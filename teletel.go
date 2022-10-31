@@ -1,4 +1,4 @@
-package main
+package minigo
 
 import (
 	"encoding/binary"

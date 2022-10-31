@@ -1,4 +1,4 @@
-package main
+package minigo
 
 type Server struct {
 	connectPage Page

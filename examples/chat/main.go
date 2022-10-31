@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	mgo "github.com/NoelM/minigo"
 	"log"
 	"net"
 	"os"
@@ -71,14 +72,14 @@ func main() {
 
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
-	tcpd := NewTCPDriver(conn)
-	mntl := NewMinitel(tcpd)
+	tcpd := mgo.NewTCPDriver(conn)
+	mntl := mgo.NewMinitel(tcpd)
 
 	var pid uint
 	var key uint
 	var err error
 
-	p := NewTestPage(mntl)
+	p := mgo.NewTestPage(mntl)
 	p.Draw()
 	for {
 		log.Printf("PID=%d", pid)
@@ -87,23 +88,23 @@ func handleRequest(conn net.Conn) {
 		}
 
 		switch key {
-		case Envoi:
+		case mgo.Envoi:
 			pid = p.Envoi()
-		case Retour:
+		case mgo.Retour:
 			pid = p.Retour()
-		case Repetition:
+		case mgo.Repetition:
 			pid = p.Repetition()
-		case Guide:
+		case mgo.Guide:
 			pid = p.Guide()
-		case Annulation:
+		case mgo.Annulation:
 			pid = p.Annulation()
-		case Sommaire:
+		case mgo.Sommaire:
 			pid = p.Sommaire()
-		case Correction:
+		case mgo.Correction:
 			pid = p.Correction()
-		case Suite:
+		case mgo.Suite:
 			pid = p.Suite()
-		case ConnexionFin:
+		case mgo.ConnexionFin:
 			pid = p.ConnexionFin()
 		default:
 			p.NewKey(key)

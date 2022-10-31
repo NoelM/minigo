@@ -18,8 +18,9 @@ jobs:
       with:
         go-version: '1.19'
 
-    - name: Build
-      run: go build -v .
-
-    - name: Test
+    - name: Test Minigo
       run: go test -v .
+
+    - name: Build Example Chat
+      run: go build -v examples/chat/.
+

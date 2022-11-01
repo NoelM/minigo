@@ -103,7 +103,7 @@ func handleRequest(conn net.Conn, page *ChatPage) {
 	lastMessageId := -1
 	lastUserId := -1
 
-	drawPage(mntl, page, username, lastUserId)
+	drawPage(mntl, page, username)
 	for {
 		key, err = mntl.RecvKey()
 		if err != nil {
@@ -117,7 +117,7 @@ func handleRequest(conn net.Conn, page *ChatPage) {
 			if lastMessageId != len(page.messages) {
 				updated = true
 				lastMessageId = len(page.messages)
-				updateMessages(mntl, page, lastMessageId)
+				updateMessages(mntl, page)
 			}
 
 			if updated {
@@ -170,10 +170,10 @@ func handleRequest(conn net.Conn, page *ChatPage) {
 	}
 }
 
-func drawPage(minitel *mgo.Minitel, page *ChatPage, username string, lastMessageId int) {
+func drawPage(minitel *mgo.Minitel, page *ChatPage, username string) {
 	drawHeader(minitel)
 	updateConnected(minitel, page, username)
-	updateMessages(minitel, page, lastMessageId)
+	updateMessages(minitel, page)
 	updateTextZone(minitel)
 }
 
@@ -201,16 +201,23 @@ func updateTextZone(minitel *mgo.Minitel) {
 	minitel.SendBytes(buf)
 }
 
-func updateMessages(minitel *mgo.Minitel, page *ChatPage, lastMessageId int) {
+func updateMessages(minitel *mgo.Minitel, page *ChatPage) {
 	var buf []byte
+	var countNbLines int
 
 	buf = mgo.GetMoveCursorXY(buf, 1, 4)
 	page.messagesMtx.RLock()
 	for mid := len(page.messages) - 1; mid >= 0; mid-- {
 		msg := page.messages[mid]
 
-		buf = mgo.GetMessage(buf, fmt.Sprintf("(%s) %s > ", msg.timestamp.Format("15:04"), msg.user))
-		buf = mgo.GetMessage(buf, fmt.Sprintf("%s", msg.message))
+		formatted := fmt.Sprintf("(%s) %s > %s", msg.timestamp.Format("15:04"), msg.user, msg.message)
+		countNbLines += 1 + len(formatted)/mgo.ColonnesSimple
+		if countNbLines+4 > 18 {
+			break
+		}
+
+		buf = mgo.GetMessage(buf, formatted)
+
 		buf = mgo.GetMoveCursorReturn(buf, 1)
 	}
 	page.messagesMtx.RUnlock()

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"time"
 )
 
 type Driver interface {
@@ -16,14 +18,16 @@ type Driver interface {
 
 type TCPDriver struct {
 	conn       net.Conn
+	timeout    time.Duration
 	recvBufLen int
 	recvBufPos int
 	recvBuf    []byte
 }
 
-func NewTCPDriver(conn net.Conn) *TCPDriver {
+func NewTCPDriver(conn net.Conn, timeout time.Duration) *TCPDriver {
 	return &TCPDriver{
 		conn:       conn,
+		timeout:    timeout,
 		recvBufLen: 0,
 		recvBufPos: 0,
 		recvBuf:    make([]byte, 1024),
@@ -53,19 +57,28 @@ func (t *TCPDriver) Recv() (byte, error) {
 	}
 
 	var err error
+	if t.timeout > 0 {
+		if err = t.conn.SetReadDeadline(time.Now().Add(t.timeout)); err != nil {
+			return 0, fmt.Errorf("unable to set timeout: %w", err)
+		}
+	}
+
 	t.recvBuf = make([]byte, 1024)
 	t.recvBufLen, err = t.conn.Read(t.recvBuf)
-	if err != nil {
+	if err == io.EOF || err == os.ErrDeadlineExceeded {
+		t.recvBufLen, t.recvBufPos = 0, 0
+		return 0, err
+	} else if err != nil {
 		t.recvBufLen, t.recvBufPos = 0, 0
 		return 0, fmt.Errorf("unable to read from TCP: %w", err)
 	}
 
 	if b, err := t.popHead(); err == nil {
 		return b, nil
-	} else if err != io.EOF {
-		return 0, fmt.Errorf("unable to popHead: %w", err)
+	} else if err == io.EOF {
+		return 0, err
 	} else {
-		return 0, fmt.Errorf("buffer EOF: %w", err)
+		return 0, fmt.Errorf("unable to popHead: %w", err)
 	}
 }
 

@@ -49,7 +49,7 @@ func GetByteWithParity(b byte) byte {
 func CheckByteParity(b byte) (byte, error) {
 	// The parity bit is set to 0 if the sum of other bits is even,
 	// thus if the sum is odd the parity bit is set to 1
-	if IsByteEven(b) && !BitReadAt(b, ByteParityPos) {
+	if IsByteEven(b) == !BitReadAt(b, ByteParityPos) {
 		return BitWriteAt(b, ByteParityPos, false), nil
 	} else {
 		return 0, errors.New("invalid parity received")
@@ -189,7 +189,6 @@ func GetCleanLineToCursor(buf []byte) []byte {
 
 func GetChar(c int32) (byte, error) {
 	vdtByte := GetVideotextCharByte(byte(c))
-	fmt.Printf("%q %x\n", c, vdtByte)
 	if IsValidChar(vdtByte) {
 		return vdtByte, nil
 	}
@@ -429,5 +428,17 @@ func (m *Minitel) RecvKey() (uint, error) {
 			}
 		}
 	}
-	return uint(binary.BigEndian.Uint32(readBuffer)), nil
+
+	switch len(readBuffer) {
+	case 1:
+		return uint(readBuffer[0]), nil
+	case 2:
+		return uint(binary.BigEndian.Uint16(readBuffer)), nil
+	case 3:
+		return uint(binary.BigEndian.Uint32(readBuffer)), nil
+	case 4:
+		return uint(binary.BigEndian.Uint64(readBuffer)), nil
+	default:
+		return 0, errors.New("unable to cast readBuffer")
+	}
 }

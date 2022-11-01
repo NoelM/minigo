@@ -77,6 +77,12 @@ func TestCheckByteParity(t *testing.T) {
 		t.Fatalf("wrong parity check for %b, expected %b, computed %b, with error: %s", goodParityByte, goodParityRemoved, computed, err.Error())
 	}
 
+	goodParityByte = 0b10010011
+	goodParityRemoved = 0b00010011
+	if computed, err := CheckByteParity(goodParityByte); computed != goodParityRemoved || err != nil {
+		t.Fatalf("wrong parity check for %b, expected %b, computed %b, with error: %s", goodParityByte, goodParityRemoved, computed, err.Error())
+	}
+
 	var wrongParityByte byte = 0b11000001
 	var wrongParityRemoved byte = 0
 	if computed, err := CheckByteParity(wrongParityByte); computed != wrongParityRemoved || err == nil {

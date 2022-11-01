@@ -22,5 +22,5 @@ jobs:
       run: go test -v .
 
     - name: Build Example Chat
-      run: go build -v examples/chat/.
+      run: cd examples/chat && go build -v .
 

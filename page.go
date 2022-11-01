@@ -3,6 +3,7 @@ package minigo
 import "log"
 
 type Page interface {
+	NewSession(driver Driver)
 	Draw()
 	NewKey(uint)
 	Envoi() uint

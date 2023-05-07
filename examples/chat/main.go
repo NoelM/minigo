@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	mgo "github.com/NoelM/minigo"
 	"log"
 	"math/rand"
-	"net"
-	"os"
+	"net/http"
+	"nhooyr.io/websocket"
 	"time"
 )
 
@@ -49,7 +50,7 @@ func main() {
 }
 */
 
-const (
+/*const (
 	ConnHost = "192.168.1.10"
 	ConnPort = "3615"
 	ConnType = "tcp"
@@ -81,17 +82,44 @@ func main() {
 		go handleRequest(conn, page)
 	}
 }
+*/
+
+func main() {
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer c.Close(websocket.StatusInternalError, "the sky is falling")
+
+		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
+		defer cancel()
+
+		ctx = c.CloseRead(ctx)
+
+		wsd := mgo.NewWebSocketDriver(c, ctx)
+		mini := mgo.NewMinitel(wsd)
+
+		handleRequest(mini)
+	})
+
+	err := http.ListenAndServe("192.168.1.27:3615", fn)
+	log.Fatal(err)
+}
 
 // Handles incoming requests.
-func handleRequest(conn net.Conn, page *ChatPage) {
-	tcpd := mgo.NewTCPDriver(conn, time.Second)
-	mntl := mgo.NewMinitel(tcpd)
-
+func handleRequest(mntl *mgo.Minitel) {
 	var buffer []byte
 	var key uint
 	var err error
 
 	username := Pseudos[rand.Intn(5)]
+	page := &ChatPage{
+		users:    []User{},
+		messages: []Message{},
+	}
+
 	page.usersMtx.Lock()
 	page.users = append(page.users, User{
 		logTime: time.Now(),

@@ -60,7 +60,7 @@ func (p *ChatPage) NewSession(driver mgo.Driver) uint {
 
 	p.Draw()
 	for {
-		if key, err = minitel.RecvKey(); err != nil {
+		if key, err = minitel.ReadKey(); err != nil {
 			log.Printf("unable to receive key: %s", err.Error())
 		}
 

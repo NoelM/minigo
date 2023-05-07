@@ -105,7 +105,7 @@ func handleRequest(conn net.Conn, page *ChatPage) {
 
 	drawPage(mntl, page, username)
 	for {
-		key, err = mntl.RecvKey()
+		key, err = mntl.ReadKey()
 		if err != nil {
 			updated := false
 			if lastUserId != len(page.users) {
@@ -184,7 +184,7 @@ func moveCursorToText(minitel *mgo.Minitel, msgLen int) {
 
 	buf = mgo.GetMoveCursorXY(buf, col+1, 20+row)
 
-	minitel.SendBytes(buf)
+	minitel.WriteBytes(buf)
 }
 
 func updateTextZone(minitel *mgo.Minitel) {
@@ -198,7 +198,7 @@ func updateTextZone(minitel *mgo.Minitel) {
 	buf = mgo.GetMoveCursorXY(buf, 1, 20)
 	buf = append(buf, mgo.GetByteWithParity(mgo.Con))
 
-	minitel.SendBytes(buf)
+	minitel.WriteBytes(buf)
 }
 
 func updateMessages(minitel *mgo.Minitel, page *ChatPage) {
@@ -222,7 +222,7 @@ func updateMessages(minitel *mgo.Minitel, page *ChatPage) {
 	}
 	page.messagesMtx.RUnlock()
 
-	minitel.SendBytes(buf)
+	minitel.WriteBytes(buf)
 }
 
 func drawHeader(minitel *mgo.Minitel) {
@@ -231,7 +231,7 @@ func drawHeader(minitel *mgo.Minitel) {
 	buf = append(buf, mgo.Ff) // Screen cleanup, cursor at 1,1, article separator
 	buf = mgo.GetMessage(buf, fmt.Sprintf("=== MESSAGERIE ==="))
 
-	minitel.SendBytes(buf)
+	minitel.WriteBytes(buf)
 }
 
 func updateConnected(minitel *mgo.Minitel, page *ChatPage, username string) {
@@ -253,5 +253,5 @@ func updateConnected(minitel *mgo.Minitel, page *ChatPage, username string) {
 	}
 	page.usersMtx.RUnlock()
 
-	minitel.SendBytes(buf)
+	minitel.WriteBytes(buf)
 }

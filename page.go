@@ -39,7 +39,7 @@ func (p *TestPage) Draw() {
 	buf = GetMoveCursorReturn(buf, 1)
 	buf = GetMessage(buf, " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_abcdefghijklmnopqrstuvwxyz")
 
-	p.mntl.SendBytes(buf)
+	p.mntl.WriteBytes(buf)
 }
 
 func (p *TestPage) Envoi() uint {

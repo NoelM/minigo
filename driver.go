@@ -1,91 +1,84 @@
 package minigo
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net"
+	"nhooyr.io/websocket"
 	"os"
 	"time"
 )
 
 type Driver interface {
-	popHead() (byte, error)
-
-	Recv() (byte, error)
-	Readable() (bool, error)
-	Send(msg []byte) (int, error)
+	Read(buffer *bytes.Buffer) error
+	Write(data []byte) (int, error)
 }
 
 type TCPDriver struct {
-	conn       net.Conn
-	timeout    time.Duration
-	recvBufLen int
-	recvBufPos int
-	recvBuf    []byte
+	conn    net.Conn
+	timeout time.Duration
 }
 
 func NewTCPDriver(conn net.Conn, timeout time.Duration) *TCPDriver {
 	return &TCPDriver{
-		conn:       conn,
-		timeout:    timeout,
-		recvBufLen: 0,
-		recvBufPos: 0,
-		recvBuf:    make([]byte, 1024),
+		conn:    conn,
+		timeout: timeout,
 	}
 }
 
-func (t *TCPDriver) popHead() (byte, error) {
-	if t.recvBufLen == 0 {
-		return 0, io.EOF
-	}
-
-	if t.recvBufPos < t.recvBufLen {
-		b := t.recvBuf[t.recvBufPos]
-		t.recvBufPos++
-		return b, nil
-	} else {
-		t.recvBufPos, t.recvBufLen = 0, 0
-		return 0, io.EOF
-	}
-}
-
-func (t *TCPDriver) Recv() (byte, error) {
-	if b, err := t.popHead(); err == nil {
-		return b, nil
-	} else if err != io.EOF {
-		return 0, fmt.Errorf("unable to popHead: %w", err)
-	}
+func (t *TCPDriver) Read(buffer *bytes.Buffer) error {
 
 	var err error
 	if t.timeout > 0 {
 		if err = t.conn.SetReadDeadline(time.Now().Add(t.timeout)); err != nil {
-			return 0, fmt.Errorf("unable to set timeout: %w", err)
+			return fmt.Errorf("unable to set timeout: %w", err)
 		}
 	}
 
-	t.recvBuf = make([]byte, 1024)
-	t.recvBufLen, err = t.conn.Read(t.recvBuf)
+	buf := make([]byte, 1024)
+	bufLen, err := t.conn.Read(buf)
 	if err == io.EOF || err == os.ErrDeadlineExceeded {
-		t.recvBufLen, t.recvBufPos = 0, 0
-		return 0, err
+		return err
 	} else if err != nil {
-		t.recvBufLen, t.recvBufPos = 0, 0
-		return 0, fmt.Errorf("unable to read from TCP: %w", err)
+		return fmt.Errorf("unable to read from TCP: %w", err)
 	}
 
-	if b, err := t.popHead(); err == nil {
-		return b, nil
-	} else if err == io.EOF {
-		return 0, err
-	} else {
-		return 0, fmt.Errorf("unable to popHead: %w", err)
-	}
+	_, err = buffer.Write(buf[0:bufLen])
+	return err
 }
 
-func (t *TCPDriver) Readable() (bool, error) {
-	return true, nil
-}
-
-func (t *TCPDriver) Send(buf []byte) (int, error) {
+func (t *TCPDriver) SendBytes(buf []byte) (int, error) {
 	return t.conn.Write(buf)
+}
+
+type WebSocketDriver struct {
+	conn *websocket.Conn
+	ctx  context.Context
+}
+
+func NewWebSocketDriver(conn *websocket.Conn, ctx context.Context) *WebSocketDriver {
+	return &WebSocketDriver{
+		conn: conn,
+		ctx:  ctx,
+	}
+}
+
+func (wsd *WebSocketDriver) Read(buffer *bytes.Buffer) error {
+	t, msg, err := wsd.conn.Read(wsd.ctx)
+
+	if err != nil {
+		return fmt.Errorf("unable to recieve byte: %s", err)
+	}
+	if t != websocket.MessageBinary {
+		return fmt.Errorf("unable to recieve message type: %s", t.String())
+	}
+
+	_, err = buffer.Write(msg)
+	return err
+}
+
+func (wsd *WebSocketDriver) Write(data []byte) (int, error) {
+	return len(data), wsd.conn.Write(wsd.ctx, websocket.MessageBinary, data)
 }

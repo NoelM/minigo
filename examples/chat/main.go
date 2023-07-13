@@ -1,13 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	mgo "github.com/NoelM/minigo"
+	"github.com/gobwas/ws"
 	"log"
 	"math/rand"
 	"net/http"
-	"nhooyr.io/websocket"
 	"time"
 )
 
@@ -86,19 +85,14 @@ func main() {
 
 func main() {
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
+		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		defer c.Close(websocket.StatusInternalError, "the sky is falling")
+		defer conn.Close()
 
-		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
-		defer cancel()
-
-		ctx = c.CloseRead(ctx)
-
-		wsd := mgo.NewWebSocketDriver(c, ctx)
+		wsd := mgo.NewWebSocketDriver(conn)
 		mini := mgo.NewMinitel(wsd)
 
 		handleRequest(mini)
@@ -133,6 +127,10 @@ func handleRequest(mntl *mgo.Minitel) {
 
 	drawPage(mntl, page, username)
 	for {
+		if mntl.IsClosed() {
+			return
+		}
+
 		key, err = mntl.ReadKey()
 		if err != nil {
 			updated := false

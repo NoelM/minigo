@@ -2,11 +2,12 @@ package minigo
 
 import (
 	"bytes"
-	"context"
+	"errors"
 	"fmt"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	"io"
 	"net"
-	"nhooyr.io/websocket"
 	"os"
 	"time"
 )
@@ -14,11 +15,13 @@ import (
 type Driver interface {
 	Read(buffer *bytes.Buffer) error
 	Write(data []byte) (int, error)
+	IsClosed() bool
 }
 
 type TCPDriver struct {
 	conn    net.Conn
 	timeout time.Duration
+	close   bool
 }
 
 func NewTCPDriver(conn net.Conn, timeout time.Duration) *TCPDriver {
@@ -53,26 +56,26 @@ func (t *TCPDriver) SendBytes(buf []byte) (int, error) {
 	return t.conn.Write(buf)
 }
 
-type WebSocketDriver struct {
-	conn *websocket.Conn
-	ctx  context.Context
+func (t *TCPDriver) IsClosed() bool {
+	return t.close
 }
 
-func NewWebSocketDriver(conn *websocket.Conn, ctx context.Context) *WebSocketDriver {
+type WebSocketDriver struct {
+	conn   net.Conn
+	closed bool
+}
+
+func NewWebSocketDriver(conn net.Conn) *WebSocketDriver {
 	return &WebSocketDriver{
-		conn: conn,
-		ctx:  ctx,
+		conn:   conn,
+		closed: false,
 	}
 }
 
 func (wsd *WebSocketDriver) Read(buffer *bytes.Buffer) error {
-	t, msg, err := wsd.conn.Read(wsd.ctx)
-
-	if err != nil {
-		return fmt.Errorf("unable to recieve byte: %s", err)
-	}
-	if t != websocket.MessageBinary {
-		return fmt.Errorf("unable to recieve message type: %s", t.String())
+	msg, _, err := wsutil.ReadClientData(wsd.conn)
+	if err != nil && errors.Is(err, io.EOF) {
+		wsd.closed = true
 	}
 
 	_, err = buffer.Write(msg)
@@ -80,5 +83,9 @@ func (wsd *WebSocketDriver) Read(buffer *bytes.Buffer) error {
 }
 
 func (wsd *WebSocketDriver) Write(data []byte) (int, error) {
-	return len(data), wsd.conn.Write(wsd.ctx, websocket.MessageBinary, data)
+	return len(data), wsutil.WriteServerMessage(wsd.conn, ws.OpBinary, data)
+}
+
+func (wsd *WebSocketDriver) IsClosed() bool {
+	return wsd.closed
 }

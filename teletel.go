@@ -41,13 +41,16 @@ func BitWriteAt(b byte, i int, value bool) byte {
 func GetByteWithParity(b byte) byte {
 	// The parity bit is set to 0 if the sum of other bits is even,
 	// thus if the sum is odd the parity bit is set to 1
-	return BitWriteAt(b, ByteParityPos, !IsByteEven(b))
+	//return BitWriteAt(b, ByteParityPos, !IsByteEven(b))
+
+	// Do not mandatory, checked by the JS and Socketel
+	return b
 }
 
 func CheckByteParity(b byte) (byte, error) {
 	// The parity bit is set to 0 if the sum of other bits is even,
 	// thus if the sum is odd the parity bit is set to 1
-	if IsByteEven(b) == !BitReadAt(b, ByteParityPos) {
+	if IsByteEven(b) != BitReadAt(b, ByteParityPos) {
 		return BitWriteAt(b, ByteParityPos, false), nil
 	} else {
 		return 0, errors.New("invalid parity received")

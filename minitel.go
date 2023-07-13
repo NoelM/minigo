@@ -138,10 +138,11 @@ func (m *Minitel) readByte() (byte, error) {
 		return 0, err
 	}
 
-	b, err = CheckByteParity(b)
-	if err != nil {
-		return 0, err
-	}
+	// Seems fixed by the JS and Socketel
+	//b, err = CheckByteParity(b)
+	//if err != nil {
+	//	return 0, err
+	//}
 
 	return b, nil
 }
@@ -218,4 +219,8 @@ func (m *Minitel) ReadKey() (uint, error) {
 	default:
 		return 0, errors.New("unable to cast inBuffer")
 	}
+}
+
+func (m *Minitel) IsClosed() bool {
+	return m.driver.IsClosed()
 }

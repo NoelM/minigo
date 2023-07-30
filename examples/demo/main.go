@@ -60,21 +60,28 @@ func demo(c *websocket.Conn, ctx context.Context, apiResp *Response) {
 		buf = []byte{}
 		apiResp.Mtx.RLock()
 		for _, d := range apiResp.Departures {
-			if nbLines+3 > 25 {
+			realLines := 3 + len(d.Informations.Direction)/40
+
+			if nbLines+realLines > 25 {
 				break
 			}
 
 			baseDepTime, _ := time.Parse("20060102T150405", d.Schedule.BaseDepartureDateTime)
 			depTime, _ := time.Parse("20060102T150405", d.Schedule.DepartureDateTime)
 
-			header := fmt.Sprintf("%s - %s %s %s", depTime.Format("15:04"), d.Informations.CommercialMode, d.Informations.Code, d.Informations.Headsign)
+			header := ""
+			if d.Informations.Code != "" {
+				header = fmt.Sprintf("%s - %s %s %s", depTime.Format("15:04"), d.Informations.CommercialMode, d.Informations.Code, d.Informations.Headsign)
+			} else {
+				header = fmt.Sprintf("%s - %s %s", depTime.Format("15:04"), d.Informations.CommercialMode, d.Informations.Headsign)
+			}
 
 			buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
 			buf = append(buf, minigo.EncodeMessage(header)...)
 
 			if !depTime.Equal(baseDepTime) {
 				delay := fmt.Sprintf("RETARD %d MIN", int(depTime.Sub(baseDepTime).Minutes()))
-				buf = append(buf, minigo.GetMoveCursorLeft(3)...)
+				buf = append(buf, minigo.GetMoveCursorRight(3)...)
 				buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal, minigo.Clignotement)...)
 				buf = append(buf, minigo.EncodeMessage(delay)...)
 				buf = append(buf, minigo.EncodeAttribute(minigo.Fixe)...)
@@ -85,7 +92,7 @@ func demo(c *websocket.Conn, ctx context.Context, apiResp *Response) {
 			buf = append(buf, minigo.EncodeMessage(d.Informations.Direction[:38])...)
 			buf = append(buf, minigo.GetMoveCursorReturn(2)...)
 
-			nbLines += 3
+			nbLines += realLines
 		}
 		apiResp.Mtx.RUnlock()
 

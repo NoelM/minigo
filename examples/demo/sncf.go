@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type Response struct {
@@ -37,7 +38,7 @@ type Context struct {
 }
 
 func GetDepartures(apiKey string, resp *Response) error {
-	requestURL := "https://api.sncf.com/v1/coverage/sncf/stop_areas/stop_area%3ASNCF%3A87686006/departures?datetime=20230730T182654&count=20"
+	requestURL := fmt.Sprintf("https://api.navitia.io/v1/coverage/sncf/stop_areas/stop_area%%3ASNCF%%3A87686006/physical_modes/physical_mode%%3ALongDistanceTrain/departures?from_datetime=%s&", time.Now().Format("20060102T150405"))
 
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {

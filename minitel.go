@@ -61,67 +61,67 @@ func (m *Minitel) MoveCursorXY(x, y int) error {
 		return fmt.Errorf("unable to move cursor: values (x=%d,y=%d) out of bound", x, y)
 	}
 
-	m.outBuffer = GetMoveCursorXY(m.outBuffer, x, y)
+	m.outBuffer = GetMoveCursorXY(x, y)
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) MoveCursorLeft(n int) error {
-	m.outBuffer = GetMoveCursorLeft(m.outBuffer, n)
+	m.outBuffer = GetMoveCursorLeft(n)
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) MoveCursorRight(n int) error {
-	m.outBuffer = GetMoveCursorRight(m.outBuffer, n)
+	m.outBuffer = GetMoveCursorRight(n)
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) MoveCursorDown(n int) error {
-	m.outBuffer = GetMoveCursorDown(m.outBuffer, n)
+	m.outBuffer = GetMoveCursorDown(n)
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) MoveCursorUp(n int) error {
-	m.outBuffer = GetMoveCursorUp(m.outBuffer, n)
+	m.outBuffer = GetMoveCursorUp(n)
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) MoveCursorReturn(n int) error {
-	m.outBuffer = GetMoveCursorReturn(m.outBuffer, n)
+	m.outBuffer = GetMoveCursorReturn(n)
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) CleanScreen() error {
-	m.outBuffer = GetCleanScreen(m.outBuffer)
+	m.outBuffer = GetCleanScreen()
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) CleanScreenFromCursor() error {
-	m.outBuffer = GetCleanScreenFromCursor(m.outBuffer)
+	m.outBuffer = GetCleanScreenFromCursor()
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) CleanScreenToCursor() error {
-	m.outBuffer = GetCleanScreenToCursor(m.outBuffer)
+	m.outBuffer = GetCleanScreenToCursor()
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) CleanLine() error {
-	m.outBuffer = GetCleanLine(m.outBuffer)
+	m.outBuffer = GetCleanLine()
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) CleanLineFromCursor() error {
-	m.outBuffer = GetCleanLineFromCursor(m.outBuffer)
+	m.outBuffer = GetCleanLineFromCursor()
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) CleanLineToCursor() error {
-	m.outBuffer = GetCleanLineToCursor(m.outBuffer)
+	m.outBuffer = GetCleanLineToCursor()
 	return m.writeAndClearOutBuffer()
 }
 
 func (m *Minitel) PrintMessage(msg string) error {
-	m.outBuffer = GetMessage(m.outBuffer, msg)
+	m.outBuffer = EncodeMessage(msg)
 	return m.writeAndClearOutBuffer()
 }
 
@@ -139,10 +139,10 @@ func (m *Minitel) readByte() (byte, error) {
 	}
 
 	// Seems fixed by the JS and Socketel
-	//b, err = CheckByteParity(b)
-	//if err != nil {
-	//	return 0, err
-	//}
+	b, err = CheckByteParity(b)
+	if err != nil {
+		return 0, err
+	}
 
 	return b, nil
 }
@@ -228,7 +228,7 @@ func (m *Minitel) IsClosed() bool {
 func (m *Minitel) CursorOn() {
 	buf := []byte{}
 
-	buf = GetCursorOn(buf)
+	buf = append(buf, GetCursorOn())
 	buf = append(buf, Esc, 0x23, 0x20, 0x5F)
 	m.WriteBytes(buf)
 }

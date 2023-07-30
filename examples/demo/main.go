@@ -34,17 +34,18 @@ func main() {
 func demo(c *websocket.Conn, ctx context.Context) {
 	for {
 		hello := minigo.EncodeMessage("SALUT SALUT !!!")
-		hello = append(hello, minigo.GetMoveCursorReturn(1)...)
-		hello = append(hello, minigo.EncodeAttributes(minigo.DoubleGrandeur, minigo.Clignotement)...)
-		hello = append(hello, minigo.EncodeMessage("C'EST GRAND !")...)
-
+		hello = append(hello, minigo.GetMoveCursorReturn(2)...)
 		c.Write(ctx, websocket.MessageBinary, hello)
+		time.Sleep(2 * time.Second)
 
-		time.Sleep(10 * time.Second)
+		big := minigo.EncodeAttributes(minigo.DoubleGrandeur, minigo.Clignotement)
+		big = append(big, minigo.EncodeMessage("C'EST GRAND !")...)
+		c.Write(ctx, websocket.MessageBinary, big)
+		time.Sleep(2 * time.Second)
 
-		resetScreen := []byte{}
-		resetScreen = append(resetScreen, minigo.EncodeAttributes(minigo.GrandeurNormale, minigo.Fixe)...)
+		resetScreen := minigo.EncodeAttributes(minigo.GrandeurNormale, minigo.Fixe)
 		resetScreen = append(resetScreen, minigo.GetCleanScreen()...)
+		resetScreen = append(resetScreen, minigo.GetMoveCursorXY(0, 1)...)
 		c.Write(ctx, websocket.MessageBinary, resetScreen)
 	}
 }

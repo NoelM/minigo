@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -11,8 +13,24 @@ import (
 )
 
 func main() {
-	// This handler demonstrates how to correctly handle a write only WebSocket connection.
-	// i.e you only expect to write messages and do not expect to read any messages.
+	apiKey := os.Getenv("SNCF_API_KEY")
+	apiResponse := Response{}
+
+	err := GetDepartures(apiKey, &apiResponse)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ticker := time.NewTicker(1 * time.Minute)
+	go func() {
+		for range ticker.C {
+			err := GetDepartures(apiKey, &apiResponse)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}()
+
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 		if err != nil {
@@ -24,28 +42,41 @@ func main() {
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 
-		demo(c, ctx)
+		demo(c, ctx, &apiResponse)
 	})
 
-	err := http.ListenAndServe("192.168.1.34:3615", fn)
+	err = http.ListenAndServe("192.168.1.34:3615", fn)
 	log.Fatal(err)
 }
 
-func demo(c *websocket.Conn, ctx context.Context) {
+func demo(c *websocket.Conn, ctx context.Context, apiResp *Response) {
 	for {
-		hello := minigo.EncodeMessage("SALUT SALUT !!!")
-		hello = append(hello, minigo.GetMoveCursorReturn(2)...)
-		c.Write(ctx, websocket.MessageBinary, hello)
-		time.Sleep(1 * time.Second)
+		buf := []byte{}
+		nbLines := 0
 
-		big := minigo.EncodeAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-		big = append(big, minigo.EncodeMessage("C'EST GRAND !")...)
-		c.Write(ctx, websocket.MessageBinary, big)
-		time.Sleep(3 * time.Second)
+		apiResp.Mtx.RLock()
+		for _, d := range apiResp.Departures {
+			if nbLines+3 > 20 {
+				break
+			}
 
-		resetScreen := minigo.EncodeAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-		resetScreen = append(resetScreen, minigo.GetCleanScreen()...)
-		resetScreen = append(resetScreen, minigo.GetMoveCursorXY(0, 1)...)
-		c.Write(ctx, websocket.MessageBinary, resetScreen)
+			//baseDepTime, _ := time.Parse("20060102T150405", d.Schedule.BaseDepartureDateTime)
+			depTime, _ := time.Parse("20060102T150405", d.Schedule.DepartureDateTime)
+			header := fmt.Sprintf("%s - %s %s", depTime.Format("15:04"), d.Informations.CommercialMode, d.Informations.Headsign)
+			destination := fmt.Sprintf(">> %s", d.Informations.Direction)
+
+			buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
+			buf = append(buf, minigo.EncodeMessage(header)...)
+			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+			buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
+			buf = append(buf, minigo.EncodeMessage(destination)...)
+			buf = append(buf, minigo.GetMoveCursorReturn(2)...)
+
+			nbLines += 3
+		}
+		apiResp.Mtx.RUnlock()
+
+		c.Write(ctx, websocket.MessageBinary, buf)
+		time.Sleep(10 * time.Second)
 	}
 }

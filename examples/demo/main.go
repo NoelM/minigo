@@ -68,7 +68,6 @@ func demo(c *websocket.Conn, ctx context.Context, apiResp *Response) {
 			depTime, _ := time.Parse("20060102T150405", d.Schedule.DepartureDateTime)
 
 			header := fmt.Sprintf("%s - %s %s", depTime.Format("15:04"), d.Informations.CommercialMode, d.Informations.Headsign)
-			destination := fmt.Sprintf(">> %s", d.Informations.Direction)
 
 			buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
 			buf = append(buf, minigo.EncodeMessage(header)...)
@@ -83,7 +82,7 @@ func demo(c *websocket.Conn, ctx context.Context, apiResp *Response) {
 
 			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 			buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
-			buf = append(buf, minigo.EncodeMessage(destination)...)
+			buf = append(buf, minigo.EncodeMessage(d.Informations.Direction[:38])...)
 			buf = append(buf, minigo.GetMoveCursorReturn(2)...)
 
 			nbLines += 3

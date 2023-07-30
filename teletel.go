@@ -203,6 +203,13 @@ func EncodeAttribute(attribute byte) (buf []byte) {
 	return
 }
 
+func EncodeAttributes(attributes ...byte) (buf []byte) {
+	for _, atb := range attributes {
+		buf = append(buf, GetByteWithParity(Esc), GetByteWithParity(atb))
+	}
+	return
+}
+
 func GetTextZone(text string, attributes ...byte) (buf []byte) {
 	buf = append(buf, GetByteWithParity(Sp))
 

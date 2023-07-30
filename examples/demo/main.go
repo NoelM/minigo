@@ -27,7 +27,7 @@ func main() {
 		demo(c, ctx)
 	})
 
-	err := http.ListenAndServe("192.168.1.27:3615", fn)
+	err := http.ListenAndServe("192.168.1.34:3615", fn)
 	log.Fatal(err)
 }
 
@@ -35,13 +35,16 @@ func demo(c *websocket.Conn, ctx context.Context) {
 	for {
 		hello := minigo.EncodeMessage("SALUT SALUT !!!")
 		hello = append(hello, minigo.GetMoveCursorReturn(1)...)
-		hello = append(hello, minigo.EncodeAttribute(minigo.DoubleGrandeur)...)
-		hello = append(minigo.EncodeMessage("C'EST GRAND !"))
+		hello = append(hello, minigo.EncodeAttributes(minigo.DoubleGrandeur, minigo.Clignotement)...)
+		hello = append(hello, minigo.EncodeMessage("C'EST GRAND !")...)
 
 		c.Write(ctx, websocket.MessageBinary, hello)
 
 		time.Sleep(10 * time.Second)
 
-		c.Write(ctx, websocket.MessageBinary, minigo.GetCleanScreen())
+		resetScreen := []byte{}
+		resetScreen = append(resetScreen, minigo.EncodeAttributes(minigo.GrandeurNormale, minigo.Fixe)...)
+		resetScreen = append(resetScreen, minigo.GetCleanScreen()...)
+		c.Write(ctx, websocket.MessageBinary, resetScreen)
 	}
 }

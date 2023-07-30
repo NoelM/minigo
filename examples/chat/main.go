@@ -84,6 +84,11 @@ func main() {
 */
 
 func main() {
+	page := &ChatPage{
+		users:    []User{},
+		messages: []Message{},
+	}
+
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
@@ -95,7 +100,17 @@ func main() {
 		wsd := mgo.NewWebSocketDriver(conn)
 		mini := mgo.NewMinitel(wsd)
 
-		handleRequest(mini)
+		username := Pseudos[rand.Intn(4)]
+
+		page.usersMtx.Lock()
+		page.users = append(page.users, User{
+			logTime: time.Now(),
+			logged:  true,
+			pseudo:  username,
+		})
+		page.usersMtx.Unlock()
+
+		handleRequest(mini, page, username)
 	})
 
 	err := http.ListenAndServe("192.168.1.27:3615", fn)
@@ -103,54 +118,58 @@ func main() {
 }
 
 // Handles incoming requests.
-func handleRequest(mntl *mgo.Minitel) {
+func handleRequest(mntl *mgo.Minitel, page *ChatPage, username string) {
 	var buffer []byte
-	var key uint
-	var err error
 
-	username := Pseudos[rand.Intn(5)]
-	page := &ChatPage{
-		users:    []User{},
-		messages: []Message{},
-	}
-
-	page.usersMtx.Lock()
-	page.users = append(page.users, User{
-		logTime: time.Now(),
-		logged:  true,
-		pseudo:  username,
-	})
-	page.usersMtx.Unlock()
+	recvChan := make(chan uint)
 
 	lastMessageId := -1
 	lastUserId := -1
 
-	drawPage(mntl, page, username)
+	go func() {
+		for {
+			if mntl.IsClosed() {
+				return
+			}
+
+			key, err := mntl.ReadKey()
+			if err != nil {
+				fmt.Printf("unable to read key: %s", err)
+			}
+			recvChan <- key
+		}
+	}()
+
+	mntl.CursorOn()
+	//drawPage(mntl, page, username)
 	for {
 		if mntl.IsClosed() {
 			return
 		}
 
-		key, err = mntl.ReadKey()
-		if err != nil {
+		var key uint
+
+		select {
+		case key = <-recvChan:
+		default:
 			updated := false
 			if lastUserId != len(page.users) {
 				updated = true
 				lastUserId = len(page.users)
-				updateConnected(mntl, page, username)
+				//updateConnected(mntl, page, username)
 			}
 
 			if lastMessageId != len(page.messages) {
 				updated = true
 				lastMessageId = len(page.messages)
-				updateMessages(mntl, page)
+				//updateMessages(mntl, page)
 			}
 
 			if updated {
-				moveCursorToText(mntl, len(buffer))
+				//moveCursorToText(mntl, len(buffer))
 			}
 
-			log.Printf("unable to receive key: %s", err.Error())
+			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 
@@ -222,7 +241,7 @@ func updateTextZone(minitel *mgo.Minitel) {
 	buf = mgo.GetMoveCursorXY(buf, 25, 25)
 	buf = mgo.GetMessage(buf, "MESSAGE + ENVOI")
 	buf = mgo.GetMoveCursorXY(buf, 1, 20)
-	buf = append(buf, mgo.GetByteWithParity(mgo.Con))
+	buf = append(buf, mgo.GetByteWithParity(mgo.CursorOn))
 
 	minitel.WriteBytes(buf)
 }

@@ -224,3 +224,11 @@ func (m *Minitel) ReadKey() (uint, error) {
 func (m *Minitel) IsClosed() bool {
 	return m.driver.IsClosed()
 }
+
+func (m *Minitel) CursorOn() {
+	buf := []byte{}
+
+	buf = GetCursorOn(buf)
+	buf = append(buf, Esc, 0x23, 0x20, 0x5F)
+	m.WriteBytes(buf)
+}

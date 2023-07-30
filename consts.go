@@ -158,8 +158,8 @@ const (
 
 // 1.2.6.4 Visualisation du curseur
 const (
-	Con  = 0x11 // Visualisation de la position active du curseur (curseur actif).
-	Coff = 0x14 // Arrêt de la visualisation de la position active (curseur inactif).
+	CursorOn  = 0x11 // Visualisation de la position active du curseur (curseur actif).
+	CursorOff = 0x14 // Arrêt de la visualisation de la position active (curseur inactif).
 )
 
 // Chapitre 3 : Le clavier

@@ -30,21 +30,18 @@ func IsByteEven(b byte) bool {
 	return even
 }
 
-func BitWriteAt(b byte, i int, value bool) byte {
+func BitWriteAt(b byte, pos int, value bool) byte {
 	if value {
-		return b | byte(1<<i)
+		return b | byte(1<<pos)
 	} else {
-		return b &^ byte(1<<i)
+		return b &^ byte(1<<pos)
 	}
 }
 
 func GetByteWithParity(b byte) byte {
 	// The parity bit is set to 0 if the sum of other bits is even,
 	// thus if the sum is odd the parity bit is set to 1
-	//return BitWriteAt(b, ByteParityPos, !IsByteEven(b))
-
-	// Do not mandatory, checked by the JS and Socketel
-	return b
+	return BitWriteAt(b, ByteParityPos, !IsByteEven(b))
 }
 
 func CheckByteParity(b byte) (byte, error) {
@@ -57,29 +54,23 @@ func CheckByteParity(b byte) (byte, error) {
 	}
 }
 
-func GetProCode(buf []byte, pro byte) ([]byte, error) {
+func GetProCode(pro byte) ([]byte, error) {
 	if pro < Pro1 || pro > Pro3 {
 		return nil, errors.New("pro argument beyond bound [0x39;0x3B]")
 	}
-	buf = append(buf, GetByteWithParity(Esc))
-	buf = append(buf, GetByteWithParity(pro))
-	return buf, nil
+	return []byte{GetByteWithParity(Esc), GetByteWithParity(pro)}, nil
 }
 
-func GetPCode(buf []byte, i int) []byte {
+func GetPCode(i int) []byte {
 	if i < 10 {
-		buf = append(buf, GetByteWithParity(0x30+byte(i)))
+		return []byte{GetByteWithParity(0x30 + byte(i))}
 	} else {
-		buf = append(buf, GetByteWithParity(0x30+byte(i/10)))
-		buf = append(buf, GetByteWithParity(0x30+byte(i%10)))
+		return []byte{GetByteWithParity(0x30 + byte(i/10)), GetByteWithParity(0x30 + byte(i%10))}
 	}
-	return buf
 }
 
-func GetWordWithParity(buf []byte, word int) []byte {
-	buf = append(buf, GetByteWithParity(GetByteHigh(word)))
-	buf = append(buf, GetByteWithParity(GetByteLow(word)))
-	return buf
+func GetWordWithParity(word int) []byte {
+	return []byte{GetByteWithParity(GetByteHigh(word)), GetByteWithParity(GetByteLow(word))}
 }
 
 func IsPosInBounds(x, y int, resolution uint) (bool, error) {
@@ -93,102 +84,102 @@ func IsPosInBounds(x, y int, resolution uint) (bool, error) {
 	}
 }
 
-func GetMoveCursorXY(buf []byte, x, y int) []byte {
-	buf = GetWordWithParity(buf, Csi)
-	buf = GetPCode(buf, y)
+func GetMoveCursorXY(x, y int) (buf []byte) {
+	buf = GetWordWithParity(Csi)
+	buf = append(buf, GetPCode(y)...)
 	buf = append(buf, GetByteWithParity(0x3B))
-	buf = GetPCode(buf, x)
+	buf = append(buf, GetPCode(x)...)
 	buf = append(buf, GetByteWithParity(0x48))
-	return buf
+	return
 }
 
-func GetMoveCursorLeft(buf []byte, n int) []byte {
+func GetMoveCursorLeft(n int) (buf []byte) {
 	if n == 1 {
-		return append(buf, GetByteWithParity(Bs))
+		buf = append(buf, GetByteWithParity(Bs))
 	} else {
-		buf = GetWordWithParity(buf, Csi)
-		buf = GetPCode(buf, n)
+		buf = GetWordWithParity(Csi)
+		buf = append(buf, GetPCode(n)...)
 		buf = append(buf, GetByteWithParity(0x44))
 	}
-	return buf
+	return
 }
 
-func GetMoveCursorRight(buf []byte, n int) []byte {
+func GetMoveCursorRight(n int) (buf []byte) {
 	if n == 1 {
-		return append(buf, GetByteWithParity(Ht))
+		buf = append(buf, GetByteWithParity(Ht))
 	} else {
-		buf = GetWordWithParity(buf, Csi)
-		buf = GetPCode(buf, n)
+		buf = GetWordWithParity(Csi)
+		buf = append(buf, GetPCode(n)...)
 		buf = append(buf, GetByteWithParity(0x43))
 	}
-	return buf
+	return
 }
 
-func GetMoveCursorDown(buf []byte, n int) []byte {
+func GetMoveCursorDown(n int) (buf []byte) {
 	if n == 1 {
-		return append(buf, GetByteWithParity(Lf))
+		buf = append(buf, GetByteWithParity(Lf))
 	} else {
-		buf = GetWordWithParity(buf, Csi)
-		buf = GetPCode(buf, n)
+		buf = GetWordWithParity(Csi)
+		buf = append(buf, GetPCode(n)...)
 		buf = append(buf, GetByteWithParity(0x42))
 	}
-	return buf
+	return
 }
 
-func GetMoveCursorUp(buf []byte, n int) []byte {
+func GetMoveCursorUp(n int) (buf []byte) {
 	if n == 1 {
-		return append(buf, GetByteWithParity(Vt))
+		buf = append(buf, GetByteWithParity(Vt))
 	} else {
-		buf = GetWordWithParity(buf, Csi)
-		buf = GetPCode(buf, n)
+		buf = GetWordWithParity(Csi)
+		buf = append(buf, GetPCode(n)...)
 		buf = append(buf, GetByteWithParity(0x41))
 	}
-	return buf
+	return
 }
 
-func GetMoveCursorReturn(buf []byte, n int) []byte {
+func GetMoveCursorReturn(n int) (buf []byte) {
 	buf = append(buf, GetByteWithParity(Cr))
-	buf = GetMoveCursorDown(buf, n)
-	return buf
+	buf = append(buf, GetMoveCursorDown(n)...)
+	return
 }
 
-func GetCleanScreen(buf []byte) []byte {
-	buf = GetWordWithParity(buf, Csi)
+func GetCleanScreen() (buf []byte) {
+	buf = GetWordWithParity(Csi)
 	buf = append(buf, GetByteWithParity(0x32), GetByteWithParity(0x4A))
-	return buf
+	return
 }
 
-func GetCleanScreenFromCursor(buf []byte) []byte {
-	buf = GetWordWithParity(buf, Csi)
+func GetCleanScreenFromCursor() (buf []byte) {
+	buf = GetWordWithParity(Csi)
 	buf = append(buf, GetByteWithParity(0x4A))
-	return buf
+	return
 }
 
-func GetCleanScreenToCursor(buf []byte) []byte {
-	buf = GetWordWithParity(buf, Csi)
+func GetCleanScreenToCursor() (buf []byte) {
+	buf = GetWordWithParity(Csi)
 	buf = append(buf, GetByteWithParity(0x31), GetByteWithParity(0x4A))
-	return buf
+	return
 }
 
-func GetCleanLine(buf []byte) []byte {
-	buf = GetWordWithParity(buf, Csi)
+func GetCleanLine() (buf []byte) {
+	buf = GetWordWithParity(Csi)
 	buf = append(buf, GetByteWithParity(0x32), GetByteWithParity(0x4B))
 	return buf
 }
 
-func GetCleanLineFromCursor(buf []byte) []byte {
-	buf = GetWordWithParity(buf, Csi)
+func GetCleanLineFromCursor() (buf []byte) {
+	buf = GetWordWithParity(Csi)
 	buf = append(buf, GetByteWithParity(0x4B))
-	return buf
+	return
 }
 
-func GetCleanLineToCursor(buf []byte) []byte {
-	buf = append(buf, GetWordWithParity(buf, Csi)...)
+func GetCleanLineToCursor() (buf []byte) {
+	buf = GetWordWithParity(Csi)
 	buf = append(buf, GetByteWithParity(0x31), GetByteWithParity(0x4B))
-	return buf
+	return
 }
 
-func GetChar(c int32) (byte, error) {
+func EncodeChar(c int32) (byte, error) {
 	vdtByte := GetVideotextCharByte(byte(c))
 	if IsValidChar(vdtByte) {
 		return vdtByte, nil
@@ -196,37 +187,35 @@ func GetChar(c int32) (byte, error) {
 	return 0, errors.New("invalid char byte")
 }
 
-func GetMessage(buf []byte, msg string) []byte {
+func EncodeMessage(msg string) (buf []byte) {
 	for _, c := range msg {
-		if b, err := GetChar(c); err == nil {
+		if b, err := EncodeChar(c); err == nil {
 			buf = append(buf, GetByteWithParity(b))
 		} else {
 			continue
 		}
 	}
-	return buf
+	return
 }
 
-func GetAttribute(buf []byte, attribute byte) []byte {
-	buf = append(buf, GetByteWithParity(Esc))
-	buf = append(buf, GetByteWithParity(attribute))
-	return buf
+func EncodeAttribute(attribute byte) (buf []byte) {
+	buf = append(buf, GetByteWithParity(Esc), GetByteWithParity(attribute))
+	return
 }
 
-func GetTextZone(buf []byte, attributes []byte, text string) []byte {
-	buf = append(buf, Sp)
+func GetTextZone(text string, attributes ...byte) (buf []byte) {
+	buf = append(buf, GetByteWithParity(Sp))
 
 	for _, atb := range attributes {
-		buf = GetAttribute(buf, atb)
+		buf = append(buf, EncodeAttribute(atb)...)
 	}
-	buf = GetMessage(buf, text)
+	buf = append(buf, EncodeMessage(text)...)
+	buf = append(buf, GetByteWithParity(Sp))
 
-	buf = append(buf, Sp)
-
-	return buf
+	return
 }
 
-func GetSubArticle(buf []byte, content []byte, x, y int, res uint) []byte {
+func GetSubArticle(content []byte, x, y int, res uint) (buf []byte) {
 	inBound, err := IsPosInBounds(x, y, res)
 	if err != nil {
 		log.Printf("unable to create sub-article: %s", err.Error())
@@ -235,7 +224,15 @@ func GetSubArticle(buf []byte, content []byte, x, y int, res uint) []byte {
 		log.Printf("positon (x=%d ; y=%d) out-of-bounds", x, y)
 	}
 
-	buf = append(buf, Us, byte(0x40+x), byte(0x40+y))
+	buf = append(buf, GetByteWithParity(Us), byte(0x40+x), byte(0x40+y))
 	buf = append(buf, content...)
-	return buf
+	return
+}
+
+func GetCursorOn() byte {
+	return GetByteWithParity(CursorOn)
+}
+
+func AppendCursorOff() byte {
+	return GetByteWithParity(CursorOff)
 }

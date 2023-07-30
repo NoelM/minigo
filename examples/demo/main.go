@@ -67,7 +67,7 @@ func demo(c *websocket.Conn, ctx context.Context, apiResp *Response) {
 			baseDepTime, _ := time.Parse("20060102T150405", d.Schedule.BaseDepartureDateTime)
 			depTime, _ := time.Parse("20060102T150405", d.Schedule.DepartureDateTime)
 
-			header := fmt.Sprintf("%s - %s %s", depTime.Format("15:04"), d.Informations.CommercialMode, d.Informations.Headsign)
+			header := fmt.Sprintf("%s - %s %s %s", depTime.Format("15:04"), d.Informations.CommercialMode, d.Informations.Code, d.Informations.Headsign)
 
 			buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
 			buf = append(buf, minigo.EncodeMessage(header)...)

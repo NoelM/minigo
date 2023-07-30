@@ -20,6 +20,7 @@ type Departure struct {
 }
 
 type DisplayInformation struct {
+	Code           string `json:"code"`
 	CommercialMode string `json:"commercial_mode"`
 	Direction      string `json:"direction"`
 	Headsign       string `json:"headsign"`

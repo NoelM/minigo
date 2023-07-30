@@ -51,9 +51,13 @@ func main() {
 
 func demo(c *websocket.Conn, ctx context.Context, apiResp *Response) {
 	for {
-		buf := []byte{}
 		nbLines := 0
 
+		buf := minigo.GetMoveCursorXY(0, 1)
+		buf = append(buf, minigo.GetCleanScreen()...)
+		c.Write(ctx, websocket.MessageBinary, buf)
+
+		buf = []byte{}
 		apiResp.Mtx.RLock()
 		for _, d := range apiResp.Departures {
 			if nbLines+3 > 20 {

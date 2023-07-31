@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/NoelM/minigo"
 	"nhooyr.io/websocket"
 )
 
@@ -22,14 +23,42 @@ func main() {
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 
-		recvChan := make(chan []byte)
+		recvChan := make(chan uint)
 		go func() {
+			var wsMsg []byte
+			fullRead := true
+
+			var keyBuffer []byte
+			var keyValue uint
+			var done bool
+
+			var b byte
+			var id int
+
 			for {
-				_, msg, err := c.Read(ctx)
-				if err != nil {
-					continue
+				if fullRead {
+					_, wsMsg, err = c.Read(ctx)
+					if err != nil {
+						continue
+					}
+					fullRead = false
 				}
-				recvChan <- msg
+
+				for id, b = range wsMsg {
+					keyBuffer = append(keyBuffer, b)
+
+					done, keyValue, err = minigo.ReadKey(keyBuffer)
+					if done || err != nil {
+						keyBuffer = []byte{}
+					}
+					if done {
+						recvChan <- keyValue
+					}
+
+					if id == len(wsMsg)-1 {
+						fullRead = true
+					}
+				}
 
 				if ctx.Err() != nil {
 					return
@@ -44,11 +73,11 @@ func main() {
 	log.Fatal(err)
 }
 
-func chat(c *websocket.Conn, ctx context.Context, recvChan chan []byte) {
+func chat(c *websocket.Conn, ctx context.Context, recvChan chan uint) {
 	for {
 		select {
 		case msg := <-recvChan:
-			fmt.Printf("recieved: %s", msg)
+			fmt.Printf("recieved: %d", msg)
 		default:
 			continue
 		}

@@ -1,6 +1,7 @@
 package minigo
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
@@ -242,4 +243,62 @@ func GetCursorOn() byte {
 
 func AppendCursorOff() byte {
 	return GetByteWithParity(CursorOff)
+}
+
+func ReadKey(readBuffer []byte) (done bool, value uint, err error) {
+	if readBuffer[0] == 0x19 {
+		if len(readBuffer) == 1 {
+			return
+		}
+
+		switch readBuffer[1] {
+		case 0x23:
+			readBuffer = []byte{0xA3}
+		case 0x27:
+			readBuffer = []byte{0xA7}
+		case 0x30:
+			readBuffer = []byte{0xB0}
+		case 0x31:
+			readBuffer = []byte{0xB1}
+		case 0x38:
+			readBuffer = []byte{0xF7}
+		case 0x7B:
+			readBuffer = []byte{0xDF}
+		}
+	} else if readBuffer[0] == 0x13 {
+		if len(readBuffer) == 1 {
+			return
+		}
+	} else if readBuffer[0] == 0x1B {
+		if len(readBuffer) == 1 {
+			return
+		}
+
+		if readBuffer[1] == 0x5B {
+			if len(readBuffer) == 2 {
+				return
+			}
+
+			if readBuffer[2] == 0x34 || readBuffer[2] == 0x32 {
+				if len(readBuffer) == 3 {
+					return
+				}
+			}
+		}
+	}
+
+	done = true
+
+	switch len(readBuffer) {
+	case 1:
+		return done, uint(readBuffer[0]), nil
+	case 2:
+		return done, uint(binary.BigEndian.Uint16(readBuffer)), nil
+	case 3:
+		return done, uint(binary.BigEndian.Uint32(readBuffer)), nil
+	case 4:
+		return done, uint(binary.BigEndian.Uint64(readBuffer)), nil
+	default:
+		return done, 0, errors.New("unable to cast readbuffer")
+	}
 }

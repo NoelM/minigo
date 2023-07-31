@@ -7,8 +7,8 @@ import (
 	irc "github.com/thoj/go-ircevent"
 )
 
-const channel = "#go-eventirc-test"
-const serverssl = "irc.freenode.net:7000"
+const channel = "#minitel"
+const serverssl = "irc.libera.chat:7000"
 
 func startIRC(envoi chan []byte, messageList *Messages) {
 	ircnick1 := "minitel"

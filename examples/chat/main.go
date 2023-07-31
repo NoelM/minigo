@@ -81,7 +81,7 @@ func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint) {
 		select {
 		case key := <-recvKey:
 			if key == minigo.Envoi {
-				sendMessage(c, ctx, userInput, messageList)
+				messageList = sendMessage(c, ctx, userInput, messageList)
 				userInput = []byte{}
 
 			} else if minigo.IsUintAValidChar(key) {
@@ -100,7 +100,7 @@ func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint) {
 	}
 }
 
-func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte, list [][]byte) {
+func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte, list [][]byte) [][]byte {
 	list = append(list, msg)
 	currentLine := 1
 
@@ -108,7 +108,7 @@ func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte, list [][]by
 	buf = append(buf, minigo.GetCleanScreenFromCursor()...)
 	c.Write(ctx, websocket.MessageBinary, buf)
 
-	for i := len(list) - 1; i > 0; i -= 1 {
+	for i := len(list) - 1; i >= 0; i -= 1 {
 		msgSize := len(list[i])/40 + 1
 		if currentLine+msgSize > 20 {
 			break
@@ -126,6 +126,8 @@ func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte, list [][]by
 
 		currentLine += msgSize
 	}
+
+	return list
 }
 
 func updateMessageInput(c *websocket.Conn, ctx context.Context, len int, key byte) {

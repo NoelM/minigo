@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -29,6 +30,10 @@ func main() {
 					continue
 				}
 				recvChan <- msg
+
+				if ctx.Err() != nil {
+					return
+				}
 			}
 		}()
 
@@ -43,9 +48,13 @@ func chat(c *websocket.Conn, ctx context.Context, recvChan chan []byte) {
 	for {
 		select {
 		case msg := <-recvChan:
-			c.Write(ctx, websocket.MessageBinary, msg)
+			fmt.Printf("recieved: %s", msg)
 		default:
 			continue
+		}
+
+		if ctx.Err() != nil {
+			return
 		}
 	}
 }

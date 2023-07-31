@@ -10,8 +10,8 @@ import (
 const channel = "#go-eventirc-test"
 const serverssl = "irc.freenode.net:7000"
 
-func startIRC(messageList *Messages) {
-	ircnick1 := "blatiblat"
+func startIRC(envoi chan []byte, messageList *Messages) {
+	ircnick1 := "minitel"
 	irccon := irc.IRC(ircnick1, "IRCTestSSL")
 	irccon.UseTLS = true
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -25,6 +25,17 @@ func startIRC(messageList *Messages) {
 		messageList.AppendMessage(nick, msg)
 		fmt.Printf("%s: %s\n", nick, msg)
 	})
+
+	go func() {
+		for {
+			select {
+			case msg := <-envoi:
+				irccon.Privmsg(channel, string(msg))
+			default:
+				continue
+			}
+		}
+	}()
 
 	err := irccon.Connect(serverssl)
 	if err != nil {

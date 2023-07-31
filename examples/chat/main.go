@@ -26,10 +26,11 @@ func main() {
 		recvKey := make(chan uint)
 		go listenKeys(c, ctx, recvKey)
 
+		envoi := make(chan []byte)
 		messageList := Messages{}
-		go startIRC(&messageList)
+		go startIRC(envoi, &messageList)
 
-		chat(c, ctx, recvKey, &messageList)
+		chat(c, ctx, recvKey, envoi, &messageList)
 	})
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)
@@ -76,7 +77,7 @@ func listenKeys(c *websocket.Conn, ctx context.Context, recvChan chan uint) {
 	}
 }
 
-func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint, messagesList *Messages) {
+func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint, envoi chan []byte, messagesList *Messages) {
 	userInput := []byte{}
 
 	for {
@@ -84,6 +85,7 @@ func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint, messagesLis
 		case key := <-recvKey:
 			if key == minigo.Envoi {
 				messagesList.AppendTeletelMessage("minitel", userInput)
+				envoi <- userInput
 
 				clearInput(c, ctx)
 				updateScreen(c, ctx, messagesList)

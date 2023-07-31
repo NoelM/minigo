@@ -96,8 +96,10 @@ func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint, envoi chan 
 				updateInput(c, ctx, userInput)
 
 			} else if key == minigo.Correction {
-				corrInput(c, ctx, len(userInput))
-				userInput = userInput[:len(userInput)-2]
+				if len(userInput) > 0 {
+					corrInput(c, ctx, len(userInput))
+					userInput = userInput[:len(userInput)-1]
+				}
 
 			} else if minigo.IsUintAValidChar(key) {
 				appendInput(c, ctx, len(userInput), byte(key))

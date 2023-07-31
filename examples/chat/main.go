@@ -27,6 +27,8 @@ func main() {
 		go listenKeys(c, ctx, recvKey)
 
 		messageList := Messages{}
+		go startIRC(&messageList)
+
 		chat(c, ctx, recvKey, &messageList)
 	})
 

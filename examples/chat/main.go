@@ -74,13 +74,14 @@ func listenKeys(c *websocket.Conn, ctx context.Context, recvChan chan uint) {
 }
 
 func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint) {
+	messageList := [][]byte{}
 	userInput := []byte{}
 
 	for {
 		select {
 		case key := <-recvKey:
 			if key == minigo.Envoi {
-				sendMessage(c, ctx, userInput)
+				sendMessage(c, ctx, userInput, messageList)
 				userInput = []byte{}
 
 			} else if minigo.IsUintAValidChar(key) {
@@ -99,12 +100,32 @@ func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint) {
 	}
 }
 
-func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte) {
+func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte, list [][]byte) {
+	list = append(list, msg)
+	currentLine := 1
+
 	buf := minigo.GetMoveCursorXY(1, 20)
 	buf = append(buf, minigo.GetCleanScreenFromCursor()...)
-	buf = append(buf, minigo.GetMoveCursorXY(0, 1)...)
-	buf = append(buf, msg...)
 	c.Write(ctx, websocket.MessageBinary, buf)
+
+	for i := len(list) - 1; i > 0; i -= 1 {
+		msgSize := len(list[i])/40 + 1
+		if currentLine+msgSize > 20 {
+			break
+		}
+
+		for j := currentLine; j <= currentLine+msgSize; j++ {
+			buf := append(buf, minigo.GetMoveCursorXY(0, j)...)
+			buf = append(buf, minigo.GetCleanLine()...)
+			c.Write(ctx, websocket.MessageBinary, buf)
+		}
+
+		buf := append(buf, minigo.GetMoveCursorXY(0, currentLine)...)
+		buf = append(buf, list[i]...)
+		c.Write(ctx, websocket.MessageBinary, buf)
+
+		currentLine += msgSize
+	}
 }
 
 func updateMessageInput(c *websocket.Conn, ctx context.Context, len int, key byte) {

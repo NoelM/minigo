@@ -182,7 +182,7 @@ func GetCleanLineToCursor() (buf []byte) {
 
 func EncodeChar(c int32) (byte, error) {
 	vdtByte := GetVideotextCharByte(byte(c))
-	if IsValidChar(vdtByte) {
+	if IsByteAValidChar(vdtByte) {
 		return vdtByte, nil
 	}
 	return 0, errors.New("invalid char byte")
@@ -245,42 +245,42 @@ func AppendCursorOff() byte {
 	return GetByteWithParity(CursorOff)
 }
 
-func ReadKey(readBuffer []byte) (done bool, value uint, err error) {
-	if readBuffer[0] == 0x19 {
-		if len(readBuffer) == 1 {
+func ReadKey(keyBuffer []byte) (done bool, value uint, err error) {
+	if keyBuffer[0] == 0x19 {
+		if len(keyBuffer) == 1 {
 			return
 		}
 
-		switch readBuffer[1] {
+		switch keyBuffer[1] {
 		case 0x23:
-			readBuffer = []byte{0xA3}
+			keyBuffer = []byte{0xA3}
 		case 0x27:
-			readBuffer = []byte{0xA7}
+			keyBuffer = []byte{0xA7}
 		case 0x30:
-			readBuffer = []byte{0xB0}
+			keyBuffer = []byte{0xB0}
 		case 0x31:
-			readBuffer = []byte{0xB1}
+			keyBuffer = []byte{0xB1}
 		case 0x38:
-			readBuffer = []byte{0xF7}
+			keyBuffer = []byte{0xF7}
 		case 0x7B:
-			readBuffer = []byte{0xDF}
+			keyBuffer = []byte{0xDF}
 		}
-	} else if readBuffer[0] == 0x13 {
-		if len(readBuffer) == 1 {
+	} else if keyBuffer[0] == 0x13 {
+		if len(keyBuffer) == 1 {
 			return
 		}
-	} else if readBuffer[0] == 0x1B {
-		if len(readBuffer) == 1 {
+	} else if keyBuffer[0] == 0x1B {
+		if len(keyBuffer) == 1 {
 			return
 		}
 
-		if readBuffer[1] == 0x5B {
-			if len(readBuffer) == 2 {
+		if keyBuffer[1] == 0x5B {
+			if len(keyBuffer) == 2 {
 				return
 			}
 
-			if readBuffer[2] == 0x34 || readBuffer[2] == 0x32 {
-				if len(readBuffer) == 3 {
+			if keyBuffer[2] == 0x34 || keyBuffer[2] == 0x32 {
+				if len(keyBuffer) == 3 {
 					return
 				}
 			}
@@ -289,15 +289,15 @@ func ReadKey(readBuffer []byte) (done bool, value uint, err error) {
 
 	done = true
 
-	switch len(readBuffer) {
+	switch len(keyBuffer) {
 	case 1:
-		return done, uint(readBuffer[0]), nil
+		return done, uint(keyBuffer[0]), nil
 	case 2:
-		return done, uint(binary.BigEndian.Uint16(readBuffer)), nil
+		return done, uint(binary.BigEndian.Uint16(keyBuffer)), nil
 	case 3:
-		return done, uint(binary.BigEndian.Uint32(readBuffer)), nil
+		return done, uint(binary.BigEndian.Uint32(keyBuffer)), nil
 	case 4:
-		return done, uint(binary.BigEndian.Uint64(readBuffer)), nil
+		return done, uint(binary.BigEndian.Uint64(keyBuffer)), nil
 	default:
 		return done, 0, errors.New("unable to cast readbuffer")
 	}

@@ -31,7 +31,7 @@ func main() {
 		messageList := Messages{}
 		go startIRC(string(nick), envoi, &messageList)
 
-		chatPage(&m, envoi, &messageList)
+		chatPage(&m, string(nick), envoi, &messageList)
 	})
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)

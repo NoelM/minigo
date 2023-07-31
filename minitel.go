@@ -79,6 +79,10 @@ func (m *Minitel) Reset() error {
 // CLEANS
 //
 
+func (m *Minitel) CleanLine() error {
+	return m.Send(GetCleanLine())
+}
+
 func (m *Minitel) CleanScreenFromCursor() error {
 	return m.Send(GetCleanLineFromCursor())
 }

@@ -2,12 +2,17 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/NoelM/minigo"
 )
 
-func chatPage(m *minigo.Minitel, envoi chan []byte, messagesList *Messages) {
+func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *Messages) {
 	userInput := []byte{}
+
+	m.WriteStringXY(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", nick))
+	time.Sleep(2 * time.Second)
+	m.CleanLine()
 
 	for {
 		select {

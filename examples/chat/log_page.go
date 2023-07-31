@@ -14,8 +14,7 @@ func logPage(m *minigo.Minitel) []byte {
 
 	m.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
 	m.WriteStringXY(10, 12, "PSEUDO : ")
-	m.Return(1)
-	m.CursorOn()
+	m.CursorOnXY(10, 13)
 
 	for {
 		select {
@@ -24,6 +23,7 @@ func logPage(m *minigo.Minitel) []byte {
 				if len(userInput) == 0 {
 					continue
 				}
+				m.Reset()
 				return userInput
 
 			} else if key == minigo.Correction {

@@ -26,7 +26,8 @@ func main() {
 		recvKey := make(chan uint)
 		go listenKeys(c, ctx, recvKey)
 
-		chat(c, ctx, recvKey)
+		messageList := Messages{}
+		chat(c, ctx, recvKey, &messageList)
 	})
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)
@@ -73,20 +74,31 @@ func listenKeys(c *websocket.Conn, ctx context.Context, recvChan chan uint) {
 	}
 }
 
-func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint) {
-	messageList := [][]byte{}
+func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint, messagesList *Messages) {
 	userInput := []byte{}
 
 	for {
 		select {
 		case key := <-recvKey:
 			if key == minigo.Envoi {
-				messageList = sendMessage(c, ctx, userInput, messageList)
+				messagesList.AppendTeletelMessage("minitel", userInput)
+
+				clearInput(c, ctx)
+				updateScreen(c, ctx, messagesList)
 				userInput = []byte{}
 
+			} else if key == minigo.Repetition {
+				updateScreen(c, ctx, messagesList)
+				updateInput(c, ctx, userInput)
+
+			} else if key == minigo.Correction {
+				corrInput(c, ctx, len(userInput))
+				userInput = userInput[:len(userInput)-2]
+
 			} else if minigo.IsUintAValidChar(key) {
-				updateMessageInput(c, ctx, len(userInput), byte(key))
+				appendInput(c, ctx, len(userInput), byte(key))
 				userInput = append(userInput, byte(key))
+
 			} else {
 				fmt.Printf("key: %d not supported", key)
 			}
@@ -98,40 +110,4 @@ func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint) {
 			return
 		}
 	}
-}
-
-func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte, list [][]byte) [][]byte {
-	list = append(list, msg)
-	currentLine := 1
-
-	buf := minigo.GetMoveCursorXY(1, 20)
-	buf = append(buf, minigo.GetCleanScreenFromCursor()...)
-	c.Write(ctx, websocket.MessageBinary, buf)
-
-	for i := len(list) - 1; i >= 0; i -= 1 {
-		msgSize := len(list[i])/40 + 2
-		if currentLine+msgSize > 20 {
-			break
-		}
-
-		buf := append(buf, minigo.GetMoveCursorXY(0, currentLine)...)
-		buf = append(buf, list[i]...)
-		buf = append(buf, minigo.GetCleanLineFromCursor()...)
-		buf = append(buf, minigo.GetMoveCursorReturn(1)...)
-		buf = append(buf, minigo.GetCleanLine()...)
-		c.Write(ctx, websocket.MessageBinary, buf)
-
-		currentLine += msgSize
-	}
-
-	return list
-}
-
-func updateMessageInput(c *websocket.Conn, ctx context.Context, len int, key byte) {
-	y := len / 40
-	x := len % 40
-
-	buf := minigo.GetMoveCursorXY(x+1, y+20)
-	buf = append(buf, key)
-	c.Write(ctx, websocket.MessageBinary, buf)
 }

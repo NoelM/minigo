@@ -10,9 +10,8 @@ import (
 const channel = "#minitel"
 const serverssl = "irc.libera.chat:7000"
 
-func startIRC(envoi chan []byte, messageList *Messages) {
-	ircnick1 := "minitel"
-	irccon := irc.IRC(ircnick1, "IRCTestSSL")
+func startIRC(nick string, envoi chan []byte, messageList *Messages) {
+	irccon := irc.IRC(nick, "IRCTestSSL")
 	irccon.UseTLS = true
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })

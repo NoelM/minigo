@@ -199,6 +199,10 @@ func EncodeMessage(msg string) (buf []byte) {
 	return
 }
 
+func EncodeSprintf(format string, a ...any) []byte {
+	return EncodeMessage(fmt.Sprintf(format, a...))
+}
+
 func EncodeAttribute(attribute byte) (buf []byte) {
 	buf = append(buf, GetByteWithParity(Esc), GetByteWithParity(attribute))
 	return

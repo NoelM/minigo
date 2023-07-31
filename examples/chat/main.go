@@ -109,19 +109,14 @@ func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte, list [][]by
 	c.Write(ctx, websocket.MessageBinary, buf)
 
 	for i := len(list) - 1; i >= 0; i -= 1 {
-		msgSize := len(list[i])/40 + 1
+		msgSize := len(list[i])/40 + 2
 		if currentLine+msgSize > 20 {
 			break
 		}
 
-		for j := currentLine; j <= currentLine+msgSize; j++ {
-			buf := append(buf, minigo.GetMoveCursorXY(0, j)...)
-			buf = append(buf, minigo.GetCleanLine()...)
-			c.Write(ctx, websocket.MessageBinary, buf)
-		}
-
 		buf := append(buf, minigo.GetMoveCursorXY(0, currentLine)...)
 		buf = append(buf, list[i]...)
+		buf = append(buf, minigo.GetCleanLineFromCursor()...)
 		c.Write(ctx, websocket.MessageBinary, buf)
 
 		currentLine += msgSize

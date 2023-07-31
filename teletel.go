@@ -1,6 +1,7 @@
 package minigo
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
@@ -181,7 +182,7 @@ func GetCleanLineToCursor() (buf []byte) {
 
 func EncodeChar(c int32) (byte, error) {
 	vdtByte := GetVideotextCharByte(byte(c))
-	if IsValidChar(vdtByte) {
+	if IsByteAValidChar(vdtByte) {
 		return vdtByte, nil
 	}
 	return 0, errors.New("invalid char byte")
@@ -242,4 +243,62 @@ func GetCursorOn() byte {
 
 func AppendCursorOff() byte {
 	return GetByteWithParity(CursorOff)
+}
+
+func ReadKey(keyBuffer []byte) (done bool, value uint, err error) {
+	if keyBuffer[0] == 0x19 {
+		if len(keyBuffer) == 1 {
+			return
+		}
+
+		switch keyBuffer[1] {
+		case 0x23:
+			keyBuffer = []byte{0xA3}
+		case 0x27:
+			keyBuffer = []byte{0xA7}
+		case 0x30:
+			keyBuffer = []byte{0xB0}
+		case 0x31:
+			keyBuffer = []byte{0xB1}
+		case 0x38:
+			keyBuffer = []byte{0xF7}
+		case 0x7B:
+			keyBuffer = []byte{0xDF}
+		}
+	} else if keyBuffer[0] == 0x13 {
+		if len(keyBuffer) == 1 {
+			return
+		}
+	} else if keyBuffer[0] == 0x1B {
+		if len(keyBuffer) == 1 {
+			return
+		}
+
+		if keyBuffer[1] == 0x5B {
+			if len(keyBuffer) == 2 {
+				return
+			}
+
+			if keyBuffer[2] == 0x34 || keyBuffer[2] == 0x32 {
+				if len(keyBuffer) == 3 {
+					return
+				}
+			}
+		}
+	}
+
+	done = true
+
+	switch len(keyBuffer) {
+	case 1:
+		return done, uint(keyBuffer[0]), nil
+	case 2:
+		return done, uint(binary.BigEndian.Uint16(keyBuffer)), nil
+	case 3:
+		return done, uint(binary.BigEndian.Uint32(keyBuffer)), nil
+	case 4:
+		return done, uint(binary.BigEndian.Uint64(keyBuffer)), nil
+	default:
+		return done, 0, errors.New("unable to cast readbuffer")
+	}
 }

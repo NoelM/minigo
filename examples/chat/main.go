@@ -117,6 +117,8 @@ func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte, list [][]by
 		buf := append(buf, minigo.GetMoveCursorXY(0, currentLine)...)
 		buf = append(buf, list[i]...)
 		buf = append(buf, minigo.GetCleanLineFromCursor()...)
+		buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+		buf = append(buf, minigo.GetCleanLine()...)
 		c.Write(ctx, websocket.MessageBinary, buf)
 
 		currentLine += msgSize

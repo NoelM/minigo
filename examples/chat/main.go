@@ -100,7 +100,9 @@ func chat(c *websocket.Conn, ctx context.Context, recvKey chan uint) {
 }
 
 func sendMessage(c *websocket.Conn, ctx context.Context, msg []byte) {
-	buf := minigo.GetMoveCursorXY(0, 1)
+	buf := minigo.GetMoveCursorXY(1, 20)
+	buf = append(buf, minigo.GetCleanScreenFromCursor()...)
+	buf = append(buf, minigo.GetMoveCursorXY(0, 1)...)
 	buf = append(buf, msg...)
 	c.Write(ctx, websocket.MessageBinary, buf)
 }
@@ -109,7 +111,7 @@ func updateMessageInput(c *websocket.Conn, ctx context.Context, len int, key byt
 	y := len / 40
 	x := len % 40
 
-	buf := minigo.GetMoveCursorXY(x, y+20)
+	buf := minigo.GetMoveCursorXY(x+1, y+20)
 	buf = append(buf, key)
 	c.Write(ctx, websocket.MessageBinary, buf)
 }

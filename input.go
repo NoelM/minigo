@@ -22,6 +22,10 @@ func NewInput(m *Minitel, refX, refY int, width, height int, pre string, cursor 
 }
 
 func (i *Input) clearScreen() {
+	if i.cursor {
+		i.m.CursorOff()
+	}
+
 	command := []byte{}
 
 	for row := 0; row < i.height; row += 1 {

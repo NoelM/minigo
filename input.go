@@ -35,18 +35,18 @@ func (i *Input) clearScreen() {
 	i.m.Send(command)
 }
 
-func (i *Input) getAbsoluteXY(offset int) (x, y int) {
+func (i *Input) getAbsoluteXY() (x, y int) {
 	totalLen := len(i.Value)
 	if len(i.pre) > 0 {
 		totalLen += len(i.pre) + 1
 	}
-	y = (totalLen+offset)/i.width + i.refY
-	x = (totalLen+offset)%i.width + i.refX
+	y = totalLen/i.width + i.refY
+	x = totalLen%i.width + i.refX
 	return
 }
 
 func (i *Input) AppendKey(key byte) {
-	x, y := i.getAbsoluteXY(0)
+	x, y := i.getAbsoluteXY()
 	i.Value = append(i.Value, key)
 
 	command := GetMoveCursorXY(x, y)
@@ -60,7 +60,7 @@ func (i *Input) Correction() {
 	}
 
 	i.Value = i.Value[:len(i.Value)-1]
-	x, y := i.getAbsoluteXY(0)
+	x, y := i.getAbsoluteXY()
 
 	command := GetMoveCursorXY(x, y)
 	command = append(command, GetCleanLineFromCursor()...)

@@ -2,6 +2,7 @@ package minigo
 
 import (
 	"context"
+	"fmt"
 
 	"nhooyr.io/websocket"
 )
@@ -59,6 +60,7 @@ func (m *Minitel) Listen() {
 		}
 
 		if m.ctx.Err() != nil {
+			fmt.Printf("minitel listen stop\n")
 			return
 		}
 	}

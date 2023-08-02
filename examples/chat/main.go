@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -22,16 +23,22 @@ func main() {
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 
+		fmt.Printf("new connection from: %s\n", r.RemoteAddr)
+
 		m := minigo.NewMinitel(c, ctx)
 		go m.Listen()
 
 		nick := logPage(&m)
 
 		envoi := make(chan []byte)
+		done := make(chan bool)
 		messageList := Messages{}
-		go startIRC(string(nick), envoi, &messageList)
+		go startIRC(string(nick), envoi, done, &messageList)
 
 		chatPage(&m, string(nick), envoi, &messageList)
+		done <- true
+
+		fmt.Printf("close connection from: %s", r.RemoteAddr)
 	})
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)

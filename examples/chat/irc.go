@@ -10,7 +10,7 @@ import (
 const channel = "#minitel"
 const serverssl = "irc.libera.chat:7000"
 
-func startIRC(nick string, envoi chan []byte, messageList *Messages) {
+func startIRC(nick string, envoi chan []byte, done chan bool, messageList *Messages) {
 	irccon := irc.IRC(nick, "IRCTestSSL")
 	irccon.UseTLS = true
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -30,6 +30,8 @@ func startIRC(nick string, envoi chan []byte, messageList *Messages) {
 			select {
 			case msg := <-envoi:
 				irccon.Privmsg(channel, string(msg))
+			case <-done:
+				irccon.Disconnect()
 			default:
 				continue
 			}
@@ -42,4 +44,6 @@ func startIRC(nick string, envoi chan []byte, messageList *Messages) {
 		return
 	}
 	irccon.Loop()
+
+	fmt.Println("disconnected from irc.libera.chat")
 }

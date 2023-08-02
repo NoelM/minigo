@@ -8,7 +8,7 @@ import (
 )
 
 func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *Messages) {
-	userInput := []byte{}
+	messageInput := minigo.NewInput(m, 1, InputLine, 40, 5, ">", true)
 
 	m.WriteStringXY(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", nick))
 	time.Sleep(2 * time.Second)
@@ -18,28 +18,23 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 		select {
 		case key := <-m.InKey:
 			if key == minigo.Envoi {
-				messagesList.AppendTeletelMessage("minitel", userInput)
-				envoi <- userInput
+				messagesList.AppendTeletelMessage("minitel", messageInput.Value)
+				envoi <- messageInput.Value
 
-				clearInput(m)
+				messageInput.Clear()
 				updateScreen(m, messagesList)
-				userInput = []byte{}
 
 				m.CursorOnXY(1, InputLine)
 
 			} else if key == minigo.Repetition {
 				updateScreen(m, messagesList)
-				updateInput(m, userInput)
+				messageInput.Print()
 
 			} else if key == minigo.Correction {
-				if len(userInput) > 0 {
-					corrInput(m, len(userInput))
-					userInput = userInput[:len(userInput)-1]
-				}
+				messageInput.Correction()
 
 			} else if minigo.IsUintAValidChar(key) {
-				appendInput(m, len(userInput), byte(key))
-				userInput = append(userInput, byte(key))
+				messageInput.AppendKey(byte(key))
 
 			} else {
 				fmt.Printf("key: %d not supported", key)
@@ -55,11 +50,6 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 }
 
 const InputLine = 22
-
-func clearInput(m *minigo.Minitel) {
-	m.CursorOff()
-	m.CleanScreenFromXY(1, InputLine)
-}
 
 func updateScreen(m *minigo.Minitel, list *Messages) {
 	currentLine := 1
@@ -98,26 +88,4 @@ func updateScreen(m *minigo.Minitel, list *Messages) {
 
 		currentLine += msgLines
 	}
-}
-
-func appendInput(m *minigo.Minitel, inputLen int, key byte) {
-	y := inputLen / 40
-	x := inputLen % 40
-
-	buf := minigo.GetMoveCursorXY(x+1, y+InputLine)
-	buf = append(buf, key)
-	m.Send(buf)
-}
-
-func corrInput(m *minigo.Minitel, inputLen int) {
-	y := (inputLen - 1) / 40
-	x := (inputLen - 1) % 40
-
-	buf := minigo.GetMoveCursorXY(x+1, y+InputLine)
-	buf = append(buf, minigo.GetCleanLineFromCursor()...)
-	m.Send(buf)
-}
-
-func updateInput(m *minigo.Minitel, userInput []byte) {
-	m.WriteBytesXY(1, InputLine, userInput)
 }

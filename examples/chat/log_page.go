@@ -7,7 +7,7 @@ import (
 )
 
 func logPage(m *minigo.Minitel) []byte {
-	userInput := []byte{}
+	nickInput := minigo.NewInput(m, 10, 13, 10, 1, "", true)
 
 	m.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
 	m.WriteStringXY(10, 10, "MINI-CHAT")
@@ -20,21 +20,17 @@ func logPage(m *minigo.Minitel) []byte {
 		select {
 		case key := <-m.InKey:
 			if key == minigo.Envoi {
-				if len(userInput) == 0 {
+				if len(nickInput.Value) == 0 {
 					continue
 				}
 				m.Reset()
-				return userInput
+				return nickInput.Value
 
 			} else if key == minigo.Correction {
-				if len(userInput) > 0 {
-					corrInput(m, len(userInput))
-					userInput = userInput[:len(userInput)-1]
-				}
+				nickInput.Correction()
 
 			} else if minigo.IsUintAValidChar(key) {
-				appendInput(m, len(userInput), byte(key))
-				userInput = append(userInput, byte(key))
+				nickInput.AppendKey(byte(key))
 
 			} else {
 				fmt.Printf("key: %d not supported", key)

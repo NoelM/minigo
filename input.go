@@ -4,7 +4,7 @@ type Input struct {
 	m             *Minitel
 	refX, refY    int
 	width, height int
-	buf           []byte
+	Value         []byte
 	pre           string
 	cursor        bool
 }
@@ -22,11 +22,11 @@ func NewInput(m *Minitel, refX, refY int, width, height int, pre string, cursor 
 }
 
 func (i *Input) AppendKey(key byte) {
-	totalLen := len(i.pre) + 1 + len(i.buf)
+	totalLen := len(i.pre) + 1 + len(i.Value)
 	locY := totalLen / i.width
 	locX := totalLen % i.width
 
-	i.buf = append(i.buf, key)
+	i.Value = append(i.Value, key)
 
 	command := GetMoveCursorXY(i.refX+locX+1, i.refY+locY+totalLen)
 	command = append(command, key)
@@ -34,22 +34,22 @@ func (i *Input) AppendKey(key byte) {
 }
 
 func (i *Input) Correction() {
-	if len(i.buf) == 0 {
+	if len(i.Value) == 0 {
 		return
 	}
 
-	totalLen := len(i.pre) + 1 + len(i.buf)
+	totalLen := len(i.pre) + 1 + len(i.Value)
 	locY := (totalLen - 1) / i.width
 	locX := (totalLen - 1) % i.width
 
-	i.buf = i.buf[:len(i.buf)-1]
+	i.Value = i.Value[:len(i.Value)-1]
 
 	command := GetMoveCursorXY(i.refX+locX+1, i.refY+locY)
 	command = append(command, GetCleanLineFromCursor()...)
 	i.m.Send(command)
 }
 
-func (i *Input) Print() {
+func (i *Input) clearScreen() {
 	command := []byte{}
 
 	for row := 0; row < i.height; row += 1 {
@@ -60,6 +60,17 @@ func (i *Input) Print() {
 	}
 	command = append(command, EncodeMessage(i.pre)...)
 	command = append(command, GetMoveCursorRight(1)...)
-	command = append(command, i.buf...)
+	command = append(command, []byte(i.pre)...)
+	command = append(command, GetMoveCursorRight(1)...)
 	i.m.Send(command)
+}
+
+func (i *Input) Print() {
+	i.clearScreen()
+	i.m.Send(i.Value)
+}
+
+func (i *Input) Clear() {
+	i.Value = []byte{}
+	i.clearScreen()
 }

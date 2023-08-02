@@ -127,6 +127,10 @@ func (m *Minitel) Return(n int) error {
 	return m.Send(GetMoveCursorReturn(n))
 }
 
+func (m *Minitel) MoveCursorDown(n int) error {
+	return m.Send(GetMoveCursorDown(n))
+}
+
 //
 // CURSORS
 //
@@ -143,4 +147,20 @@ func (m *Minitel) CursorOnXY(x, y int) error {
 
 func (m *Minitel) CursorOff() error {
 	return m.Send(EncodeAttribute(CursorOff))
+}
+
+//
+// PAGE
+//
+
+func (m *Minitel) RouleauOn() error {
+	buf, _ := GetProCode(2)
+	buf = append(buf, Start, Rouleau)
+	return m.Send(buf)
+}
+
+func (m *Minitel) RouleauOff() error {
+	buf, _ := GetProCode(2)
+	buf = append(buf, Stop, Rouleau)
+	return m.Send(buf)
 }

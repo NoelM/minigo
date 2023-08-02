@@ -15,6 +15,7 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 	m.CleanLine()
 
 	messageInput.Repetition()
+	m.RouleauOn()
 
 	for {
 		select {
@@ -23,8 +24,9 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 				messagesList.AppendTeletelMessage("minitel", messageInput.Value)
 				envoi <- messageInput.Value
 
+				updateRouleau(m, messageInput.Value)
 				messageInput.Clear()
-				updateScreen(m, messagesList)
+				//updateScreen(m, messagesList)
 
 				messageInput.Activate()
 
@@ -90,4 +92,12 @@ func updateScreen(m *minigo.Minitel, list *Messages) {
 
 		currentLine += msgLines
 	}
+}
+
+func updateRouleau(m *minigo.Minitel, message []byte) {
+	m.MoveCursorXY(1, 24)
+	m.MoveCursorDown(1)
+
+	m.MoveCursorXY(1, InputLine-1)
+	m.Send(message)
 }

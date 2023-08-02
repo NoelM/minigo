@@ -88,7 +88,7 @@ func (i *Input) Clear() {
 }
 
 func (i *Input) Activate() {
-	x, y := i.getAbsoluteXY(0)
+	x, y := i.getAbsoluteXY()
 	i.m.MoveCursorXY(x, y)
 	if i.cursor {
 		i.m.CursorOn()

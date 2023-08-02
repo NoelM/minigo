@@ -41,14 +41,13 @@ func (i *Input) getAbsoluteXY(offset int) (x, y int) {
 		totalLen += len(i.pre) + 1
 	}
 	y = (totalLen+offset)/i.width + i.refY
-	x = (totalLen+offset)%i.width + i.refX
+	x = (totalLen+offset)%i.width + i.refX + 1
 	return
 }
 
 func (i *Input) AppendKey(key byte) {
-	i.Value = append(i.Value, key)
-
 	x, y := i.getAbsoluteXY(0)
+	i.Value = append(i.Value, key)
 
 	command := GetMoveCursorXY(x, y)
 	command = append(command, key)
@@ -71,8 +70,11 @@ func (i *Input) Correction() {
 func (i *Input) Repetition() {
 	i.clearScreen()
 
-	x, y := i.getAbsoluteXY(0)
-	i.m.MoveCursorXY(x, y)
+	preOffset := 0
+	if len(i.pre) > 0 {
+		preOffset = len(i.pre) + 1
+	}
+	i.m.MoveCursorXY(i.refX+preOffset, i.refY)
 	i.m.Send(i.Value)
 
 	if i.cursor {

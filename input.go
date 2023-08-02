@@ -25,9 +25,9 @@ func (i *Input) clearScreen() {
 	command := []byte{}
 
 	for row := 0; row < i.height; row += 1 {
-		command = GetMoveCursorXY(i.refX, i.refY+row)
+		command = append(command, GetMoveCursorXY(i.refX, i.refY+row)...)
 		// TODO: handle input with a width < rowWidth
-		command = append(command, GetCleanScreenFromCursor()...)
+		command = append(command, GetCleanLineFromCursor()...)
 	}
 
 	command = append(command, GetMoveCursorXY(i.refX, i.refY)...)
@@ -41,7 +41,7 @@ func (i *Input) getAbsoluteXY(offset int) (x, y int) {
 		totalLen += len(i.pre) + 1
 	}
 	y = (totalLen+offset)/i.width + i.refY
-	x = (totalLen+offset)%i.width + i.refX + 1
+	x = (totalLen+offset)%i.width + i.refX
 	return
 }
 

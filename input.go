@@ -21,14 +21,32 @@ func NewInput(m *Minitel, refX, refY int, width, height int, pre string, cursor 
 	}
 }
 
-func (i *Input) AppendKey(key byte) {
-	totalLen := len(i.pre) + 1 + len(i.Value)
-	locY := totalLen / i.width
-	locX := totalLen % i.width
+func (i *Input) clearScreen() {
+	command := []byte{}
 
+	for row := 0; row < i.height; row += 1 {
+		command = GetMoveCursorXY(i.refX, i.refY+row)
+
+		// TODO: handle input with a width < rowWidth
+		command = append(command, GetCleanScreenFromCursor()...)
+	}
+	command = append(command, EncodeMessage(i.pre)...)
+	i.m.Send(command)
+}
+
+func (i *Input) getAbsoluteXY(offset int) (x, y int) {
+	totalLen := len(i.pre) + 1 + len(i.Value)
+	y = (totalLen+offset)/i.width + i.refY
+	x = (totalLen+offset)%i.width + i.refX
+	return
+}
+
+func (i *Input) AppendKey(key byte) {
 	i.Value = append(i.Value, key)
 
-	command := GetMoveCursorXY(i.refX+locX+1, i.refY+locY+totalLen)
+	x, y := i.getAbsoluteXY(0)
+
+	command := GetMoveCursorXY(x, y)
 	command = append(command, key)
 	i.m.Send(command)
 }
@@ -38,39 +56,35 @@ func (i *Input) Correction() {
 		return
 	}
 
-	totalLen := len(i.pre) + 1 + len(i.Value)
-	locY := (totalLen - 1) / i.width
-	locX := (totalLen - 1) % i.width
-
 	i.Value = i.Value[:len(i.Value)-1]
+	x, y := i.getAbsoluteXY(0)
 
-	command := GetMoveCursorXY(i.refX+locX+1, i.refY+locY)
+	command := GetMoveCursorXY(x, y)
 	command = append(command, GetCleanLineFromCursor()...)
 	i.m.Send(command)
 }
 
-func (i *Input) clearScreen() {
-	command := []byte{}
-
-	for row := 0; row < i.height; row += 1 {
-		command = GetMoveCursorXY(i.refX, i.refY)
-
-		// TODO: handle input with a width < rowWidth
-		command = append(command, GetCleanScreenFromCursor()...)
-	}
-	command = append(command, EncodeMessage(i.pre)...)
-	command = append(command, GetMoveCursorRight(1)...)
-	command = append(command, []byte(i.pre)...)
-	command = append(command, GetMoveCursorRight(1)...)
-	i.m.Send(command)
-}
-
-func (i *Input) Print() {
+func (i *Input) Repetition() {
 	i.clearScreen()
+
+	x, y := i.getAbsoluteXY(0)
+	i.m.MoveCursorXY(x, y)
 	i.m.Send(i.Value)
 }
 
 func (i *Input) Clear() {
 	i.Value = []byte{}
 	i.clearScreen()
+}
+
+func (i *Input) Activate() {
+	x, y := i.getAbsoluteXY(0)
+	i.m.MoveCursorXY(x, y)
+	if i.cursor {
+		i.m.CursorOn()
+	}
+}
+
+func (i *Input) Deactivate() {
+	i.m.CursorOff()
 }

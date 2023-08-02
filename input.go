@@ -21,7 +21,7 @@ func NewInput(m *Minitel, refX, refY int, width, height int, pre string, cursor 
 	}
 }
 
-func (i *Input) clearScreen() {
+func (i *Input) clearInputOnScreen() {
 	if i.cursor {
 		i.m.CursorOff()
 	}
@@ -72,7 +72,7 @@ func (i *Input) Correction() {
 }
 
 func (i *Input) Repetition() {
-	i.clearScreen()
+	i.clearInputOnScreen()
 
 	preOffset := 0
 	if len(i.pre) > 0 {
@@ -88,7 +88,7 @@ func (i *Input) Repetition() {
 
 func (i *Input) Clear() {
 	i.Value = []byte{}
-	i.clearScreen()
+	i.clearInputOnScreen()
 }
 
 func (i *Input) Activate() {

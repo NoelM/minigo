@@ -60,7 +60,7 @@ func updateScreen(m *minigo.Minitel, list *Messages, lastId *int) {
 	defer list.Mtx.RUnlock()
 
 	m.CursorOff()
-	for i := *lastId - 1; i < len(list.List); i += 1 {
+	for i := *lastId; i < len(list.List); i += 1 {
 		// 3 because the format is: "nick > text"
 		msgLen := len(list.List[i].Nick) + len(list.List[i].Text) + 3
 

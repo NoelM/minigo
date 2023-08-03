@@ -34,6 +34,7 @@ func NewMinitel(conn *websocket.Conn, ctx context.Context) Minitel {
 	return Minitel{
 		conn:  conn,
 		ctx:   ctx,
+		quit:  false,
 		InKey: make(chan uint),
 	}
 }

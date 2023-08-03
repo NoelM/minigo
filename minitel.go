@@ -18,11 +18,11 @@ const (
 
 type Minitel struct {
 	InKey chan uint
+	Quit  chan bool
 
 	conn    *websocket.Conn
 	ctx     context.Context
 	ackType AckType
-	quit    bool
 
 	terminalByte       byte
 	vitesseByte        byte
@@ -34,13 +34,9 @@ func NewMinitel(conn *websocket.Conn, ctx context.Context) Minitel {
 	return Minitel{
 		conn:  conn,
 		ctx:   ctx,
-		quit:  false,
 		InKey: make(chan uint),
+		Quit:  make(chan bool),
 	}
-}
-
-func (m *Minitel) Quitting() bool {
-	return m.quit
 }
 
 func (m *Minitel) ContextError() error {
@@ -101,7 +97,7 @@ func (m *Minitel) Listen() {
 				websocket.CloseStatus(err) == websocket.StatusNormalClosure {
 				fmt.Printf("[minigo] %s listen stop: %s\n", time.Now().Format(time.RFC3339), err.Error())
 
-				m.quit = true
+				m.Quit <- true
 				return
 			}
 			fullRead = false

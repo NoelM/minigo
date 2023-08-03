@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/NoelM/minigo"
 	irc "github.com/thoj/go-ircevent"
 )
 
 const channel = "#minitel"
 const serverssl = "irc.libera.chat:7000"
 
-func ircLoop(m *minigo.Minitel, nick string, envoi chan []byte, messageList *Messages) {
+func ircLoop(nick string, quit chan bool, envoi chan []byte, messageList *Messages) {
 	irccon := irc.IRC(nick, "IRCTestSSL")
 	irccon.UseTLS = true
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -26,15 +25,16 @@ func ircLoop(m *minigo.Minitel, nick string, envoi chan []byte, messageList *Mes
 	})
 
 	go func() {
-		for !m.Quitting() {
+		for {
 			select {
 			case msg := <-envoi:
 				irccon.Privmsg(channel, string(msg))
+			case <-quit:
+				irccon.Quit()
 			default:
 				continue
 			}
 		}
-		irccon.Quit()
 	}()
 
 	err := irccon.Connect(serverssl)

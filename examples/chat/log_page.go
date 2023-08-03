@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/NoelM/minigo"
 )
 
@@ -21,9 +19,12 @@ func logPage(m *minigo.Minitel) []byte {
 		case key := <-m.RecvKey:
 			if key == minigo.Envoi {
 				if len(nickInput.Value) == 0 {
+					warnLog.Println("Empty nick input")
 					continue
 				}
 				m.Reset()
+
+				infoLog.Printf("Logged as: %s\n", nickInput.Value)
 				return nickInput.Value
 
 			} else if key == minigo.Correction {
@@ -33,10 +34,13 @@ func logPage(m *minigo.Minitel) []byte {
 				nickInput.AppendKey(byte(key))
 
 			} else {
-				fmt.Printf("key: %d not supported", key)
+				errorLog.Printf("Not supported key: %d\n", key)
 			}
+
 		case <-m.Quit:
+			warnLog.Println("Quitting log page")
 			return nil
+
 		default:
 			continue
 		}

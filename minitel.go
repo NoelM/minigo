@@ -3,10 +3,15 @@ package minigo
 import (
 	"context"
 	"fmt"
-	"time"
+	"log"
+	"os"
 
 	"nhooyr.io/websocket"
 )
+
+var infoLog = log.New(os.Stdout, "[minigo] INFO:", log.Ldate|log.LUTC)
+var warnLog = log.New(os.Stdout, "[minigo] WARN:", log.Ldate|log.LUTC)
+var errorLog = log.New(os.Stdout, "[minigo] ERROR:", log.Ldate|log.LUTC)
 
 type AckType uint
 
@@ -70,9 +75,10 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 	}
 
 	if !ok {
-		err = fmt.Errorf("not verified for acknowledgment: %d", m.ackType)
+		err = fmt.Errorf("not verified for acknowledgment ackType=%d", m.ackType)
+		errorLog.Panicln(err.Error())
 	} else {
-		fmt.Printf("verified acknowledgement for: %d\n", m.ackType)
+		infoLog.Printf("verified acknowledgement ackType=%d\n", m.ackType)
 	}
 
 	m.ackType = NoAck
@@ -93,13 +99,17 @@ func (m *Minitel) Listen() {
 
 		if fullRead {
 			_, wsMsg, err = m.conn.Read(m.ctx)
-			if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure ||
-				websocket.CloseStatus(err) == websocket.StatusNormalClosure {
-				fmt.Printf("[minigo] %s listen stop: %s\n", time.Now().Format(time.RFC3339), err.Error())
+			if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure {
+				warnLog.Printf("Stop minitel listen: Closed WS connection: %s\n", err.Error())
+				m.Quit <- true
+				return
 
+			} else if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
+				infoLog.Printf("Stop minitel listen: Closed WS connection: %s\n", err.Error())
 				m.Quit <- true
 				return
 			}
+
 			fullRead = false
 		}
 
@@ -108,14 +118,16 @@ func (m *Minitel) Listen() {
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
 			if err != nil {
+				errorLog.Printf("Unable to read key=%x: %s\n", keyBuffer, err.Error())
 				keyBuffer = []byte{}
 			}
 
 			if done {
 				if pro {
+					infoLog.Printf("Recieved procode=%x\n", keyBuffer)
 					err = m.ackChecker(keyBuffer)
 					if err != nil {
-						fmt.Println(err.Error())
+						errorLog.Printf("Unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
 					}
 				} else {
 					m.RecvKey <- keyValue

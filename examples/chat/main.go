@@ -2,28 +2,32 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/NoelM/minigo"
 	"nhooyr.io/websocket"
 )
 
+var infoLog = log.New(os.Stdout, "[MINICHAT] INFO:", log.Ldate|log.LUTC)
+var warnLog = log.New(os.Stdout, "[MINICHAT] WARN:", log.Ldate|log.LUTC)
+var errorLog = log.New(os.Stdout, "[MINICHAT] ERROR:", log.Ldate|log.LUTC)
+
 func main() {
+
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 		if err != nil {
-			log.Println(err)
+			errorLog.Printf("Unable to open WS connection: %s\n", err.Error())
 			return
 		}
 		defer c.Close(websocket.StatusInternalError, "the sky is falling")
+		infoLog.Printf("New connection from IP=%s\n", r.RemoteAddr)
 
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
-
-		fmt.Printf("[chat] %s new connection from: %s\n", time.Now().Format(time.RFC3339), r.RemoteAddr)
 
 		m := minigo.NewMinitel(c, ctx)
 		go m.Listen()
@@ -36,7 +40,7 @@ func main() {
 		chatPage(m, ircDvr)
 		ircDvr.Quit()
 
-		fmt.Printf("close connection from: %s", r.RemoteAddr)
+		infoLog.Printf("Minitel session closed for IP=%s nick=%s\n", r.RemoteAddr, nick)
 	})
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)

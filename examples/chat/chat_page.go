@@ -8,6 +8,8 @@ import (
 )
 
 func chatPage(m *minigo.Minitel, ircDvr *IrcDriver) {
+	infoLog.Printf("Opening chat page for nick=%s\n", ircDvr.Nick)
+
 	messages := []Message{}
 	messageInput := minigo.NewInput(m, 1, InputLine, 40, 5, ">", true)
 
@@ -32,12 +34,16 @@ func chatPage(m *minigo.Minitel, ircDvr *IrcDriver) {
 				messages = append(messages, msg)
 				ircDvr.SendMessage <- msg
 
+				infoLog.Printf("Send new message to IRC from nick=%s len=%d\n", ircDvr.Nick, len(msg.Text))
+
 				messageInput.Clear()
 				updateScreen(m, messages, &lastId)
 
 				messageInput.Repetition()
 
 			} else if key == minigo.Repetition {
+				infoLog.Printf("User nick=%s asked for a refresh\n", ircDvr.Nick)
+
 				messageInput.ClearScreen()
 				updateScreen(m, messages, &lastId)
 				messageInput.Repetition()
@@ -49,13 +55,16 @@ func chatPage(m *minigo.Minitel, ircDvr *IrcDriver) {
 				messageInput.AppendKey(byte(key))
 
 			} else {
-				fmt.Printf("key: %d not supported", key)
+				errorLog.Printf("Not supported key: %d\n", key)
 			}
+
 		case msg := <-ircDvr.RecvMessage:
 			messages = append(messages, msg)
+
 		case <-m.Quit:
-			fmt.Printf("[chat] %s user=%s disconnected chat page\n", ircDvr.Nick, time.Now().Format(time.RFC3339))
+			warnLog.Printf("Quitting chatpage for nick: %s\n", ircDvr.Nick)
 			return
+
 		default:
 			continue
 		}

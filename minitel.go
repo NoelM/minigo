@@ -219,7 +219,7 @@ func (m *Minitel) CursorOff() error {
 func (m *Minitel) RouleauOn() error {
 	m.ackType = AckRouleau
 
-	buf, _ := GetProCode(2)
+	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Start, Rouleau)
 	return m.Send(buf)
 }
@@ -227,7 +227,7 @@ func (m *Minitel) RouleauOn() error {
 func (m *Minitel) RouleauOff() error {
 	m.ackType = AckPage
 
-	buf, _ := GetProCode(2)
+	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Stop, Rouleau)
 	return m.Send(buf)
 }

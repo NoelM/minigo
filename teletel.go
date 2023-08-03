@@ -293,11 +293,10 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
 				return
 			}
 			// PRO2, RESP BYTE, STATUS BYTE
-			pro = true
+			done, pro = true, true
+			return
 		}
 	}
-
-	done = true
 
 	switch len(keyBuffer) {
 	case 1:
@@ -312,5 +311,6 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
 		err = errors.New("unable to cast readbuffer")
 	}
 
+	done = true
 	return
 }

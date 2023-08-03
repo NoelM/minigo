@@ -28,7 +28,7 @@ func main() {
 		m := minigo.NewMinitel(c, ctx)
 		go m.Listen()
 
-		rouleau(&m)
+		rouleau(m)
 	})
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)

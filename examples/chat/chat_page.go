@@ -7,10 +7,11 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *Messages) {
+func chatPage(m *minigo.Minitel, ircDvr *IrcDriver) {
+	messages := []Message{}
 	messageInput := minigo.NewInput(m, 1, InputLine, 40, 5, ">", true)
 
-	m.WriteStringXY(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", nick))
+	m.WriteStringXY(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", ircDvr.Nick))
 	time.Sleep(2 * time.Second)
 	m.CleanLine()
 
@@ -20,19 +21,25 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 	lastId := 0
 	for {
 		select {
-		case key := <-m.InKey:
+		case key := <-m.RecvKey:
 			if key == minigo.Envoi {
-				messagesList.AppendTeletelMessage(nick, messageInput.Value)
-				envoi <- messageInput.Value
+				msg := Message{
+					Nick: ircDvr.Nick,
+					Text: string(messageInput.Value),
+					Type: Message_Teletel,
+					Time: time.Now(),
+				}
+				messages = append(messages, msg)
+				ircDvr.SendMessage <- msg
 
 				messageInput.Clear()
-				updateScreen(m, messagesList, &lastId)
+				updateScreen(m, messages, &lastId)
 
 				messageInput.Repetition()
 
 			} else if key == minigo.Repetition {
 				messageInput.ClearScreen()
-				updateScreen(m, messagesList, &lastId)
+				updateScreen(m, messages, &lastId)
 				messageInput.Repetition()
 
 			} else if key == minigo.Correction {
@@ -44,8 +51,10 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 			} else {
 				fmt.Printf("key: %d not supported", key)
 			}
+		case msg := <-ircDvr.RecvMessage:
+			messages = append(messages, msg)
 		case <-m.Quit:
-			fmt.Printf("[chat] %s user=%s disconnected chat page\n", nick, time.Now().Format(time.RFC3339))
+			fmt.Printf("[chat] %s user=%s disconnected chat page\n", ircDvr.Nick, time.Now().Format(time.RFC3339))
 			return
 		default:
 			continue
@@ -55,14 +64,11 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 
 const InputLine = 22
 
-func updateScreen(m *minigo.Minitel, list *Messages, lastId *int) {
-	list.Mtx.RLock()
-	defer list.Mtx.RUnlock()
-
+func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 	m.CursorOff()
-	for i := *lastId; i < len(list.List); i += 1 {
+	for i := *lastId; i < len(list); i += 1 {
 		// 3 because the format is: "nick > text"
-		msgLen := len(list.List[i].Nick) + len(list.List[i].Text) + 3
+		msgLen := len(list[i].Nick) + len(list[i].Text) + 3
 
 		// 2 because if msgLen < 40, the division gives 0 and one breaks another line for readability
 		// nick > text
@@ -75,15 +81,15 @@ func updateScreen(m *minigo.Minitel, list *Messages, lastId *int) {
 			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 		}
 		buf = append(buf, minigo.GetMoveCursorXY(1, InputLine-msgLines)...)
-		buf = append(buf, minigo.EncodeSprintf("%s > ", list.List[i].Nick)...)
+		buf = append(buf, minigo.EncodeSprintf("%s > ", list[i].Nick)...)
 
-		if list.List[i].Type == Message_Teletel {
-			buf = append(buf, list.List[i].Text...)
+		if list[i].Type == Message_Teletel {
+			buf = append(buf, list[i].Text...)
 		} else {
-			buf = append(buf, minigo.EncodeMessage(list.List[i].Text)...)
+			buf = append(buf, minigo.EncodeMessage(list[i].Text)...)
 		}
 		m.Send(buf)
 	}
 
-	*lastId = len(list.List)
+	*lastId = len(list)
 }

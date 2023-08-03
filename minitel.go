@@ -17,8 +17,8 @@ const (
 )
 
 type Minitel struct {
-	InKey chan uint
-	Quit  chan bool
+	RecvKey chan uint
+	Quit    chan bool
 
 	conn    *websocket.Conn
 	ctx     context.Context
@@ -30,12 +30,12 @@ type Minitel struct {
 	protocoleByte      byte
 }
 
-func NewMinitel(conn *websocket.Conn, ctx context.Context) Minitel {
-	return Minitel{
-		conn:  conn,
-		ctx:   ctx,
-		InKey: make(chan uint),
-		Quit:  make(chan bool),
+func NewMinitel(conn *websocket.Conn, ctx context.Context) *Minitel {
+	return &Minitel{
+		conn:    conn,
+		ctx:     ctx,
+		RecvKey: make(chan uint),
+		Quit:    make(chan bool),
 	}
 }
 
@@ -118,7 +118,7 @@ func (m *Minitel) Listen() {
 						fmt.Println(err.Error())
 					}
 				} else {
-					m.InKey <- keyValue
+					m.RecvKey <- keyValue
 				}
 
 				keyBuffer = []byte{}

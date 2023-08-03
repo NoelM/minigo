@@ -28,15 +28,13 @@ func main() {
 		m := minigo.NewMinitel(c, ctx)
 		go m.Listen()
 
-		nick := logPage(&m)
+		nick := logPage(m)
 
-		envoi := make(chan []byte)
-		quit := make(chan bool)
-		messageList := Messages{}
-		go ircLoop(string(nick), quit, envoi, &messageList)
+		ircDvr := NewIrcDriver(string(nick))
+		ircDvr.Loop()
 
-		chatPage(&m, string(nick), envoi, &messageList)
-		quit <- true
+		chatPage(m, ircDvr)
+		ircDvr.Quit()
 
 		fmt.Printf("close connection from: %s", r.RemoteAddr)
 	})

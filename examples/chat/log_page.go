@@ -18,7 +18,7 @@ func logPage(m *minigo.Minitel) []byte {
 
 	for {
 		select {
-		case key := <-m.InKey:
+		case key := <-m.RecvKey:
 			if key == minigo.Envoi {
 				if len(nickInput.Value) == 0 {
 					continue
@@ -35,12 +35,10 @@ func logPage(m *minigo.Minitel) []byte {
 			} else {
 				fmt.Printf("key: %d not supported", key)
 			}
+		case <-m.Quit:
+			return nil
 		default:
 			continue
-		}
-
-		if m.ContextError() != nil {
-			return nil
 		}
 	}
 }

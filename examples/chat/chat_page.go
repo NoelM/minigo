@@ -44,7 +44,6 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 			} else {
 				fmt.Printf("key: %d not supported", key)
 			}
-			return
 		default:
 			continue
 		}

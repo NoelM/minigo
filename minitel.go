@@ -7,10 +7,25 @@ import (
 	"nhooyr.io/websocket"
 )
 
+type AckType uint
+
+const (
+	NoAck = iota
+	AckRouleau
+	AckPage
+)
+
 type Minitel struct {
-	conn  *websocket.Conn
-	ctx   context.Context
 	InKey chan uint
+
+	conn    *websocket.Conn
+	ctx     context.Context
+	ackType AckType
+
+	terminalByte       byte
+	vitesseByte        byte
+	fonctionnementByte byte
+	protocoleByte      byte
 }
 
 func NewMinitel(conn *websocket.Conn, ctx context.Context) Minitel {
@@ -25,11 +40,43 @@ func (m *Minitel) ContextError() error {
 	return m.ctx.Err()
 }
 
+func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
+	switch keyBuffer[2] {
+	case Terminal:
+		m.terminalByte = keyBuffer[3]
+	case Fonctionnement:
+		m.fonctionnementByte = keyBuffer[3]
+	case Vitesse:
+		m.vitesseByte = keyBuffer[3]
+	case Protocole:
+		m.protocoleByte = keyBuffer[3]
+	default:
+		return
+	}
+
+	ok := false
+	switch m.ackType {
+	case AckRouleau:
+		ok = BitReadAt(m.fonctionnementByte, 6)
+	case AckPage:
+		ok = !BitReadAt(m.fonctionnementByte, 6)
+	default:
+		return
+	}
+
+	if !ok {
+		return fmt.Errorf("not verified for acknowledgment: %d", m.ackType)
+	}
+	return
+}
+
 func (m *Minitel) Listen() {
 	fullRead := true
 	var keyBuffer []byte
 	var keyValue uint
+
 	var done bool
+	var pro bool
 
 	for {
 		var err error
@@ -46,12 +93,22 @@ func (m *Minitel) Listen() {
 		for id, b := range wsMsg {
 			keyBuffer = append(keyBuffer, b)
 
-			done, keyValue, err = ReadKey(keyBuffer)
-			if done || err != nil {
+			done, pro, keyValue, err = ReadKey(keyBuffer)
+			if err != nil {
 				keyBuffer = []byte{}
 			}
+
 			if done {
-				m.InKey <- keyValue
+				if pro {
+					err = m.ackChecker(keyBuffer)
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+				} else {
+					m.InKey <- keyValue
+				}
+
+				keyBuffer = []byte{}
 			}
 
 			if id == len(wsMsg)-1 {
@@ -150,16 +207,20 @@ func (m *Minitel) CursorOff() error {
 }
 
 //
-// PAGE
+// MODE PAGE OU ROULEAU
 //
 
 func (m *Minitel) RouleauOn() error {
+	m.ackType = AckRouleau
+
 	buf, _ := GetProCode(2)
 	buf = append(buf, Start, Rouleau)
 	return m.Send(buf)
 }
 
 func (m *Minitel) RouleauOff() error {
+	m.ackType = AckPage
+
 	buf, _ := GetProCode(2)
 	buf = append(buf, Stop, Rouleau)
 	return m.Send(buf)

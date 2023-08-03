@@ -266,6 +266,13 @@ const (
 	Pro3 = 0x3B
 )
 
+const (
+	Terminal       = 0x71
+	Fonctionnement = 0x73
+	Vitesse        = 0x75
+	Protocole      = 0x77
+)
+
 // Correspondance ASCII / Videotex
 const CharTable = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_xabcdefghijklmnopqrstuvwxyz"
 

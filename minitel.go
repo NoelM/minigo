@@ -51,6 +51,7 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 	case Protocole:
 		m.protocoleByte = keyBuffer[3]
 	default:
+		fmt.Printf("not handled response byte: %x\n", keyBuffer[3])
 		return
 	}
 
@@ -61,12 +62,17 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 	case AckPage:
 		ok = !BitReadAt(m.fonctionnementByte, 6)
 	default:
+		fmt.Printf("not handled AckType: %d\n", m.ackType)
 		return
 	}
 
 	if !ok {
-		return fmt.Errorf("not verified for acknowledgment: %d", m.ackType)
+		err = fmt.Errorf("not verified for acknowledgment: %d", m.ackType)
+	} else {
+		fmt.Printf("verified acknowledgement for: %d\n", m.ackType)
 	}
+
+	m.ackType = NoAck
 	return
 }
 

@@ -273,7 +273,7 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
 		if len(keyBuffer) == 1 {
 			return
 		}
-	} else if keyBuffer[0] == 0x1B {
+	} else if keyBuffer[0] == Esc {
 		if len(keyBuffer) == 1 {
 			return
 		}
@@ -289,16 +289,11 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
 				}
 			}
 		} else if keyBuffer[1] == Pro2 { // PRO2 = ESC + 0x3A
-			if len(keyBuffer) == 2 {
+			if len(keyBuffer) < 4 {
 				return
 			}
-
-			if keyBuffer[2] == Terminal || keyBuffer[2] == Fonctionnement || keyBuffer[2] == Vitesse || keyBuffer[2] == Protocole {
-				if len(keyBuffer) == 3 {
-					return
-				}
-				pro = true
-			}
+			// PRO2, RESP BYTE, STATUS BYTE
+			pro = true
 		}
 	}
 

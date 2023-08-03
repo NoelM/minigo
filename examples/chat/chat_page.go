@@ -18,11 +18,11 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 	m.RouleauOn()
 
 	lastId := 0
-	for {
+	for !m.Quitting() {
 		select {
 		case key := <-m.InKey:
 			if key == minigo.Envoi {
-				messagesList.AppendTeletelMessage("minitel", messageInput.Value)
+				messagesList.AppendTeletelMessage(nick, messageInput.Value)
 				envoi <- messageInput.Value
 
 				messageInput.Clear()
@@ -44,13 +44,13 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 			} else {
 				fmt.Printf("key: %d not supported", key)
 			}
-		case <-m.Closed:
-			fmt.Printf("closed chat page\n")
 			return
 		default:
 			continue
 		}
 	}
+
+	fmt.Printf("[chat] %s user=%s disconnected chat page\n", nick, time.Now().Format(time.RFC3339))
 }
 
 const InputLine = 22

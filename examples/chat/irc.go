@@ -3,14 +3,16 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"time"
 
+	"github.com/NoelM/minigo"
 	irc "github.com/thoj/go-ircevent"
 )
 
 const channel = "#minitel"
 const serverssl = "irc.libera.chat:7000"
 
-func startIRC(nick string, envoi chan []byte, done chan bool, messageList *Messages) {
+func ircLoop(m *minigo.Minitel, nick string, envoi chan []byte, messageList *Messages) {
 	irccon := irc.IRC(nick, "IRCTestSSL")
 	irccon.UseTLS = true
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -20,22 +22,19 @@ func startIRC(nick string, envoi chan []byte, done chan bool, messageList *Messa
 	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
 		msg := event.Message()
 		nick := event.Nick
-
 		messageList.AppendMessage(nick, msg)
-		fmt.Printf("%s: %s\n", nick, msg)
 	})
 
 	go func() {
-		for {
+		for !m.Quitting() {
 			select {
 			case msg := <-envoi:
 				irccon.Privmsg(channel, string(msg))
-			case <-done:
-				irccon.Disconnect()
 			default:
 				continue
 			}
 		}
+		irccon.Quit()
 	}()
 
 	err := irccon.Connect(serverssl)
@@ -45,5 +44,5 @@ func startIRC(nick string, envoi chan []byte, done chan bool, messageList *Messa
 	}
 	irccon.Loop()
 
-	fmt.Println("disconnected from irc.libera.chat")
+	fmt.Printf("[chat] %s disconnected from: irc.libera.chat\n", time.Now().Format(time.RFC3339))
 }

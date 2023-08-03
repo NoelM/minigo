@@ -23,7 +23,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 
-		fmt.Printf("new connection from: %s\n", r.RemoteAddr)
+		fmt.Printf("[chat] %s new connection from: %s\n", time.Now().Format(time.RFC3339), r.RemoteAddr)
 
 		m := minigo.NewMinitel(c, ctx)
 		go m.Listen()
@@ -32,7 +32,7 @@ func main() {
 
 		envoi := make(chan []byte)
 		messageList := Messages{}
-		go startIRC(string(nick), envoi, m.Closed, &messageList)
+		go ircLoop(&m, string(nick), envoi, &messageList)
 
 		chatPage(&m, string(nick), envoi, &messageList)
 

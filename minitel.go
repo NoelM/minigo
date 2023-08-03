@@ -3,6 +3,7 @@ package minigo
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"nhooyr.io/websocket"
 )
@@ -16,12 +17,12 @@ const (
 )
 
 type Minitel struct {
-	InKey  chan uint
-	Closed chan bool
+	InKey chan uint
 
 	conn    *websocket.Conn
 	ctx     context.Context
 	ackType AckType
+	quit    bool
 
 	terminalByte       byte
 	vitesseByte        byte
@@ -31,11 +32,14 @@ type Minitel struct {
 
 func NewMinitel(conn *websocket.Conn, ctx context.Context) Minitel {
 	return Minitel{
-		conn:   conn,
-		ctx:    ctx,
-		InKey:  make(chan uint),
-		Closed: make(chan bool),
+		conn:  conn,
+		ctx:   ctx,
+		InKey: make(chan uint),
 	}
+}
+
+func (m *Minitel) Quitting() bool {
+	return m.quit
 }
 
 func (m *Minitel) ContextError() error {
@@ -94,8 +98,9 @@ func (m *Minitel) Listen() {
 			_, wsMsg, err = m.conn.Read(m.ctx)
 			if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure ||
 				websocket.CloseStatus(err) == websocket.StatusNormalClosure {
-				fmt.Printf("minitel listen stop\n")
-				m.Closed <- true
+				fmt.Printf("[minigo] %s listen stop: %s\n", time.Now().Format(time.RFC3339), err.Error())
+
+				m.quit = true
 				return
 			}
 			fullRead = false

@@ -71,7 +71,9 @@ func updateScreen(m *minigo.Minitel, list *Messages, lastId *int) {
 		msgLines := msgLen/40 + 2
 
 		buf := minigo.GetMoveCursorXY(1, 24)
-		buf = append(buf, minigo.GetMoveCursorReturn(msgLines)...)
+		for k := 0; k < msgLines; k += 1 {
+			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+		}
 		buf = append(buf, minigo.GetMoveCursorXY(1, InputLine-msgLines)...)
 		buf = append(buf, minigo.EncodeSprintf("%s > ", list.List[i].Nick)...)
 

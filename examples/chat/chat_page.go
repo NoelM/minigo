@@ -44,12 +44,11 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 			} else {
 				fmt.Printf("key: %d not supported", key)
 			}
+		case <-m.Closed:
+			fmt.Printf("closed chat page\n")
+			return
 		default:
 			continue
-		}
-
-		if m.ContextError() != nil {
-			return
 		}
 	}
 }

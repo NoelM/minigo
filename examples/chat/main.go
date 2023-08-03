@@ -31,12 +31,10 @@ func main() {
 		nick := logPage(&m)
 
 		envoi := make(chan []byte)
-		done := make(chan bool)
 		messageList := Messages{}
-		go startIRC(string(nick), envoi, done, &messageList)
+		go startIRC(string(nick), envoi, m.Closed, &messageList)
 
 		chatPage(&m, string(nick), envoi, &messageList)
-		done <- true
 
 		fmt.Printf("close connection from: %s", r.RemoteAddr)
 	})

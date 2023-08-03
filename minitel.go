@@ -16,7 +16,8 @@ const (
 )
 
 type Minitel struct {
-	InKey chan uint
+	InKey  chan uint
+	Closed chan bool
 
 	conn    *websocket.Conn
 	ctx     context.Context
@@ -30,9 +31,10 @@ type Minitel struct {
 
 func NewMinitel(conn *websocket.Conn, ctx context.Context) Minitel {
 	return Minitel{
-		conn:  conn,
-		ctx:   ctx,
-		InKey: make(chan uint),
+		conn:   conn,
+		ctx:    ctx,
+		InKey:  make(chan uint),
+		Closed: make(chan bool),
 	}
 }
 
@@ -90,8 +92,11 @@ func (m *Minitel) Listen() {
 
 		if fullRead {
 			_, wsMsg, err = m.conn.Read(m.ctx)
-			if err != nil {
-				continue
+			if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure ||
+				websocket.CloseStatus(err) == websocket.StatusNormalClosure {
+				fmt.Printf("minitel listen stop\n")
+				m.Closed <- true
+				return
 			}
 			fullRead = false
 		}
@@ -120,11 +125,6 @@ func (m *Minitel) Listen() {
 			if id == len(wsMsg)-1 {
 				fullRead = true
 			}
-		}
-
-		if m.ctx.Err() != nil {
-			fmt.Printf("minitel listen stop\n")
-			return
 		}
 	}
 }

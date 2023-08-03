@@ -62,7 +62,11 @@ func (i *Input) Repetition() {
 		command = append(command, EncodeMessage(i.pre)...)
 		command = append(command, GetMoveCursorRight(1)...)
 	}
-	command = append(command, i.Value...)
+
+	if len(i.Value) > 0 {
+		command = append(command, i.Value...)
+	}
+
 	i.m.Send(command)
 
 	if i.cursor {

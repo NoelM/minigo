@@ -26,7 +26,7 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 				messageInput.Clear()
 				updateScreen(m, messagesList)
 
-				messageInput.Activate()
+				messageInput.Repetition()
 
 			} else if key == minigo.Repetition {
 				updateScreen(m, messagesList)

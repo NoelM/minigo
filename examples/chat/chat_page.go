@@ -15,7 +15,9 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 	m.CleanLine()
 
 	messageInput.Repetition()
+	m.RouleauOn()
 
+	lastId := 0
 	for {
 		select {
 		case key := <-m.InKey:
@@ -24,12 +26,13 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 				envoi <- messageInput.Value
 
 				messageInput.Clear()
-				updateScreen(m, messagesList)
+				updateScreen(m, messagesList, &lastId)
 
 				messageInput.Repetition()
 
 			} else if key == minigo.Repetition {
-				updateScreen(m, messagesList)
+				messageInput.ClearScreen()
+				updateScreen(m, messagesList, &lastId)
 				messageInput.Repetition()
 
 			} else if key == minigo.Correction {
@@ -53,14 +56,12 @@ func chatPage(m *minigo.Minitel, nick string, envoi chan []byte, messagesList *M
 
 const InputLine = 22
 
-func updateScreen(m *minigo.Minitel, list *Messages) {
-	currentLine := 1
-
+func updateScreen(m *minigo.Minitel, list *Messages, lastId *int) {
 	list.Mtx.RLock()
 	defer list.Mtx.RUnlock()
 
 	m.CursorOff()
-	for i := len(list.List) - 1; i >= 0; i -= 1 {
+	for i := *lastId - 1; i < len(list.List); i += 1 {
 		// 3 because the format is: "nick > text"
 		msgLen := len(list.List[i].Nick) + len(list.List[i].Text) + 3
 
@@ -70,11 +71,9 @@ func updateScreen(m *minigo.Minitel, list *Messages) {
 		// nick > text2
 		msgLines := msgLen/40 + 2
 
-		if currentLine+msgLines > InputLine {
-			break
-		}
-
-		buf := minigo.GetMoveCursorXY(0, currentLine)
+		buf := minigo.GetMoveCursorXY(1, 24)
+		buf = append(buf, minigo.GetMoveCursorReturn(msgLines)...)
+		buf = append(buf, minigo.GetMoveCursorXY(1, InputLine-msgLines)...)
 		buf = append(buf, minigo.EncodeSprintf("%s > ", list.List[i].Nick)...)
 
 		if list.List[i].Type == Message_Teletel {
@@ -82,12 +81,8 @@ func updateScreen(m *minigo.Minitel, list *Messages) {
 		} else {
 			buf = append(buf, minigo.EncodeMessage(list.List[i].Text)...)
 		}
-
-		buf = append(buf, minigo.GetCleanLineFromCursor()...)
-		buf = append(buf, minigo.GetMoveCursorReturn(1)...)
-		buf = append(buf, minigo.GetCleanLine()...)
 		m.Send(buf)
-
-		currentLine += msgLines
 	}
+
+	*lastId = len(list.List)
 }

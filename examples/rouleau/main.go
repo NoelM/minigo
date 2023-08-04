@@ -2,47 +2,52 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/NoelM/minigo"
 	"nhooyr.io/websocket"
 )
 
-var infoLog = log.New(os.Stdout, "[MINICHAT] INFO:", log.Ldate|log.LUTC)
-var warnLog = log.New(os.Stdout, "[MINICHAT] WARN:", log.Ldate|log.LUTC)
-var errorLog = log.New(os.Stdout, "[MINICHAT] ERROR:", log.Ldate|log.LUTC)
-
 func main() {
-
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 		if err != nil {
-			errorLog.Printf("Unable to open WS connection: %s\n", err.Error())
+			log.Println(err)
 			return
 		}
 		defer c.Close(websocket.StatusInternalError, "the sky is falling")
-		infoLog.Printf("New connection from IP=%s\n", r.RemoteAddr)
 
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 
+		fmt.Printf("new connection from: %s\n", r.RemoteAddr)
+
 		m := minigo.NewMinitel(c, ctx)
 		go m.Listen()
 
-		nick := logPage(m)
-
-		ircDvr := NewIrcDriver(string(nick))
-		go ircDvr.Loop()
-
-		chatPage(m, ircDvr)
-		ircDvr.Quit()
-
-		infoLog.Printf("Minitel session closed for IP=%s nick=%s\n", r.RemoteAddr, nick)
+		rouleau(m)
 	})
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)
 	log.Fatal(err)
+}
+
+func rouleau(m *minigo.Minitel) {
+	m.Reset()
+	m.RouleauOn()
+
+	i := 0
+	for {
+		msg := fmt.Sprintf("ligne %d", i)
+
+		command := minigo.EncodeMessage(msg)
+		command = append(command, minigo.GetMoveCursorReturn(1)...)
+		m.Send(command)
+
+		i += 1
+		time.Sleep(time.Second)
+	}
 }

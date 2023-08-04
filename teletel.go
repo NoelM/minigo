@@ -249,7 +249,7 @@ func AppendCursorOff() byte {
 	return GetByteWithParity(CursorOff)
 }
 
-func ReadKey(keyBuffer []byte) (done bool, value uint, err error) {
+func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
 	if keyBuffer[0] == 0x19 {
 		if len(keyBuffer) == 1 {
 			return
@@ -273,7 +273,7 @@ func ReadKey(keyBuffer []byte) (done bool, value uint, err error) {
 		if len(keyBuffer) == 1 {
 			return
 		}
-	} else if keyBuffer[0] == 0x1B {
+	} else if keyBuffer[0] == Esc {
 		if len(keyBuffer) == 1 {
 			return
 		}
@@ -288,21 +288,29 @@ func ReadKey(keyBuffer []byte) (done bool, value uint, err error) {
 					return
 				}
 			}
+		} else if keyBuffer[1] == Pro2 { // PRO2 = ESC + 0x3A
+			if len(keyBuffer) < 4 {
+				return
+			}
+			// PRO2, RESP BYTE, STATUS BYTE
+			done, pro = true, true
+			return
 		}
 	}
 
-	done = true
-
 	switch len(keyBuffer) {
 	case 1:
-		return done, uint(keyBuffer[0]), nil
+		value = uint(keyBuffer[0])
 	case 2:
-		return done, uint(binary.BigEndian.Uint16(keyBuffer)), nil
+		value = uint(binary.BigEndian.Uint16(keyBuffer))
 	case 3:
-		return done, uint(binary.BigEndian.Uint32(keyBuffer)), nil
+		value = uint(binary.BigEndian.Uint32(keyBuffer))
 	case 4:
-		return done, uint(binary.BigEndian.Uint64(keyBuffer)), nil
+		value = uint(binary.BigEndian.Uint64(keyBuffer))
 	default:
-		return done, 0, errors.New("unable to cast readbuffer")
+		err = errors.New("unable to cast readbuffer")
 	}
+
+	done = true
+	return
 }

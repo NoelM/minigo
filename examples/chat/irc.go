@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"time"
 
 	irc "github.com/thoj/go-ircevent"
 )
@@ -10,40 +11,63 @@ import (
 const channel = "#minitel"
 const serverssl = "irc.libera.chat:7000"
 
-func startIRC(nick string, envoi chan []byte, done chan bool, messageList *Messages) {
-	irccon := irc.IRC(nick, "IRCTestSSL")
-	irccon.UseTLS = true
-	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
-	irccon.AddCallback("366", func(e *irc.Event) {})
+type IrcDriver struct {
+	conn *irc.Connection
+	quit bool
 
-	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
-		msg := event.Message()
-		nick := event.Nick
+	Nick        string
+	RecvMessage chan Message
+	SendMessage chan Message
+}
 
-		messageList.AppendMessage(nick, msg)
-		fmt.Printf("%s: %s\n", nick, msg)
+func NewIrcDriver(nick string) *IrcDriver {
+	return &IrcDriver{
+		Nick:        nick,
+		RecvMessage: make(chan Message),
+		SendMessage: make(chan Message),
+	}
+}
+
+func (i *IrcDriver) Quit() {
+	i.conn.Quit()
+}
+
+func (i *IrcDriver) sendMessageListner() {
+	for !i.quit {
+		select {
+		case msg := <-i.SendMessage:
+			i.conn.Privmsg(channel, msg.Text)
+		default:
+			continue
+		}
+	}
+}
+
+func (i *IrcDriver) Loop() error {
+	i.conn = irc.IRC(i.Nick, "Minitel Client")
+	i.conn.UseTLS = true
+	i.conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	i.conn.AddCallback("001", func(e *irc.Event) { i.conn.Join(channel) })
+	i.conn.AddCallback("366", func(e *irc.Event) {})
+
+	i.conn.AddCallback("PRIVMSG", func(event *irc.Event) {
+		i.RecvMessage <- Message{
+			Nick: event.Nick,
+			Text: event.Message(),
+			Type: Message_UTF8,
+			Time: time.Now(),
+		}
 	})
 
-	go func() {
-		for {
-			select {
-			case msg := <-envoi:
-				irccon.Privmsg(channel, string(msg))
-			case <-done:
-				irccon.Disconnect()
-			default:
-				continue
-			}
-		}
-	}()
-
-	err := irccon.Connect(serverssl)
+	err := i.conn.Connect(serverssl)
 	if err != nil {
 		fmt.Printf("Err %s", err)
-		return
+		return err
 	}
-	irccon.Loop()
 
-	fmt.Println("disconnected from irc.libera.chat")
+	go i.sendMessageListner()
+	i.conn.Loop()
+
+	fmt.Printf("[chat] %s disconnected from: irc.libera.chat\n", time.Now().Format(time.RFC3339))
+	return nil
 }

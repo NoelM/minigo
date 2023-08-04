@@ -3,21 +3,44 @@ package minigo
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
 
 	"nhooyr.io/websocket"
 )
 
+var infoLog = log.New(os.Stdout, "[minigo] INFO:", log.Ldate|log.LUTC)
+var warnLog = log.New(os.Stdout, "[minigo] WARN:", log.Ldate|log.LUTC)
+var errorLog = log.New(os.Stdout, "[minigo] ERROR:", log.Ldate|log.LUTC)
+
+type AckType uint
+
+const (
+	NoAck = iota
+	AckRouleau
+	AckPage
+)
+
 type Minitel struct {
-	conn  *websocket.Conn
-	ctx   context.Context
-	InKey chan uint
+	RecvKey chan uint
+	Quit    chan bool
+
+	conn    *websocket.Conn
+	ctx     context.Context
+	ackType AckType
+
+	terminalByte       byte
+	vitesseByte        byte
+	fonctionnementByte byte
+	protocoleByte      byte
 }
 
-func NewMinitel(conn *websocket.Conn, ctx context.Context) Minitel {
-	return Minitel{
-		conn:  conn,
-		ctx:   ctx,
-		InKey: make(chan uint),
+func NewMinitel(conn *websocket.Conn, ctx context.Context) *Minitel {
+	return &Minitel{
+		conn:    conn,
+		ctx:     ctx,
+		RecvKey: make(chan uint),
+		Quit:    make(chan bool),
 	}
 }
 
@@ -25,11 +48,50 @@ func (m *Minitel) ContextError() error {
 	return m.ctx.Err()
 }
 
+func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
+	switch keyBuffer[2] {
+	case Terminal:
+		m.terminalByte = keyBuffer[3]
+	case Fonctionnement:
+		m.fonctionnementByte = keyBuffer[3]
+	case Vitesse:
+		m.vitesseByte = keyBuffer[3]
+	case Protocole:
+		m.protocoleByte = keyBuffer[3]
+	default:
+		fmt.Printf("not handled response byte: %x\n", keyBuffer[3])
+		return
+	}
+
+	ok := false
+	switch m.ackType {
+	case AckRouleau:
+		ok = BitReadAt(m.fonctionnementByte, 6)
+	case AckPage:
+		ok = !BitReadAt(m.fonctionnementByte, 6)
+	default:
+		fmt.Printf("not handled AckType: %d\n", m.ackType)
+		return
+	}
+
+	if !ok {
+		err = fmt.Errorf("not verified for acknowledgment ackType=%d", m.ackType)
+		errorLog.Panicln(err.Error())
+	} else {
+		infoLog.Printf("verified acknowledgement ackType=%d\n", m.ackType)
+	}
+
+	m.ackType = NoAck
+	return
+}
+
 func (m *Minitel) Listen() {
 	fullRead := true
 	var keyBuffer []byte
 	var keyValue uint
+
 	var done bool
+	var pro bool
 
 	for {
 		var err error
@@ -37,31 +99,46 @@ func (m *Minitel) Listen() {
 
 		if fullRead {
 			_, wsMsg, err = m.conn.Read(m.ctx)
-			if err != nil {
-				continue
+			if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure {
+				warnLog.Printf("Stop minitel listen: Closed WS connection: %s\n", err.Error())
+				m.Quit <- true
+				return
+
+			} else if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
+				infoLog.Printf("Stop minitel listen: Closed WS connection: %s\n", err.Error())
+				m.Quit <- true
+				return
 			}
+
 			fullRead = false
 		}
 
 		for id, b := range wsMsg {
 			keyBuffer = append(keyBuffer, b)
 
-			done, keyValue, err = ReadKey(keyBuffer)
-			if done || err != nil {
+			done, pro, keyValue, err = ReadKey(keyBuffer)
+			if err != nil {
+				errorLog.Printf("Unable to read key=%x: %s\n", keyBuffer, err.Error())
 				keyBuffer = []byte{}
 			}
+
 			if done {
-				m.InKey <- keyValue
+				if pro {
+					infoLog.Printf("Recieved procode=%x\n", keyBuffer)
+					err = m.ackChecker(keyBuffer)
+					if err != nil {
+						errorLog.Printf("Unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
+					}
+				} else {
+					m.RecvKey <- keyValue
+				}
+
+				keyBuffer = []byte{}
 			}
 
 			if id == len(wsMsg)-1 {
 				fullRead = true
 			}
-		}
-
-		if m.ctx.Err() != nil {
-			fmt.Printf("minitel listen stop\n")
-			return
 		}
 	}
 }
@@ -127,6 +204,10 @@ func (m *Minitel) Return(n int) error {
 	return m.Send(GetMoveCursorReturn(n))
 }
 
+func (m *Minitel) MoveCursorDown(n int) error {
+	return m.Send(GetMoveCursorDown(n))
+}
+
 //
 // CURSORS
 //
@@ -143,4 +224,24 @@ func (m *Minitel) CursorOnXY(x, y int) error {
 
 func (m *Minitel) CursorOff() error {
 	return m.Send(EncodeAttribute(CursorOff))
+}
+
+//
+// MODE PAGE OU ROULEAU
+//
+
+func (m *Minitel) RouleauOn() error {
+	m.ackType = AckRouleau
+
+	buf, _ := GetProCode(Pro2)
+	buf = append(buf, Start, Rouleau)
+	return m.Send(buf)
+}
+
+func (m *Minitel) RouleauOff() error {
+	m.ackType = AckPage
+
+	buf, _ := GetProCode(Pro2)
+	buf = append(buf, Stop, Rouleau)
+	return m.Send(buf)
 }

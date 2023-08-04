@@ -35,7 +35,7 @@ func main() {
 		nick := logPage(m)
 
 		ircDvr := NewIrcDriver(string(nick))
-		ircDvr.Loop()
+		go ircDvr.Loop()
 
 		chatPage(m, ircDvr)
 		ircDvr.Quit()

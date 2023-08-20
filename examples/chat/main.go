@@ -26,6 +26,8 @@ func main() {
 		defer c.Close(websocket.StatusInternalError, "the sky is falling")
 		infoLog.Printf("New connection from IP=%s\n", r.RemoteAddr)
 
+		c.SetReadLimit(1024)
+
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 

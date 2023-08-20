@@ -31,7 +31,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 
-		m := minigo.NewMinitel(c, ctx)
+		m := minigo.NewMinitel(c, ctx, false)
 		go m.Listen()
 
 		nick := logPage(m)

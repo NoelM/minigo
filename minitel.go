@@ -146,6 +146,11 @@ func (m *Minitel) Listen() {
 }
 
 func (m *Minitel) Send(buf []byte) error {
+	if m.parity {
+		for id, b := range buf {
+			buf[id] = GetByteWithParity(b)
+		}
+	}
 	return m.conn.Write(m.ctx, websocket.MessageBinary, buf)
 }
 

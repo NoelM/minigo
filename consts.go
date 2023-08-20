@@ -2,9 +2,9 @@ package minigo
 
 import "strings"
 
-// Le standard Télétel
-
 const MaxRetry = 3
+
+const ParityBitPosition = 7
 
 const (
 	ResolutionSimple = iota

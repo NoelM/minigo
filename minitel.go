@@ -33,12 +33,14 @@ type Minitel struct {
 	vitesseByte        byte
 	fonctionnementByte byte
 	protocoleByte      byte
+	parity             bool
 }
 
-func NewMinitel(conn *websocket.Conn, ctx context.Context) *Minitel {
+func NewMinitel(conn *websocket.Conn, ctx context.Context, parity bool) *Minitel {
 	return &Minitel{
 		conn:    conn,
 		ctx:     ctx,
+		parity:  parity,
 		RecvKey: make(chan uint),
 		Quit:    make(chan bool),
 	}
@@ -144,6 +146,11 @@ func (m *Minitel) Listen() {
 }
 
 func (m *Minitel) Send(buf []byte) error {
+	if m.parity {
+		for id, b := range buf {
+			buf[id] = GetByteWithParity(b)
+		}
+	}
 	return m.conn.Write(m.ctx, websocket.MessageBinary, buf)
 }
 

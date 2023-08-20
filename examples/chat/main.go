@@ -26,10 +26,12 @@ func main() {
 		defer c.Close(websocket.StatusInternalError, "the sky is falling")
 		infoLog.Printf("New connection from IP=%s\n", r.RemoteAddr)
 
+		c.SetReadLimit(1024)
+
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 
-		m := minigo.NewMinitel(c, ctx)
+		m := minigo.NewMinitel(c, ctx, false)
 		go m.Listen()
 
 		nick := logPage(m)

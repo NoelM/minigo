@@ -11,7 +11,6 @@ import (
 func main() {
 	buf := minigo.GetCleanScreen()
 	buf = append(buf, minigo.GetMoveCursorXY(1, 2)...)
-	buf = append(buf, minigo.EncodeAttributes(minigo.CursorOff, minigo.DoubleGrandeur, minigo.InversionFond, minigo.Clignotement)...)
 	buf = append(buf, minigo.EncodeMessage("COUCOU LE MONDE !")...)
 
 	for id, b := range buf {
@@ -24,6 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer file.Close()
 
 	for {
 		n, err := os.Stdin.Read(buf)

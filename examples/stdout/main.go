@@ -4,20 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-
-	"github.com/NoelM/minigo"
 )
 
 func main() {
-	buf := minigo.GetCleanScreen()
-	buf = append(buf, minigo.GetMoveCursorXY(1, 2)...)
-	buf = append(buf, minigo.EncodeMessage("COUCOU LE MONDE !")...)
-
-	for id, b := range buf {
-		buf[id] = minigo.GetByteWithParity(b)
-	}
-
-	os.Stdout.Write(buf)
+	vdt, err := os.ReadFile("mitterand.vdt")
+	os.Stdout.Write(vdt)
 
 	file, err := os.Create("stdout.log")
 	if err != nil {

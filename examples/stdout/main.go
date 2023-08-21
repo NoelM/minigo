@@ -16,6 +16,7 @@ func main() {
 	}
 	defer file.Close()
 
+	buf := []byte{}
 	for {
 		n, err := os.Stdin.Read(buf)
 		if err != nil {

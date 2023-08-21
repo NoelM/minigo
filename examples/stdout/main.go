@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -30,8 +31,9 @@ func main() {
 
 	buf = []byte{}
 	file.Write([]byte("start listen\n"))
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		n, err := os.Stdin.Read(buf)
+		n, err := reader.Read(buf)
 		if err != nil {
 			file.Write([]byte(fmt.Sprintf("error while reading: %s\n", err.Error())))
 			break

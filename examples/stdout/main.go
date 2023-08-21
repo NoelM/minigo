@@ -20,11 +20,16 @@ func main() {
 
 	os.Stdout.Write(buf)
 
+	file, err := os.Create("stdout.log")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for {
 		n, err := os.Stdin.Read(buf)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("recv %d bytes msg='%s'", n, buf)
+		file.Write([]byte(fmt.Sprintf("recv %d bytes msg='%s'\n", n, buf)))
 	}
 }

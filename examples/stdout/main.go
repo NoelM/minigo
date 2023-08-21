@@ -9,33 +9,34 @@ import (
 )
 
 func main() {
+	file, err := os.Create("/var/log/notel/stdout.log")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer file.Close()
+
 	buf := minigo.GetCleanScreen()
 	buf = append(buf, minigo.GetMoveCursorXY(1, 1)...)
+	buf = append(buf, minigo.EncodeMessage("BIENVENUE, ECRIVEZ VOTRE MESSAGE")...)
+	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	file.Write([]byte("buf OK\n"))
+
 	for id, b := range buf {
 		buf[id] = minigo.GetByteWithParity(b)
 	}
 	os.Stdout.Write(buf)
+	file.Write([]byte("parity OK\n"))
 
-	vdt, err := os.ReadFile("mitterrand.vdt")
-	if err != nil {
-		return
-	}
-	for _, b := range vdt {
-		os.Stdout.Write([]byte{minigo.GetByteWithParity(b)})
-	}
-
-	file, err := os.Create("stdout.log")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
+	buf = []byte{}
+	file.Write([]byte("start listen\n"))
 	for {
 		n, err := os.Stdin.Read(buf)
 		if err != nil {
-			log.Fatal(err)
+			file.Write([]byte(fmt.Sprintf("error while reading: %s\n", err.Error())))
 			break
 		}
-		file.Write([]byte(fmt.Sprintf("recv %d bytes msg='%s'\n", n, buf)))
+		file.Write([]byte(fmt.Sprintf("recv %d bytes msg='%s'\n", n, buf[:n])))
 	}
+	file.Write([]byte("byte bye\n"))
 }

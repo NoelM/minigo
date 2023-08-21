@@ -7,7 +7,10 @@ import (
 )
 
 func main() {
-	vdt, err := os.ReadFile("mitterand.vdt")
+	vdt, err := os.ReadFile("mitterrand.vdt")
+	if err != nil {
+		return
+	}
 	os.Stdout.Write(vdt)
 
 	file, err := os.Create("stdout.log")

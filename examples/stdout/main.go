@@ -20,7 +20,9 @@ func main() {
 	if err != nil {
 		return
 	}
-	os.Stdout.Write(vdt)
+	for _, b := range vdt {
+		os.Stdout.Write([]byte{minigo.GetByteWithParity(b)})
+	}
 
 	file, err := os.Create("stdout.log")
 	if err != nil {

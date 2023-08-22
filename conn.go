@@ -85,6 +85,7 @@ func (m *Modem) sendCommandAndWait(at ATCommand) bool {
 				ack = true
 				break
 			} else if strings.Contains(result, "ERROR") {
+				errorLog.Println(err)
 				break
 			}
 		}

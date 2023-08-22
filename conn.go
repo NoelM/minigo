@@ -116,14 +116,14 @@ func (m *Modem) Serve(forceRing bool) {
 			warnLog.Printf("unable to get modem status: %s\n", err.Error())
 		}
 
-		if status.RI || forceRing {
-			forceRing = false
-			m.Connect()
-		}
-
 		if !status.DCD && m.connected {
 			infoLog.Printf("closed connection\n")
 			m.connected = false
+		}
+
+		if status.RI || forceRing {
+			forceRing = false
+			m.Connect()
 		}
 
 		time.Sleep(time.Second)

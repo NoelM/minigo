@@ -52,5 +52,5 @@ func main() {
 		infoLog.Printf("Minitel session closed from Modem nick=%s\n", nick)
 	})
 
-	modem.Serve(true)
+	modem.Serve(false)
 }

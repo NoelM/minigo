@@ -101,7 +101,16 @@ func (m *Minitel) Listen() {
 			fullRead = false
 		}
 
+		var parityErr error
 		for id, b := range wsMsg[:n] {
+			if m.parity {
+				b, parityErr = CheckByteParity(b)
+				if parityErr != nil {
+					warnLog.Printf("key=%x ignored: wrong parity\n", b)
+					continue
+				}
+			}
+
 			keyBuffer = append(keyBuffer, b)
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)

@@ -16,6 +16,8 @@ type Connector interface {
 
 	Read() (int, []byte, error)
 
+	ReadTimeout(time.Duration) error
+
 	Connected() bool
 }
 
@@ -67,11 +69,11 @@ func (m *Modem) sendCommandAndWait(at ATCommand) bool {
 	// Wait for message
 	if len(at.Reply) > 0 {
 		var result string
-		buffer := make([]byte, 64)
 		for {
-			n, err := m.port.Read(buffer)
+			n, buffer, err := m.ReadTimeout(5 * time.Second)
 			if err != nil {
-				log.Fatalln(err)
+				errorLog.Println(err)
+				return false
 			}
 			if n == 0 {
 				break
@@ -94,6 +96,14 @@ func (m *Modem) Write(b []byte) error {
 }
 
 func (m *Modem) Read() (int, []byte, error) {
+	n, err := m.port.Read(m.buffer)
+	return n, m.buffer, err
+}
+
+func (m *Modem) ReadTimeout(d time.Duration) (int, []byte, error) {
+	m.port.SetReadTimeout(d)
+	defer m.port.SetReadTimeout(serial.NoTimeout)
+
 	n, err := m.port.Read(m.buffer)
 	return n, m.buffer, err
 }

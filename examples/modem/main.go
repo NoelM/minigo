@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -41,5 +42,6 @@ func main() {
 				break
 			}
 		}
+		fmt.Println(result)
 	}
 }

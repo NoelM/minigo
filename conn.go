@@ -24,6 +24,7 @@ type Modem struct {
 	init        []ATCommand
 	buffer      []byte
 	ringHandler func(modem *Modem)
+	closed      bool
 }
 
 type ATCommand struct {
@@ -41,6 +42,7 @@ func NewModem(portName string, baud int, init []ATCommand) *Modem {
 		port:   port,
 		init:   init,
 		buffer: make([]byte, 1024),
+		close:  false,
 	}
 }
 
@@ -96,11 +98,15 @@ func (m *Modem) Read() (int, []byte, error) {
 	return n, m.buffer, err
 }
 
+func (m *Modem) IsClosed() bool {
+	return m.closed
+}
+
 func (m *Modem) RingHandler(f func(modem *Modem)) {
 	m.ringHandler = f
 }
 
-func (m *Modem) WaitForRing() {
+func (m *Modem) Serve() {
 	var err error
 	var status *serial.ModemStatusBits
 
@@ -124,4 +130,19 @@ func (m *Modem) Connect() {
 	}
 
 	go m.ringHandler(m)
+
+	var err error
+	var status *serial.ModemStatusBits
+	for {
+		status, err = m.port.GetModemStatusBits()
+		if err != nil {
+			warnLog.Printf("unable to get modem status: %s\n", err.Error())
+		}
+		if !status.DCD {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
+	m.closed = true
 }

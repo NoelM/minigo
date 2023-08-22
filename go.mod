@@ -5,10 +5,12 @@ go 1.18
 require (
 	github.com/gobwas/ws v1.0.2
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
+	go.bug.st/serial v1.6.0
 	nhooyr.io/websocket v1.8.7
 )
 
 require (
+	github.com/creack/goselect v0.1.2 // indirect
 	github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee // indirect
 	github.com/gobwas/pool v0.2.0 // indirect
 	github.com/klauspost/compress v1.10.3 // indirect

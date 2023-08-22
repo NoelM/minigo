@@ -39,6 +39,9 @@ func main() {
 		go m.Listen()
 
 		nick := logPage(m)
+		if !mdm.Connected() || len(nick) == 0 {
+			return
+		}
 
 		ircDvr := NewIrcDriver(string(nick))
 		go ircDvr.Loop()

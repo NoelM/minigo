@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"go.bug.st/serial"
 )
@@ -19,9 +20,10 @@ type Connector interface {
 }
 
 type Modem struct {
-	port   serial.Port
-	init   []ATCommand
-	buffer []byte
+	port        serial.Port
+	init        []ATCommand
+	buffer      []byte
+	ringHandler func(modem *Modem)
 }
 
 type ATCommand struct {
@@ -92,4 +94,34 @@ func (m *Modem) Write(b []byte) error {
 func (m *Modem) Read() (int, []byte, error) {
 	n, err := m.port.Read(m.buffer)
 	return n, m.buffer, err
+}
+
+func (m *Modem) RingHandler(f func(modem *Modem)) {
+	m.ringHandler = f
+}
+
+func (m *Modem) WaitForRing() {
+	var err error
+	var status *serial.ModemStatusBits
+
+	for {
+		status, err = m.port.GetModemStatusBits()
+		if err != nil {
+			warnLog.Printf("unable to get modem status: %s\n", err.Error())
+		}
+		if status.RI {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
+	m.Connect()
+}
+
+func (m *Modem) Connect() {
+	if !m.sendCommandAndWait(ATCommand{Command: "ATA", Reply: "CONNECT 1200/75/NONE"}) {
+		errorLog.Fatalf("unable to connect after Ring")
+	}
+
+	go m.ringHandler(m)
 }

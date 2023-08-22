@@ -21,10 +21,6 @@ func main() {
 			Command: "ATS27=16",
 			Reply:   "OK",
 		},
-		{
-			Command: "ATA",
-			Reply:   "CONNECT 1200/75/NONE",
-		},
 	}
 
 	modem := minigo.NewModem("/dev/ttyUSB0", 115200, init)
@@ -34,12 +30,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for {
-		n, buf, err := modem.Read()
-		if err != nil {
-			log.Fatal(err)
-		}
+	modem.RingHandler(func(m *minigo.Modem) {
+		for {
+			n, buf, err := m.Read()
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		fmt.Println(buf[:n])
-	}
+			fmt.Println(buf[:n])
+		}
+	})
+
+	modem.Connect()
 }

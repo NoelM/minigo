@@ -31,7 +31,7 @@ func main() {
 	}
 
 	modem.RingHandler(func(m *minigo.Modem) {
-		for !m.IsClosed() {
+		for m.Connected() {
 			n, buf, err := m.Read()
 			if err != nil {
 				log.Fatal(err)

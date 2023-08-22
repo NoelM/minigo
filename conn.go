@@ -98,7 +98,7 @@ func (m *Modem) Read() (int, []byte, error) {
 	return n, m.buffer, err
 }
 
-func (m *Modem) IsClosed() bool {
+func (m *Modem) Connected() bool {
 	return m.connected
 }
 

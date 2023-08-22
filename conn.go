@@ -133,7 +133,8 @@ func (m *Modem) Serve(forceRing bool) {
 
 func (m *Modem) Connect() {
 	if !m.sendCommandAndWait(ATCommand{Command: "ATA", Reply: "CONNECT 1200/75/NONE"}) {
-		errorLog.Fatalf("unable to connect after Ring")
+		errorLog.Printf("unable to connect after Ring")
+		return
 	}
 	m.connected = true
 

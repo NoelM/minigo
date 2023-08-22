@@ -122,6 +122,7 @@ func (m *Modem) Serve(forceRing bool) {
 		}
 
 		if status.RI || forceRing {
+			infoLog.Printf("phone rings\n")
 			forceRing = false
 			m.Connect()
 		}
@@ -137,6 +138,7 @@ func (m *Modem) Connect() {
 		return
 	}
 	m.connected = true
+	infoLog.Printf("connection established\n")
 
 	go m.ringHandler(m)
 }

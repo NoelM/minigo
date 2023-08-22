@@ -87,11 +87,13 @@ func (m *Minitel) Listen() {
 	var pro bool
 
 	for {
+		fmt.Printf("restart fullread=%v\n", fullRead)
 		var err error
 		var wsMsg []byte
 		var n int
 
 		if fullRead {
+			fmt.Println("wait for key")
 			n, wsMsg, err = m.conn.Read()
 			fmt.Printf("recv byte=%x len=%d\n", wsMsg, n)
 			if err != nil {
@@ -117,7 +119,7 @@ func (m *Minitel) Listen() {
 			keyBuffer = append(keyBuffer, b)
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
-			fmt.Println("read key done=%v pro=%v key=%d err=%s", done, pro, keyBuffer, err)
+			fmt.Printf("read key done=%v pro=%v key=%d err=%s", done, pro, keyBuffer, err)
 			if err != nil {
 				errorLog.Printf("Unable to read key=%x: %s\n", keyBuffer, err.Error())
 				keyBuffer = []byte{}

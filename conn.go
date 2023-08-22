@@ -66,6 +66,7 @@ func (m *Modem) sendCommandAndWait(at ATCommand) bool {
 		}
 	}
 
+	ack := false
 	// Wait for message
 	if len(at.Reply) > 0 {
 		var result string
@@ -73,7 +74,7 @@ func (m *Modem) sendCommandAndWait(at ATCommand) bool {
 			n, buffer, err := m.ReadTimeout(5 * time.Second)
 			if err != nil {
 				errorLog.Println(err)
-				return false
+				break
 			}
 			if n == 0 {
 				break
@@ -81,13 +82,17 @@ func (m *Modem) sendCommandAndWait(at ATCommand) bool {
 
 			result += string(buffer[0:n])
 			if strings.Contains(result, at.Reply) {
+				ack = true
 				break
-			} else {
-				return false
+			} else if strings.Contains(result, "ERROR") {
+				break
 			}
 		}
+	} else {
+		ack = true
 	}
-	return true
+
+	return ack
 }
 
 func (m *Modem) Write(b []byte) error {

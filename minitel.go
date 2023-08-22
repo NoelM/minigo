@@ -86,16 +86,13 @@ func (m *Minitel) Listen() {
 	var done bool
 	var pro bool
 
-	for {
-		fmt.Printf("restart fullread=%v\n", fullRead)
+	for m.conn.Connected() {
 		var err error
 		var wsMsg []byte
 		var n int
 
 		if fullRead {
-			fmt.Println("wait for key")
 			n, wsMsg, err = m.conn.Read()
-			fmt.Printf("recv byte=%x len=%d\n", wsMsg, n)
 			if err != nil {
 				warnLog.Printf("stop minitel listen: closed connection: %s\n", err.Error())
 				m.Quit <- true
@@ -106,7 +103,6 @@ func (m *Minitel) Listen() {
 
 		var parityErr error
 		for id, b := range wsMsg[:n] {
-			fmt.Printf("loop byte=%x\n", b)
 			if m.parity {
 				b, parityErr = CheckByteParity(b)
 				if parityErr != nil {
@@ -114,19 +110,16 @@ func (m *Minitel) Listen() {
 					continue
 				}
 			}
-			fmt.Println("parity OK")
 
 			keyBuffer = append(keyBuffer, b)
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
-			fmt.Printf("read key done=%v pro=%v key=%d err=%s", done, pro, keyBuffer, err)
 			if err != nil {
 				errorLog.Printf("Unable to read key=%x: %s\n", keyBuffer, err.Error())
 				keyBuffer = []byte{}
 			}
 
 			if done {
-				fmt.Println("DONE")
 				if pro {
 					infoLog.Printf("Recieved procode=%x\n", keyBuffer)
 					err = m.ackChecker(keyBuffer)
@@ -134,12 +127,10 @@ func (m *Minitel) Listen() {
 						errorLog.Printf("Unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
 					}
 				} else {
-					fmt.Println("sent key")
 					m.RecvKey <- keyValue
 				}
 
 				keyBuffer = []byte{}
-				fmt.Println("reset key buffer")
 			}
 
 			if id == n-1 {
@@ -147,6 +138,9 @@ func (m *Minitel) Listen() {
 			}
 		}
 	}
+
+	warnLog.Printf("stop minitel listen: closed connection\n")
+	m.Quit <- true
 }
 
 func (m *Minitel) Send(buf []byte) error {

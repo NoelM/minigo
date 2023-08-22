@@ -16,7 +16,7 @@ type Connector interface {
 
 	Read() (int, []byte, error)
 
-	IsClosed() bool
+	Connected() bool
 }
 
 type Modem struct {
@@ -24,7 +24,7 @@ type Modem struct {
 	init        []ATCommand
 	buffer      []byte
 	ringHandler func(modem *Modem)
-	closed      bool
+	connected   bool
 }
 
 type ATCommand struct {
@@ -39,10 +39,10 @@ func NewModem(portName string, baud int, init []ATCommand) *Modem {
 	}
 
 	return &Modem{
-		port:   port,
-		init:   init,
-		buffer: make([]byte, 1024),
-		closed: false,
+		port:      port,
+		init:      init,
+		buffer:    make([]byte, 1024),
+		connected: false,
 	}
 }
 
@@ -99,7 +99,7 @@ func (m *Modem) Read() (int, []byte, error) {
 }
 
 func (m *Modem) IsClosed() bool {
-	return m.closed
+	return m.connected
 }
 
 func (m *Modem) RingHandler(f func(modem *Modem)) {
@@ -121,12 +121,10 @@ func (m *Modem) Serve(forceRing bool) {
 			m.Connect()
 		}
 
-		/*
-			if !status.DCD {
-				infoLog.Printf("closed connection\n")
-				m.closed = true
-			}
-		*/
+		if !status.DCD && m.connected {
+			infoLog.Printf("closed connection\n")
+			m.connected = false
+		}
 
 		time.Sleep(time.Second)
 	}

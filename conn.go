@@ -121,10 +121,12 @@ func (m *Modem) Serve(forceRing bool) {
 			m.Connect()
 		}
 
-		if !status.DCD {
-			infoLog.Printf("closed connection\n")
-			m.closed = true
-		}
+		/*
+			if !status.DCD {
+				infoLog.Printf("closed connection\n")
+				m.closed = true
+			}
+		*/
 
 		time.Sleep(time.Second)
 	}

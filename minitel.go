@@ -173,6 +173,10 @@ func (m *Minitel) CleanLine() error {
 	return m.Send(GetCleanLine())
 }
 
+func (m *Minitel) CleanScreen() error {
+	return m.Send(GetCleanScreen())
+}
+
 func (m *Minitel) CleanScreenFromCursor() error {
 	return m.Send(GetCleanLineFromCursor())
 }

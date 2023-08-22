@@ -7,6 +7,7 @@ import (
 func logPage(m *minigo.Minitel) []byte {
 	nickInput := minigo.NewInput(m, 10, 13, 10, 1, "", true)
 
+	m.CleanScreen()
 	m.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
 	m.WriteStringXY(10, 10, "MINI-CHAT")
 

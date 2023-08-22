@@ -16,7 +16,7 @@ type Connector interface {
 
 	Read() (int, []byte, error)
 
-	ReadTimeout(time.Duration) error
+	ReadTimeout(time.Duration) (int, []byte, error)
 
 	Connected() bool
 }

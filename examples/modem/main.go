@@ -41,5 +41,5 @@ func main() {
 		}
 	})
 
-	modem.Connect()
+	modem.Serve(true)
 }

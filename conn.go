@@ -82,7 +82,7 @@ func (m *Modem) sendCommandAndWait(at ATCommand) bool {
 			result += string(buffer[0:n])
 			if strings.Contains(result, at.Reply) {
 				break
-			} else if strings.Contains(result, "ERROR") {
+			} else {
 				return false
 			}
 		}

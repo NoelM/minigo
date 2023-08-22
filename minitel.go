@@ -142,7 +142,7 @@ func (m *Minitel) Listen() {
 				fmt.Println("reset key buffer")
 			}
 
-			if id == len(wsMsg)-1 {
+			if id == n-1 {
 				fullRead = true
 			}
 		}

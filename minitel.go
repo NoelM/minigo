@@ -1,12 +1,9 @@
 package minigo
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
-
-	"nhooyr.io/websocket"
 )
 
 var infoLog = log.New(os.Stdout, "[minigo] INFO:", log.Ldate|log.LUTC)
@@ -25,8 +22,7 @@ type Minitel struct {
 	RecvKey chan uint
 	Quit    chan bool
 
-	conn    *websocket.Conn
-	ctx     context.Context
+	conn    Connector
 	ackType AckType
 
 	terminalByte       byte
@@ -36,18 +32,13 @@ type Minitel struct {
 	parity             bool
 }
 
-func NewMinitel(conn *websocket.Conn, ctx context.Context, parity bool) *Minitel {
+func NewMinitel(conn Connector, parity bool) *Minitel {
 	return &Minitel{
 		conn:    conn,
-		ctx:     ctx,
 		parity:  parity,
 		RecvKey: make(chan uint),
 		Quit:    make(chan bool),
 	}
-}
-
-func (m *Minitel) ContextError() error {
-	return m.ctx.Err()
 }
 
 func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
@@ -98,24 +89,19 @@ func (m *Minitel) Listen() {
 	for {
 		var err error
 		var wsMsg []byte
+		var n int
 
 		if fullRead {
-			_, wsMsg, err = m.conn.Read(m.ctx)
-			if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure {
-				warnLog.Printf("Stop minitel listen: Closed WS connection: %s\n", err.Error())
+			n, wsMsg, err = m.conn.Read()
+			if err != nil {
+				warnLog.Printf("stop minitel listen: closed connection: %s\n", err.Error())
 				m.Quit <- true
-				return
-
-			} else if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
-				infoLog.Printf("Stop minitel listen: Closed WS connection: %s\n", err.Error())
-				m.Quit <- true
-				return
 			}
 
 			fullRead = false
 		}
 
-		for id, b := range wsMsg {
+		for id, b := range wsMsg[:n] {
 			keyBuffer = append(keyBuffer, b)
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
@@ -151,7 +137,7 @@ func (m *Minitel) Send(buf []byte) error {
 			buf[id] = GetByteWithParity(b)
 		}
 	}
-	return m.conn.Write(m.ctx, websocket.MessageBinary, buf)
+	return m.conn.Write(buf)
 }
 
 func (m *Minitel) Reset() error {

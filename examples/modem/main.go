@@ -1,11 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/NoelM/minigo"
 )
+
+var infoLog = log.New(os.Stdout, "[minichat] INFO:", log.Ldate|log.LUTC)
+var warnLog = log.New(os.Stdout, "[minichat] WARN:", log.Ldate|log.LUTC)
+var errorLog = log.New(os.Stdout, "[minichat] ERROR:", log.Ldate|log.LUTC)
 
 func main() {
 	init := []minigo.ATCommand{
@@ -30,15 +34,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	modem.RingHandler(func(m *minigo.Modem) {
-		for m.Connected() {
-			n, buf, err := m.Read()
-			if err != nil {
-				log.Fatal(err)
-			}
+	modem.RingHandler(func(mdm *minigo.Modem) {
+		m := minigo.NewMinitel(mdm, true)
+		go m.Listen()
 
-			fmt.Println(buf[:n])
-		}
+		nick := logPage(m)
+
+		ircDvr := NewIrcDriver(string(nick))
+		go ircDvr.Loop()
+
+		chatPage(m, ircDvr)
+		ircDvr.Quit()
+
+		infoLog.Printf("Minitel session closed from Modem nick=%s\n", nick)
 	})
 
 	modem.Serve(true)

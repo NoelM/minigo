@@ -119,6 +119,7 @@ func (m *Modem) Serve(forceRing bool) {
 		if !status.DCD && m.connected {
 			infoLog.Printf("closed connection\n")
 			m.connected = false
+			m.Init()
 		}
 
 		if status.RI || forceRing {

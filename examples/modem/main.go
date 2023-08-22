@@ -3,53 +3,43 @@ package main
 import (
 	"fmt"
 	"log"
-	"strings"
 
-	"go.bug.st/serial"
+	"github.com/NoelM/minigo"
 )
 
 func main() {
-	port, err := serial.Open("/dev/ttyUSB0", &serial.Mode{BaudRate: 115200})
+	init := []minigo.ATCommand{
+		{
+			Command: "AT&F1+MCA=0",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&N2",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATS27=16",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATA",
+			Reply:   "CONNECT 1200/75/NONE",
+		},
+	}
+
+	modem := minigo.NewModem("/dev/ttyUSB0", 115200, init)
+
+	err := modem.Init()
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 
-	init := make([][]string, 0)
-	init = append(init, []string{"AT&F1+MCA=0", "OK"})
-	init = append(init, []string{"AT&N2", "OK"})
-	init = append(init, []string{"ATS27=16", "OK"})
-	init = append(init, []string{"ATA", ""})
-
-	for _, pair := range init {
-		SendCommandAndWait(port, pair[0], pair[1])
-	}
-}
-
-func SendCommandAndWait(port serial.Port, command, reply string) {
-	// Send initial message
-	if len(command) > 0 {
-		if _, err := port.Write([]byte(command + "\r\n")); err != nil {
-			log.Println(err)
+	for {
+		n, buf, err := modem.Read()
+		if err != nil {
+			log.Fatal(err)
 		}
-	}
 
-	// Wait for message
-	if len(reply) > 0 {
-		var result string
-		buffer := make([]byte, 64)
-		for {
-			n, err := port.Read(buffer)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			if n == 0 {
-				break
-			}
-			result += string(buffer[0:n])
-			if strings.Contains(result, reply) {
-				break
-			}
-		}
-		fmt.Println(result)
+		fmt.Println(buf[:n])
 	}
 }

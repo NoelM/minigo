@@ -6,11 +6,14 @@ import (
 	"github.com/NoelM/minigo"
 )
 
+const noopId = -2
+const quitId = -1
+
 const (
-	sommaire = iota
-	irc
-	meteo
-	guide
+	sommaireId = iota
+	ircId
+	meteoId
+	guideId
 )
 
 func PageSommaire(m *minigo.Minitel) int {
@@ -55,7 +58,7 @@ func PageSommaire(m *minigo.Minitel) int {
 			}
 
 		case <-m.Quit:
-			warnLog.Println("Quitting log page")
+			warnLog.Println("quit log page")
 			return -1
 
 		default:

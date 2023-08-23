@@ -40,8 +40,15 @@ func main() {
 		go m.Listen()
 
 		var id int
-		for id >= sommaire {
-			id = PageSommaire(m)
+		for id >= sommaireId {
+			switch id {
+			case sommaireId:
+				id = PageSommaire(m)
+			case ircId:
+				id = ServiceMiniChat(m)
+			default:
+				continue
+			}
 		}
 
 		infoLog.Printf("Minitel session closed for IP=%s\n", r.RemoteAddr)

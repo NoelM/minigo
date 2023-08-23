@@ -90,7 +90,7 @@ func serveModem(wg *sync.WaitGroup) {
 	}
 
 	modem.RingHandler(func(mdm *minigo.Modem) {
-		m := minigo.NewMinitel(mdm, false)
+		m := minigo.NewMinitel(mdm, true)
 		go m.Listen()
 
 		ServiceHandler(m)

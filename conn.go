@@ -1,6 +1,7 @@
 package minigo
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -19,8 +20,10 @@ type Connector interface {
 type ConnectorErrorCode int
 
 const (
-	ClosedConnection = iota
-	InterfaceUnreachable
+	InvalidDefinition = iota
+	InvalidInit
+	ClosedConnection
+	Unreachable
 )
 
 type ConnectorError struct {
@@ -32,6 +35,10 @@ func (ce *ConnectorError) Code() ConnectorErrorCode {
 	return ce.code
 }
 
-func (ce *ConnectorError) Error() error {
+func (ce *ConnectorError) Raw() error {
 	return ce.raw
+}
+
+func (ce *ConnectorError) Error() string {
+	return fmt.Sprintf("connector error id=%d: %s", ce.code, ce.raw.Error())
 }

@@ -27,9 +27,12 @@ func main() {
 		},
 	}
 
-	modem := minigo.NewModem("/dev/ttyUSB0", 115200, init)
+	modem, err := minigo.NewModem("/dev/ttyUSB0", 115200, init)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	err := modem.Init()
+	err = modem.Init()
 	if err != nil {
 		log.Fatal(err)
 	}

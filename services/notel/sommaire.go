@@ -20,8 +20,11 @@ func PageSommaire(m *minigo.Minitel) int {
 	m.SendVDT("static/notel.vdt")
 
 	m.WriteAttributes(minigo.GrandeurNormale, minigo.InversionFond)
-	m.WriteStringXY(2, 8, "Mini Chat")
-	m.CursorOnXY(10, 13)
+	m.WriteStringXY(1, 8, " 1 ")
+	m.WriteAttributes(minigo.FondNormal)
+	m.WriteStringXY(4, 8, "Mini Chat")
+
+	m.CursorOnXY(31, 24)
 
 	for {
 		select {

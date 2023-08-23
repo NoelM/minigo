@@ -2,6 +2,7 @@ package minigo
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -252,4 +253,22 @@ func (m *Minitel) RouleauOff() error {
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Stop, Rouleau)
 	return m.Send(buf)
+}
+
+//
+// VDT FORMAT
+//
+
+func (m *Minitel) SendVDT(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+
+	vdt, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+
+	return m.Send(vdt)
 }

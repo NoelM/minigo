@@ -19,6 +19,8 @@ var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lsho
 func main() {
 	var wg sync.WaitGroup
 
+	wg.Add(2)
+
 	go serveWS(&wg)
 	go serveModem(&wg)
 
@@ -26,7 +28,6 @@ func main() {
 }
 
 func serveWS(wg *sync.WaitGroup) {
-	wg.Add(1)
 	defer wg.Done()
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +62,6 @@ func serveWS(wg *sync.WaitGroup) {
 }
 
 func serveModem(wg *sync.WaitGroup) {
-	wg.Add(1)
 	defer wg.Done()
 
 	init := []minigo.ATCommand{

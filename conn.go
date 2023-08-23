@@ -15,3 +15,23 @@ type Connector interface {
 
 	Connected() bool
 }
+
+type ConnectorErrorCode int
+
+const (
+	ClosedConnection = iota
+	InterfaceUnreachable
+)
+
+type ConnectorError struct {
+	code ConnectorErrorCode
+	raw  error
+}
+
+func (ce *ConnectorError) Code() ConnectorErrorCode {
+	return ce.code
+}
+
+func (ce *ConnectorError) Error() error {
+	return ce.raw
+}

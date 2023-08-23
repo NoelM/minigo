@@ -6,9 +6,9 @@ import (
 	"os"
 )
 
-var infoLog = log.New(os.Stdout, "[minigo] INFO:", log.Ldate|log.LUTC)
-var warnLog = log.New(os.Stdout, "[minigo] WARN:", log.Ldate|log.LUTC)
-var errorLog = log.New(os.Stdout, "[minigo] ERROR:", log.Ldate|log.LUTC)
+var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 type AckType uint
 

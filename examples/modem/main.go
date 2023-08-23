@@ -7,9 +7,9 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-var infoLog = log.New(os.Stdout, "[minichat] INFO:", log.Ldate|log.LUTC)
-var warnLog = log.New(os.Stdout, "[minichat] WARN:", log.Ldate|log.LUTC)
-var errorLog = log.New(os.Stdout, "[minichat] ERROR:", log.Ldate|log.LUTC)
+var infoLog = log.New(os.Stdout, "[minichat] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var warnLog = log.New(os.Stdout, "[minichat] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var errorLog = log.New(os.Stdout, "[minichat] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 func main() {
 	init := []minigo.ATCommand{

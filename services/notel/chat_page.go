@@ -17,6 +17,8 @@ func chatPage(m *minigo.Minitel, ircDvr *IrcDriver) int {
 	time.Sleep(2 * time.Second)
 	m.CleanLine()
 
+	helpers(m)
+
 	messageInput.Repetition()
 	m.RouleauOn()
 
@@ -105,6 +107,10 @@ func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 
 	*lastId = len(list)
 
+	helpers(m)
+}
+
+func helpers(m *minigo.Minitel) {
 	m.WriteStringXY(1, 24, "MAJ ECRAN ")
 	m.WriteAttributes(minigo.InversionFond)
 	m.Send(minigo.EncodeMessage("REPET."))

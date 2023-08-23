@@ -2,6 +2,7 @@ package minigo
 
 import (
 	"context"
+	"fmt"
 
 	"nhooyr.io/websocket"
 )
@@ -59,7 +60,7 @@ func (ws *Websocket) Read() ([]byte, error) {
 	}
 
 	if msgType != websocket.MessageBinary {
-		return nil, &ConnectorError{code: InvalidData, raw: err}
+		return nil, &ConnectorError{code: InvalidData, raw: fmt.Errorf("expected Binary got type=%d", msgType)}
 	}
 
 	return msg, nil

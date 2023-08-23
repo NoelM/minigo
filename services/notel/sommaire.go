@@ -14,7 +14,7 @@ const (
 )
 
 func PageSommaire(m *minigo.Minitel) int {
-	entry := minigo.NewInput(m, 31, 24, 2, 1, "", true)
+	entry := minigo.NewInput(m, 32, 24, 2, 1, "", true)
 
 	m.CleanScreen()
 	m.SendVDT("static/notel.vdt")
@@ -31,17 +31,16 @@ func PageSommaire(m *minigo.Minitel) int {
 		case key := <-m.RecvKey:
 			if key == minigo.Envoi {
 				if len(entry.Value) == 0 {
-					warnLog.Println("Empty nick input")
+					warnLog.Println("empty choice")
 					continue
 				}
 				m.Reset()
 
-				infoLog.Printf("Logged as: %s\n", entry.Value)
+				infoLog.Printf("choose service: %s\n", entry.Value)
 				id, err := strconv.Atoi(string(entry.Value))
 				if err != nil {
 					warnLog.Println("unable to parse choice")
-					entry.Clear()
-					continue
+					return 0
 				}
 				return id
 

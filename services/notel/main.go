@@ -27,6 +27,7 @@ func main() {
 
 func serveWS(wg *sync.WaitGroup) {
 	wg.Add(1)
+	defer wg.Done()
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -57,12 +58,11 @@ func serveWS(wg *sync.WaitGroup) {
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)
 	log.Fatal(err)
-
-	wg.Done()
 }
 
 func serveModem(wg *sync.WaitGroup) {
 	wg.Add(1)
+	defer wg.Done()
 
 	init := []minigo.ATCommand{
 		{
@@ -99,8 +99,6 @@ func serveModem(wg *sync.WaitGroup) {
 	})
 
 	modem.Serve(false)
-
-	wg.Done()
 }
 
 func ServiceHandler(m *minigo.Minitel) {

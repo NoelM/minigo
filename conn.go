@@ -2,7 +2,6 @@ package minigo
 
 import (
 	"fmt"
-	"time"
 )
 
 type Connector interface {
@@ -12,8 +11,6 @@ type Connector interface {
 
 	Read() ([]byte, error)
 
-	ReadTimeout(time.Duration) ([]byte, error)
-
 	Connected() bool
 }
 
@@ -22,6 +19,7 @@ type ConnectorErrorCode int
 const (
 	InvalidDefinition = iota
 	InvalidInit
+	InvalidData
 	ClosedConnection
 	Unreachable
 )

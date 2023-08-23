@@ -22,9 +22,9 @@ func PageSommaire(m *minigo.Minitel) int {
 	m.WriteAttributes(minigo.GrandeurNormale, minigo.InversionFond)
 	m.WriteStringXY(1, 8, " 1 ")
 	m.WriteAttributes(minigo.FondNormal)
-	m.WriteStringXY(4, 8, "Mini Chat")
+	m.WriteStringXY(5, 8, "Mini Chat")
 
-	m.CursorOnXY(31, 24)
+	m.CursorOnXY(32, 24)
 
 	for {
 		select {

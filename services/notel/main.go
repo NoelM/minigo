@@ -11,9 +11,9 @@ import (
 	"nhooyr.io/websocket"
 )
 
-var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.LUTC)
-var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.LUTC)
-var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.LUTC)
+var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 func main() {
 

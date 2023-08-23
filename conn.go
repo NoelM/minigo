@@ -22,6 +22,7 @@ const (
 	InvalidData
 	ClosedConnection
 	Unreachable
+	Unsupported
 )
 
 type ConnectorError struct {

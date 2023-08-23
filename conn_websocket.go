@@ -14,6 +14,8 @@ type Websocket struct {
 
 	conn *websocket.Conn
 	ctx  context.Context
+
+	connected bool
 }
 
 func NewWebsocket(write http.ResponseWriter, request *http.Request) (*Websocket, error) {
@@ -41,6 +43,7 @@ func (ws *Websocket) Init() error {
 	ws.ctx, cancel = context.WithTimeout(ws.request.Context(), time.Minute*10)
 	defer cancel()
 
+	ws.connected = true
 	return nil
 }
 
@@ -51,9 +54,11 @@ func (ws *Websocket) Write(b []byte) error {
 		if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure ||
 			websocket.CloseStatus(err) == websocket.StatusNormalClosure {
 
+			ws.connected = false
+
 			return &ConnectorError{code: ClosedConnection, raw: err}
 		} else {
-			return &ConnectorError{code: Unreachable, raw: err}
+			return &ConnectorError{code: Unsupported, raw: err}
 		}
 	}
 
@@ -67,9 +72,11 @@ func (ws *Websocket) Read() ([]byte, error) {
 		if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure ||
 			websocket.CloseStatus(err) == websocket.StatusNormalClosure {
 
+			ws.connected = false
+
 			return nil, &ConnectorError{code: ClosedConnection, raw: err}
 		} else {
-			return nil, &ConnectorError{code: Unreachable, raw: err}
+			return nil, &ConnectorError{code: Unsupported, raw: err}
 		}
 	}
 
@@ -78,4 +85,8 @@ func (ws *Websocket) Read() ([]byte, error) {
 	}
 
 	return msg, nil
+}
+
+func (ws *Websocket) Connected() bool {
+	return ws.connected
 }

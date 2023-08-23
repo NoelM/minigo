@@ -177,7 +177,11 @@ func (m *Modem) Connect() {
 	if !isAck {
 		errorLog.Printf("unable to connect after RING got reply=%s\n", rep.Replace(result))
 		return
+	} else {
+		infoLog.Printf("acknowledged command='ATA' with reply='%s'", rep.Replace(result))
 	}
+
+	time.Sleep(100 * time.Millisecond)
 
 	status, err := m.port.GetModemStatusBits()
 	if err != nil {

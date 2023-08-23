@@ -1,17 +1,14 @@
 package minigo
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
-
-	"nhooyr.io/websocket"
 )
 
-var infoLog = log.New(os.Stdout, "[minigo] INFO:", log.Ldate|log.LUTC)
-var warnLog = log.New(os.Stdout, "[minigo] WARN:", log.Ldate|log.LUTC)
-var errorLog = log.New(os.Stdout, "[minigo] ERROR:", log.Ldate|log.LUTC)
+var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 type AckType uint
 
@@ -25,8 +22,7 @@ type Minitel struct {
 	RecvKey chan uint
 	Quit    chan bool
 
-	conn    *websocket.Conn
-	ctx     context.Context
+	conn    Connector
 	ackType AckType
 
 	terminalByte       byte
@@ -36,18 +32,13 @@ type Minitel struct {
 	parity             bool
 }
 
-func NewMinitel(conn *websocket.Conn, ctx context.Context, parity bool) *Minitel {
+func NewMinitel(conn Connector, parity bool) *Minitel {
 	return &Minitel{
 		conn:    conn,
-		ctx:     ctx,
 		parity:  parity,
 		RecvKey: make(chan uint),
 		Quit:    make(chan bool),
 	}
-}
-
-func (m *Minitel) ContextError() error {
-	return m.ctx.Err()
 }
 
 func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
@@ -95,27 +86,30 @@ func (m *Minitel) Listen() {
 	var done bool
 	var pro bool
 
-	for {
+	for m.conn.Connected() {
 		var err error
-		var wsMsg []byte
+		var inBytes []byte
 
 		if fullRead {
-			_, wsMsg, err = m.conn.Read(m.ctx)
-			if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure {
-				warnLog.Printf("Stop minitel listen: Closed WS connection: %s\n", err.Error())
+			inBytes, err = m.conn.Read()
+			if err != nil {
+				warnLog.Printf("stop minitel listen: closed connection: %s\n", err.Error())
 				m.Quit <- true
-				return
-
-			} else if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
-				infoLog.Printf("Stop minitel listen: Closed WS connection: %s\n", err.Error())
-				m.Quit <- true
-				return
 			}
 
 			fullRead = false
 		}
 
-		for id, b := range wsMsg {
+		var parityErr error
+		for id, b := range inBytes {
+			if m.parity {
+				b, parityErr = CheckByteParity(b)
+				if parityErr != nil {
+					warnLog.Printf("key=%x ignored: wrong parity\n", b)
+					continue
+				}
+			}
+
 			keyBuffer = append(keyBuffer, b)
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
@@ -138,11 +132,14 @@ func (m *Minitel) Listen() {
 				keyBuffer = []byte{}
 			}
 
-			if id == len(wsMsg)-1 {
+			if id == len(inBytes)-1 {
 				fullRead = true
 			}
 		}
 	}
+
+	warnLog.Printf("stop minitel listen: closed connection\n")
+	m.Quit <- true
 }
 
 func (m *Minitel) Send(buf []byte) error {
@@ -151,7 +148,7 @@ func (m *Minitel) Send(buf []byte) error {
 			buf[id] = GetByteWithParity(b)
 		}
 	}
-	return m.conn.Write(m.ctx, websocket.MessageBinary, buf)
+	return m.conn.Write(buf)
 }
 
 func (m *Minitel) Reset() error {
@@ -167,6 +164,10 @@ func (m *Minitel) Reset() error {
 
 func (m *Minitel) CleanLine() error {
 	return m.Send(GetCleanLine())
+}
+
+func (m *Minitel) CleanScreen() error {
+	return m.Send(GetCleanScreen())
 }
 
 func (m *Minitel) CleanScreenFromCursor() error {

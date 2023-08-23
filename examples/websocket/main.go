@@ -18,20 +18,25 @@ var errorLog = log.New(os.Stdout, "[MINICHAT] ERROR:", log.Ldate|log.LUTC)
 func main() {
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
+
+		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 		if err != nil {
-			errorLog.Printf("Unable to open WS connection: %s\n", err.Error())
+			errorLog.Printf("unable to open websocket connection: %s\n", err.Error())
 			return
 		}
-		defer c.Close(websocket.StatusInternalError, "the sky is falling")
-		infoLog.Printf("New connection from IP=%s\n", r.RemoteAddr)
 
-		c.SetReadLimit(1024)
+		defer conn.Close(websocket.StatusInternalError, "websocket internal error, quitting")
+		infoLog.Printf("new connection from IP=%s\n", r.RemoteAddr)
+
+		conn.SetReadLimit(1024)
 
 		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
 		defer cancel()
 
-		m := minigo.NewMinitel(c, ctx, false)
+		ws, _ := minigo.NewWebsocket(conn, ctx)
+		_ = ws.Init()
+
+		m := minigo.NewMinitel(ws, false)
 		go m.Listen()
 
 		nick := logPage(m)

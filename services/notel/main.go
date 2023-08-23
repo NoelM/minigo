@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -16,6 +17,16 @@ var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.Ltime|log.Lshort
 var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 func main() {
+	var wg sync.WaitGroup
+
+	go serveWS(&wg)
+	go serveModem(&wg)
+
+	wg.Wait()
+}
+
+func serveWS(wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -39,21 +50,69 @@ func main() {
 		m := minigo.NewMinitel(ws, false)
 		go m.Listen()
 
-		var id int
-		for id >= sommaireId {
-			switch id {
-			case sommaireId:
-				id = PageSommaire(m)
-			case ircId:
-				id = ServiceMiniChat(m)
-			default:
-				continue
-			}
-		}
+		ServiceHandler(m)
 
 		infoLog.Printf("Minitel session closed for IP=%s\n", r.RemoteAddr)
 	})
 
 	err := http.ListenAndServe("192.168.1.34:3615", fn)
 	log.Fatal(err)
+
+	wg.Done()
+}
+
+func serveModem(wg *sync.WaitGroup) {
+	wg.Add(1)
+
+	init := []minigo.ATCommand{
+		{
+			Command: "AT&F1+MCA=0",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&N2",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATS27=16",
+			Reply:   "OK",
+		},
+	}
+
+	modem, err := minigo.NewModem("/dev/ttyUSB0", 115200, init)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = modem.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	modem.RingHandler(func(mdm *minigo.Modem) {
+		m := minigo.NewMinitel(mdm, false)
+		go m.Listen()
+
+		ServiceHandler(m)
+
+		infoLog.Printf("Minitel session closed for Modem\n")
+	})
+
+	modem.Serve(false)
+
+	wg.Done()
+}
+
+func ServiceHandler(m *minigo.Minitel) {
+	var id int
+	for id >= sommaireId {
+		switch id {
+		case sommaireId:
+			id = PageSommaire(m)
+		case ircId:
+			id = ServiceMiniChat(m)
+		default:
+			continue
+		}
+	}
 }

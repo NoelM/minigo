@@ -2,7 +2,6 @@ package minigo
 
 import (
 	"context"
-	"fmt"
 
 	"nhooyr.io/websocket"
 )
@@ -45,7 +44,7 @@ func (ws *Websocket) Write(b []byte) error {
 }
 
 func (ws *Websocket) Read() ([]byte, error) {
-	msgType, msg, err := ws.conn.Read(ws.ctx)
+	_, msg, err := ws.conn.Read(ws.ctx)
 
 	if err != nil {
 		if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure ||
@@ -57,10 +56,6 @@ func (ws *Websocket) Read() ([]byte, error) {
 		} else {
 			return nil, &ConnectorError{code: Unsupported, raw: err}
 		}
-	}
-
-	if msgType != websocket.MessageBinary {
-		return nil, &ConnectorError{code: InvalidData, raw: fmt.Errorf("expected Binary got type=%d", msgType)}
 	}
 
 	return msg, nil

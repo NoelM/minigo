@@ -255,9 +255,9 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
 		value = uint(keyBuffer[0])
 	case 2:
 		value = uint(binary.BigEndian.Uint16(keyBuffer))
-	case 3:
-		value = uint(binary.BigEndian.Uint32(keyBuffer))
 	case 4:
+		value = uint(binary.BigEndian.Uint32(keyBuffer))
+	case 8:
 		value = uint(binary.BigEndian.Uint64(keyBuffer))
 	default:
 		err = errors.New("unable to cast readbuffer")

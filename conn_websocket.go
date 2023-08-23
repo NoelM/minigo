@@ -2,47 +2,25 @@ package minigo
 
 import (
 	"context"
-	"net/http"
-	"time"
 
 	"nhooyr.io/websocket"
 )
 
 type Websocket struct {
-	write   http.ResponseWriter
-	request *http.Request
-
 	conn *websocket.Conn
 	ctx  context.Context
 
 	connected bool
 }
 
-func NewWebsocket(write http.ResponseWriter, request *http.Request) (*Websocket, error) {
+func NewWebsocket(conn *websocket.Conn, ctx context.Context) (*Websocket, error) {
 	return &Websocket{
-		write:   write,
-		request: request,
+		conn: conn,
+		ctx:  ctx,
 	}, nil
 }
 
 func (ws *Websocket) Init() error {
-	var err error
-
-	ws.conn, err = websocket.Accept(ws.write, ws.request, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
-	if err != nil {
-		errorLog.Printf("unable to open websocket connection: %s\n", err.Error())
-		return &ConnectorError{code: InvalidInit, raw: err}
-	}
-
-	defer ws.conn.Close(websocket.StatusInternalError, "websocket internal error, quitting")
-	infoLog.Printf("new connection from IP=%s\n", ws.request.RemoteAddr)
-
-	ws.conn.SetReadLimit(1024)
-
-	var cancel context.CancelFunc
-	ws.ctx, cancel = context.WithTimeout(ws.request.Context(), time.Minute*10)
-	defer cancel()
-
 	ws.connected = true
 	return nil
 }

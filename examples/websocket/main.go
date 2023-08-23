@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/NoelM/minigo"
+	"nhooyr.io/websocket"
 )
 
 var infoLog = log.New(os.Stdout, "[MINICHAT] INFO:", log.Ldate|log.LUTC)
@@ -16,11 +19,22 @@ func main() {
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		ws, _ := minigo.NewWebsocket(w, r)
-		err := ws.Init()
+		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 		if err != nil {
-			errorLog.Printf("impossible to init websocket because: %s\n", err.Error())
+			errorLog.Printf("unable to open websocket connection: %s\n", err.Error())
+			return
 		}
+
+		defer conn.Close(websocket.StatusInternalError, "websocket internal error, quitting")
+		infoLog.Printf("new connection from IP=%s\n", r.RemoteAddr)
+
+		conn.SetReadLimit(1024)
+
+		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
+		defer cancel()
+
+		ws, _ := minigo.NewWebsocket(conn, ctx)
+		_ = ws.Init()
 
 		m := minigo.NewMinitel(ws, false)
 		go m.Listen()

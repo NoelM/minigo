@@ -93,6 +93,12 @@ func (m *Minitel) Listen() {
 		if fullRead {
 			inBytes, err = m.conn.Read()
 			if err != nil {
+				cErr, ok := err.(*ConnectorError)
+				if !ok || cErr.Code() == Unsupported {
+					errorLog.Printf("read raised error: %s\n", err.Error())
+					continue
+				}
+
 				warnLog.Printf("stop minitel listen: closed connection: %s\n", err.Error())
 				m.Quit <- true
 			}

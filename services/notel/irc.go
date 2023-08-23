@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -62,14 +61,14 @@ func (i *IrcDriver) Loop() error {
 
 	err := i.conn.Connect(serverssl)
 	if err != nil {
-		fmt.Printf("Err %s", err)
+		errorLog.Printf("unable to connect to IRC: %s\n", err.Error())
 		return err
 	}
 
 	go i.sendMessageListner()
 	i.conn.Loop()
 
-	fmt.Printf("[chat] %s disconnected from: irc.libera.chat\n", time.Now().Format(time.RFC3339))
+	infoLog.Println("disconnected from: irc.libera.chat")
 	return nil
 }
 
@@ -91,7 +90,7 @@ func ServiceMiniChat(m *minigo.Minitel) int {
 		return serviceId
 	}
 
-	infoLog.Printf("Minitel session closed from Modem nick=%s\n", nick)
+	infoLog.Printf("minichat session closed for nick=%s\n", nick)
 
 	return sommaireId
 }

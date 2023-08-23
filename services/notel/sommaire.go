@@ -54,11 +54,11 @@ func PageSommaire(m *minigo.Minitel) int {
 				entry.AppendKey(byte(key))
 
 			} else {
-				errorLog.Printf("Not supported key: %d\n", key)
+				errorLog.Printf("not supported key: %d\n", key)
 			}
 
 		case <-m.Quit:
-			warnLog.Println("quit log page")
+			warnLog.Println("quit sommaire page")
 			return -1
 
 		default:

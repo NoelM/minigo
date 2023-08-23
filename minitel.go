@@ -88,11 +88,10 @@ func (m *Minitel) Listen() {
 
 	for m.conn.Connected() {
 		var err error
-		var wsMsg []byte
-		var n int
+		var inBytes []byte
 
 		if fullRead {
-			n, wsMsg, err = m.conn.Read()
+			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: closed connection: %s\n", err.Error())
 				m.Quit <- true
@@ -102,7 +101,7 @@ func (m *Minitel) Listen() {
 		}
 
 		var parityErr error
-		for id, b := range wsMsg[:n] {
+		for id, b := range inBytes {
 			if m.parity {
 				b, parityErr = CheckByteParity(b)
 				if parityErr != nil {
@@ -133,7 +132,7 @@ func (m *Minitel) Listen() {
 				keyBuffer = []byte{}
 			}
 
-			if id == n-1 {
+			if id == len(inBytes)-1 {
 				fullRead = true
 			}
 		}

@@ -7,8 +7,8 @@ type Form struct {
 	allowActiveCycling bool
 }
 
-func (f *Form) AppendInput(name string, m *Minitel, refX, refY int, width, height int, pre string, cursor bool) {
-	f.inputs = append(f.inputs, NewInput(m, refX, refY, width, height, pre, cursor))
+func (f *Form) AppendInput(name string, input *Input) {
+	f.inputs = append(f.inputs, input)
 	f.inputNames = append(f.inputNames, name)
 }
 
@@ -19,6 +19,10 @@ func (f *Form) ToMap() map[string]string {
 	}
 
 	return out
+}
+
+func (f *Form) ValueActive() []byte {
+	return f.inputs[f.active].Value
 }
 
 func (f *Form) AppendKeyActive(key byte) {

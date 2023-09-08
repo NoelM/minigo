@@ -3,18 +3,19 @@ package minigo
 const NoOp = -100
 const QuitOp = -1
 
-type InitFunc func(mntl *Minitel, inputs InputGroup)
-type KeyboardFunc func(mntl *Minitel, inputs InputGroup, key uint)
-type InChanFunc func(mntl *Minitel, inputs InputGroup, message string)
-type NavigationFunc func(mntl *Minitel, inputs InputGroup) (map[string]string, int)
+type InitFunc func(mntl *Minitel, inputs Form, initData map[string]string)
+type KeyboardFunc func(mntl *Minitel, inputs Form, key uint)
+type InChanFunc func(mntl *Minitel, inputs Form, message string)
+type NavigationFunc func(mntl *Minitel, inputs Form) (map[string]string, int)
 
 type Page struct {
 	InChan  chan string
 	OutChan chan string
 
-	mntl   *Minitel
-	name   string
-	inputs InputGroup
+	mntl     *Minitel
+	name     string
+	initData map[string]string
+	form     Form
 
 	initFunc       InitFunc
 	charFunc       KeyboardFunc
@@ -29,13 +30,14 @@ type Page struct {
 	suiteFunc      NavigationFunc
 }
 
-func NewPage(name string, mntl *Minitel) *Page {
+func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 	return &Page{
 		mntl:           mntl,
 		name:           name,
-		initFunc:       func(mntl *Minitel, input InputGroup) { return },
-		charFunc:       func(mntl *Minitel, inputs InputGroup, key uint) { return },
-		inChanFunc:     func(mntl *Minitel, inputs InputGroup, message string) { return },
+		initData:       initData,
+		initFunc:       func(mntl *Minitel, inputs Form, initData map[string]string) {},
+		charFunc:       func(mntl *Minitel, inputs Form, key uint) {},
+		inChanFunc:     func(mntl *Minitel, inputs Form, message string) {},
 		envoiFunc:      defaultNavigationHandlerFunc,
 		sommaireFunc:   defaultNavigationHandlerFunc,
 		annulationFunc: defaultNavigationHandlerFunc,
@@ -47,7 +49,7 @@ func NewPage(name string, mntl *Minitel) *Page {
 	}
 }
 
-func defaultNavigationHandlerFunc(mntl *Minitel, input InputGroup) (map[string]string, int) {
+func defaultNavigationHandlerFunc(mntl *Minitel, input Form) (map[string]string, int) {
 	return nil, NoOp
 }
 
@@ -97,58 +99,58 @@ func (p *Page) SetInChanFunc(f InChanFunc) {
 
 func (p *Page) Run() (map[string]string, int) {
 
-	p.initFunc(p.mntl, p.inputs)
+	p.initFunc(p.mntl, p.form, p.initData)
 
 	for {
 		select {
 		case msg := <-p.InChan:
-			p.inChanFunc(p.mntl, p.inputs, msg)
+			p.inChanFunc(p.mntl, p.form, msg)
 
 		case key := <-p.mntl.RecvKey:
 			switch key {
 			case Envoi:
-				if out, op := p.envoiFunc(p.mntl, p.inputs); op != NoOp {
+				if out, op := p.envoiFunc(p.mntl, p.form); op != NoOp {
 					return out, op
 				}
 
 			case Sommaire:
-				if out, op := p.sommaireFunc(p.mntl, p.inputs); op != NoOp {
+				if out, op := p.sommaireFunc(p.mntl, p.form); op != NoOp {
 					return out, op
 				}
 
 			case Annulation:
-				if out, op := p.annulationFunc(p.mntl, p.inputs); op != NoOp {
+				if out, op := p.annulationFunc(p.mntl, p.form); op != NoOp {
 					return out, op
 				}
 
 			case Retour:
-				if out, op := p.retourFunc(p.mntl, p.inputs); op != NoOp {
+				if out, op := p.retourFunc(p.mntl, p.form); op != NoOp {
 					return out, op
 				}
 
 			case Repetition:
-				if out, op := p.repetitionFunc(p.mntl, p.inputs); op != NoOp {
+				if out, op := p.repetitionFunc(p.mntl, p.form); op != NoOp {
 					return out, op
 				}
 
 			case Guide:
-				if out, op := p.guideFunc(p.mntl, p.inputs); op != NoOp {
+				if out, op := p.guideFunc(p.mntl, p.form); op != NoOp {
 					return out, op
 				}
 
 			case Correction:
-				if out, op := p.correctionFunc(p.mntl, p.inputs); op != NoOp {
+				if out, op := p.correctionFunc(p.mntl, p.form); op != NoOp {
 					return out, op
 				}
 
 			case Suite:
-				if out, op := p.suiteFunc(p.mntl, p.inputs); op != NoOp {
+				if out, op := p.suiteFunc(p.mntl, p.form); op != NoOp {
 					return out, op
 				}
 
 			default:
 				if IsUintAValidChar(key) {
-					p.charFunc(p.mntl, p.inputs, key)
+					p.charFunc(p.mntl, p.form, key)
 
 				} else {
 					errorLog.Printf("not supported key: %d\n", key)

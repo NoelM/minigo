@@ -27,7 +27,7 @@ func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 	return sommairePage
 }
 
-func initSommaire(mntl *minigo.Minitel, form minigo.Form, initData map[string]string) {
+func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) {
 	mntl.CleanScreen()
 	mntl.SendVDT("static/notel.vdt")
 
@@ -38,7 +38,7 @@ func initSommaire(mntl *minigo.Minitel, form minigo.Form, initData map[string]st
 	form.ActivateFirst()
 }
 
-func envoiSommaire(mntl *minigo.Minitel, form minigo.Form) (map[string]string, int) {
+func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	if len(form.ValueActive()) == 0 {
 		warnLog.Println("empty choice")
 		return nil, minigo.NoOp
@@ -55,11 +55,11 @@ func envoiSommaire(mntl *minigo.Minitel, form minigo.Form) (map[string]string, i
 	return form.ToMap(), id
 }
 
-func correctionSommaire(mntl *minigo.Minitel, form minigo.Form) (map[string]string, int) {
+func correctionSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	form.CorrectionActive()
 	return nil, minigo.NoOp
 }
 
-func keySommaire(mntl *minigo.Minitel, form minigo.Form, key uint) {
+func keySommaire(mntl *minigo.Minitel, form *minigo.Form, key uint) {
 	form.AppendKeyActive(byte(key))
 }

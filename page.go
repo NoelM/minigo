@@ -3,10 +3,10 @@ package minigo
 const NoOp = -100
 const QuitOp = -1
 
-type InitFunc func(mntl *Minitel, inputs Form, initData map[string]string)
-type KeyboardFunc func(mntl *Minitel, inputs Form, key uint)
-type InChanFunc func(mntl *Minitel, inputs Form, message string)
-type NavigationFunc func(mntl *Minitel, inputs Form) (map[string]string, int)
+type InitFunc func(mntl *Minitel, inputs *Form, initData map[string]string)
+type KeyboardFunc func(mntl *Minitel, inputs *Form, key uint)
+type InChanFunc func(mntl *Minitel, inputs *Form, message string)
+type NavigationFunc func(mntl *Minitel, inputs *Form) (map[string]string, int)
 
 type Page struct {
 	InChan  chan string
@@ -15,7 +15,7 @@ type Page struct {
 	mntl     *Minitel
 	name     string
 	initData map[string]string
-	form     Form
+	form     *Form
 
 	initFunc       InitFunc
 	charFunc       KeyboardFunc
@@ -35,9 +35,9 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		mntl:           mntl,
 		name:           name,
 		initData:       initData,
-		initFunc:       func(mntl *Minitel, inputs Form, initData map[string]string) {},
-		charFunc:       func(mntl *Minitel, inputs Form, key uint) {},
-		inChanFunc:     func(mntl *Minitel, inputs Form, message string) {},
+		initFunc:       func(mntl *Minitel, inputs *Form, initData map[string]string) {},
+		charFunc:       func(mntl *Minitel, inputs *Form, key uint) {},
+		inChanFunc:     func(mntl *Minitel, inputs *Form, message string) {},
 		envoiFunc:      defaultNavigationHandlerFunc,
 		sommaireFunc:   defaultNavigationHandlerFunc,
 		annulationFunc: defaultNavigationHandlerFunc,
@@ -49,7 +49,7 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 	}
 }
 
-func defaultNavigationHandlerFunc(mntl *Minitel, input Form) (map[string]string, int) {
+func defaultNavigationHandlerFunc(mntl *Minitel, input *Form) (map[string]string, int) {
 	return nil, NoOp
 }
 
@@ -99,6 +99,7 @@ func (p *Page) SetInChanFunc(f InChanFunc) {
 
 func (p *Page) Run() (map[string]string, int) {
 
+	p.form = &Form{}
 	p.initFunc(p.mntl, p.form, p.initData)
 
 	for {

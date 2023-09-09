@@ -96,7 +96,7 @@ func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 		buf = append(buf, minigo.GetMoveCursorXY(1, InputLine-msgLines)...)
 
 		buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
-		buf = append(buf, minigo.EncodeSprintf("%s - %s ", list[i].Time.Format("15:04"), list[i].Nick)...)
+		buf = append(buf, minigo.EncodeSprintf("%s - %s", list[i].Time.Format("15:04"), list[i].Nick)...)
 		buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
 		buf = append(buf, minigo.GetMoveCursorRight(1)...)
 

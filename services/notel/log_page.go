@@ -38,7 +38,7 @@ func envoiLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) 
 	mntl.Reset()
 
 	infoLog.Printf("logged as: %s\n", form.ValueActive())
-	return form.ToMap(), minigo.NoOp
+	return form.ToMap(), minigo.QuitOp
 }
 
 func sommaireLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {

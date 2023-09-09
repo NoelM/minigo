@@ -3,7 +3,7 @@ package minigo
 const NoOp = -100
 const QuitOp = -1
 
-type InitFunc func(mntl *Minitel, inputs *Form, initData map[string]string)
+type InitFunc func(mntl *Minitel, inputs *Form, initData map[string]string) int
 type KeyboardFunc func(mntl *Minitel, inputs *Form, key uint)
 type InChanFunc func(mntl *Minitel, inputs *Form, message string)
 type NavigationFunc func(mntl *Minitel, inputs *Form) (map[string]string, int)
@@ -35,7 +35,7 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		mntl:           mntl,
 		name:           name,
 		initData:       initData,
-		initFunc:       func(mntl *Minitel, inputs *Form, initData map[string]string) {},
+		initFunc:       func(mntl *Minitel, inputs *Form, initData map[string]string) int { return NoOp },
 		charFunc:       func(mntl *Minitel, inputs *Form, key uint) {},
 		inChanFunc:     func(mntl *Minitel, inputs *Form, message string) {},
 		envoiFunc:      defaultNavigationHandlerFunc,
@@ -100,7 +100,9 @@ func (p *Page) SetInChanFunc(f InChanFunc) {
 func (p *Page) Run() (map[string]string, int) {
 
 	p.form = &Form{}
-	p.initFunc(p.mntl, p.form, p.initData)
+	if op := p.initFunc(p.mntl, p.form, p.initData); op != NoOp {
+		return nil, op
+	}
 
 	for {
 		select {

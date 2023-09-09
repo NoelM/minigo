@@ -6,9 +6,6 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-const noopId = -2
-const quitId = -1
-
 const (
 	sommaireId = iota
 	ircId
@@ -27,15 +24,17 @@ func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 	return sommairePage
 }
 
-func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) {
+func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
 	mntl.CleanScreen()
 	mntl.SendVDT("static/notel.vdt")
 
-	list := minigo.NewList(mntl, []string{"Mini-Chat"})
+	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO"})
 	list.Display()
 
 	form.AppendInput("choice", minigo.NewInput(mntl, 32, 24, 2, 1, "", true))
 	form.ActivateFirst()
+
+	return minigo.NoOp
 }
 
 func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {

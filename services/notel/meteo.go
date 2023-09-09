@@ -82,13 +82,18 @@ func getLastWeatherData() ([]WeatherReport, error) {
 	fileURL := fmt.Sprintf(URLFormat, fileName)
 
 	if _, err := os.Stat(filePath); err != nil {
+		infoLog.Printf("weather file does not exist at: %s\n", filePath)
+		infoLog.Printf("download file from: %s\n", fileURL)
+
 		if err := downloadFile(fileURL, filePath); err != nil {
+			errorLog.Printf("unable to download file: %s\n", err.Error())
 			return nil, err
 		}
 	}
 
 	weatherFile, err := os.Open(filePath)
 	if err != nil {
+		errorLog.Printf("unable to open file at: %s\n", filePath)
 		return nil, err
 	}
 	defer weatherFile.Close()
@@ -97,8 +102,8 @@ func getLastWeatherData() ([]WeatherReport, error) {
 	fileReader.Comma = ';'
 
 	weatheRecords, err := fileReader.ReadAll()
-
 	if err != nil {
+		errorLog.Printf("unable to read weather CSV record: %s\n", err.Error())
 		return nil, err
 	}
 
@@ -108,21 +113,25 @@ func getLastWeatherData() ([]WeatherReport, error) {
 		if ok {
 			temp, err := strconv.ParseFloat(record[temperatureCol], 32)
 			if err != nil {
+				warnLog.Printf("unable to parse temperature for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 
 			pres, err := strconv.ParseFloat(record[pressureCol], 32)
 			if err != nil {
+				warnLog.Printf("unable to parse pressure for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 
 			hdty, err := strconv.ParseFloat(record[humidityCol], 32)
 			if err != nil {
+				warnLog.Printf("unable to parse humidity for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 
 			wind, err := strconv.ParseFloat(record[windSpeedCol], 32)
 			if err != nil {
+				warnLog.Printf("unable to parse wind-speed for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 

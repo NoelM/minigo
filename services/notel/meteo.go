@@ -78,7 +78,7 @@ func getLastWeatherData() ([]WeatherReport, error) {
 	lastPublicationDate := time.Date(now.Year(), now.Month(), now.Day(), lastPublicationHour, 0, 0, 0, time.UTC)
 
 	fileName := fmt.Sprintf(FileFormat, lastPublicationDate.Format("2006010215"))
-	filePath := fmt.Sprintf("tmp/%s", fileName)
+	filePath := fmt.Sprintf("/tmp/%s", fileName)
 	fileURL := fmt.Sprintf(URLFormat, fileName)
 
 	if _, err := os.Stat(filePath); err != nil {

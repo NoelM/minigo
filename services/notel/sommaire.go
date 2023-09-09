@@ -19,10 +19,10 @@ const (
 func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 	sommairePage := minigo.NewPage("sommaire", mntl, nil)
 
-	sommairePage.SetInitFunc(initSommaire)
-	sommairePage.SetCharFunc(keySommaire)
-	sommairePage.SetEnvoiFunc(envoiSommaire)
-	sommairePage.SetCorrectionFunc(correctionSommaire)
+	sommairePage.SetInitFunc(initLog)
+	sommairePage.SetCharFunc(keyLog)
+	sommairePage.SetEnvoiFunc(envoiLog)
+	sommairePage.SetCorrectionFunc(correctionLog)
 
 	return sommairePage
 }

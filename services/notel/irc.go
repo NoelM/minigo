@@ -73,8 +73,10 @@ func (i *IrcDriver) Loop() error {
 }
 
 func ServiceMiniChat(m *minigo.Minitel) int {
-	nick, serviceId := logPage(m)
-	if len(nick) == 0 {
+	out, serviceId := NewPageSommaire(m).Run()
+	nick, ok := out["nick"]
+
+	if len(nick) == 0 || !ok {
 		return sommaireId
 	} else if serviceId != noopId {
 		return serviceId
@@ -90,7 +92,7 @@ func ServiceMiniChat(m *minigo.Minitel) int {
 		return serviceId
 	}
 
-	infoLog.Printf("minichat session closed for nick=%s\n", nick)
+	infoLog.Printf("minichat session closed for nick=%s\n", out)
 
 	return sommaireId
 }

@@ -67,10 +67,14 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		return nil, sommaireId
 	})
 
+	chatPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
+		inputs.AppendKeyActive(byte(key))
+	})
+
 	return chatPage
 }
 
-const InputLine = 22
+const InputLine = 21
 
 func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 	m.CursorOff()

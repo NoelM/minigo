@@ -75,8 +75,30 @@ func printWeatherReport(mntl *minigo.Minitel, rep WeatherReport) {
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	// len 32 chars
-	buf = append(buf, minigo.EncodeSprintf("%2.f C %3.f %% - %4.f hPA - %3.f m/s", rep.temperature-275., rep.humidity, rep.pressure/100., rep.windSpeed*3.6)...)
+	buf = append(buf, minigo.EncodeSprintf("%2.f C %3.f %% - %4.f hPa - %s %3.f km/h", rep.temperature-275., rep.humidity, rep.pressure/100., windDirToString(rep.windDir), rep.windSpeed*3.6)...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	mntl.Send(buf)
+}
+
+func windDirToString(deg float64) string {
+	if deg > 337.5 && deg <= 22.5 {
+		return "N"
+	} else if deg > 22.5 && deg <= 67.5 {
+		return "NE"
+	} else if deg > 67.5 && deg <= 112.5 {
+		return "E"
+	} else if deg > 112.5 && deg <= 157.5 {
+		return "SE"
+	} else if deg > 157.5 && deg <= 202.5 {
+		return "S"
+	} else if deg > 202.5 && deg <= 247.5 {
+		return "SO"
+	} else if deg > 247.5 && deg <= 292.5 {
+		return "O"
+	} else if deg > 292.5 && deg <= 337.5 {
+		return "NO"
+	} else {
+		return ""
+	}
 }

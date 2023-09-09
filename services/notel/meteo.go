@@ -57,6 +57,7 @@ const URLFormat = "https://donneespubliques.meteofrance.fr/donnees_libres/Txt/Sy
 const (
 	stationIdCol   = 0
 	pressureCol    = 2
+	windDirCol     = 5
 	windSpeedCol   = 6
 	temperatureCol = 7
 	humidityCol    = 9
@@ -66,6 +67,7 @@ type WeatherReport struct {
 	stationId   string
 	stationName string
 	temperature float64
+	windDir     float64
 	windSpeed   float64
 	pressure    float64
 	humidity    float64
@@ -129,7 +131,13 @@ func getLastWeatherData() ([]WeatherReport, error) {
 				continue
 			}
 
-			wind, err := strconv.ParseFloat(record[windSpeedCol], 32)
+			windDir, err := strconv.ParseFloat(record[windDirCol], 32)
+			if err != nil {
+				warnLog.Printf("unable to parse wind-dir for station %s: %s\n", stationName, err.Error())
+				continue
+			}
+
+			windSpeed, err := strconv.ParseFloat(record[windSpeedCol], 32)
 			if err != nil {
 				warnLog.Printf("unable to parse wind-speed for station %s: %s\n", stationName, err.Error())
 				continue
@@ -141,7 +149,8 @@ func getLastWeatherData() ([]WeatherReport, error) {
 				temperature: temp,
 				pressure:    pres,
 				humidity:    hdty,
-				windSpeed:   wind,
+				windSpeed:   windSpeed,
+				windDir:     windDir,
 			})
 		}
 	}

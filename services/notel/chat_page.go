@@ -79,7 +79,10 @@ const InputLine = 21
 func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 	m.CursorOff()
 	for i := *lastId; i < len(list); i += 1 {
-		msgLen := 5 + len(list[i].Nick) + 4 + len(list[i].Text)
+		// 5 because of the date format "15:04"
+		// 3 because of " - "
+		// 2 because of "nick__msg" 2 white spaces
+		msgLen := 5 + 3 + len(list[i].Nick) + len(list[i].Text) + 2
 
 		// 1 because if msgLen < 40, the division gives 0 and one breaks another line for readability
 		// nick > text
@@ -87,12 +90,13 @@ func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 		msgLines := msgLen/40 + 1
 
 		buf := minigo.GetMoveCursorXY(1, 24)
-		buf = append(buf, minigo.GetMoveCursorReturn(msgLines)...)
+		buf = append(buf, minigo.GetMoveCursorDown(msgLines)...)
 		buf = append(buf, minigo.GetMoveCursorXY(1, InputLine-msgLines)...)
 
 		buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
-		buf = append(buf, minigo.EncodeSprintf("%s | %s ", list[i].Time.Format("15:04"), list[i].Nick)...)
+		buf = append(buf, minigo.EncodeSprintf("%s - %s ", list[i].Time.Format("15:04"), list[i].Nick)...)
 		buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
+		buf = append(buf, minigo.GetMoveCursorRight(1)...)
 
 		if list[i].Type == Message_Teletel {
 			buf = append(buf, list[i].Text...)

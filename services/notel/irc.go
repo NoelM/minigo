@@ -85,7 +85,7 @@ func ServiceMiniChat(m *minigo.Minitel) int {
 	ircDvr := NewIrcDriver(string(nick))
 	go ircDvr.Loop()
 
-	serviceId = chatPage(m, ircDvr)
+	_, serviceId = NewChatPage(m, ircDvr).Run()
 	ircDvr.Quit()
 
 	if serviceId != noopId {

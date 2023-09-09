@@ -4,7 +4,7 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func NewLogSommaire(mntl *minigo.Minitel) *minigo.Page {
+func NewLogPage(mntl *minigo.Minitel) *minigo.Page {
 	logPage := minigo.NewPage("log", mntl, nil)
 
 	logPage.SetInitFunc(initLog)
@@ -33,7 +33,7 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 func envoiLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	if len(form.ValueActive()) == 0 {
 		warnLog.Println("empty nick input")
-		return nil, minigo.NoOp
+		return nil, minigo.QuitOp
 	}
 	mntl.Reset()
 

@@ -73,7 +73,7 @@ func (i *IrcDriver) Loop() error {
 }
 
 func ServiceMiniChat(m *minigo.Minitel) int {
-	out, serviceId := NewPageSommaire(m).Run()
+	out, serviceId := NewLogPage(m).Run()
 	nick, ok := out["nick"]
 
 	if len(nick) == 0 || !ok {

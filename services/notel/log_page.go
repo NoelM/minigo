@@ -4,48 +4,52 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func logPage(m *minigo.Minitel) ([]byte, int) {
-	nickInput := minigo.NewInput(m, 10, 13, 10, 1, "", true)
+func NewLogPage(mntl *minigo.Minitel) *minigo.Page {
+	logPage := minigo.NewPage("log", mntl, nil)
 
-	m.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-	m.WriteStringXY(10, 10, "MINI-CHAT")
+	logPage.SetInitFunc(initLog)
+	logPage.SetCharFunc(keyLog)
+	logPage.SetEnvoiFunc(envoiLog)
+	logPage.SetCorrectionFunc(correctionLog)
+	logPage.SetSommaireFunc(sommaireLog)
 
-	m.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-	m.WriteStringXY(10, 12, "PSEUDO : ")
-	m.CursorOnXY(10, 13)
+	return logPage
+}
 
-	for {
-		select {
-		case key := <-m.RecvKey:
-			if key == minigo.Envoi {
-				if len(nickInput.Value) == 0 {
-					warnLog.Println("Empty nick input")
-					continue
-				}
-				m.Reset()
+func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) {
+	mntl.CleanScreen()
 
-				infoLog.Printf("Logged as: %s\n", nickInput.Value)
-				return nickInput.Value, noopId
+	mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
+	mntl.WriteStringXY(10, 10, "MINI-CHAT")
 
-			} else if key == minigo.Correction {
-				nickInput.Correction()
+	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
+	mntl.WriteStringXY(10, 12, "PSEUDO : ")
+	mntl.CursorOnXY(10, 13)
 
-			} else if key == minigo.Sommaire {
-				return nil, sommaireId
+	form.AppendInput("nick", minigo.NewInput(mntl, 10, 13, 10, 1, "", true))
+	form.ActivateFirst()
+}
 
-			} else if minigo.IsUintAValidChar(key) {
-				nickInput.AppendKey(byte(key))
-
-			} else {
-				errorLog.Printf("Not supported key: %d\n", key)
-			}
-
-		case <-m.Quit:
-			warnLog.Println("Quitting log page")
-			return nil, quitId
-
-		default:
-			continue
-		}
+func envoiLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
+	if len(form.ValueActive()) == 0 {
+		warnLog.Println("empty nick input")
+		return nil, minigo.QuitOp
 	}
+	mntl.Reset()
+
+	infoLog.Printf("logged as: %s\n", form.ValueActive())
+	return form.ToMap(), minigo.QuitOp
+}
+
+func sommaireLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
+	return nil, sommaireId
+}
+
+func correctionLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
+	form.CorrectionActive()
+	return nil, minigo.NoOp
+}
+
+func keyLog(mntl *minigo.Minitel, form *minigo.Form, key uint) {
+	form.AppendKeyActive(byte(key))
 }

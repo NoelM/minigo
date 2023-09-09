@@ -6,19 +6,19 @@ type Input struct {
 	m             *Minitel
 	refX, refY    int
 	width, height int
-	pre           string
+	prefix        string
 	cursor        bool
 	active        bool
 }
 
-func NewInput(m *Minitel, refX, refY int, width, height int, pre string, cursor bool) *Input {
+func NewInput(m *Minitel, refX, refY int, width, height int, prefix string, cursor bool) *Input {
 	return &Input{
 		m:      m,
 		refX:   refX,
 		refY:   refY,
 		width:  width,
 		height: height,
-		pre:    pre,
+		prefix: prefix,
 		cursor: cursor,
 	}
 }
@@ -26,8 +26,8 @@ func NewInput(m *Minitel, refX, refY int, width, height int, pre string, cursor 
 // getAbsoluteXY, return where the cursor should be for a certain lenght of message
 func (i *Input) getAbsoluteXY() (x, y int) {
 	totalLen := len(i.Value)
-	if len(i.pre) > 0 {
-		totalLen += len(i.pre) + 1
+	if len(i.prefix) > 0 {
+		totalLen += len(i.prefix) + 1
 	}
 	y = totalLen/i.width + i.refY
 	x = totalLen%i.width + i.refX
@@ -58,8 +58,8 @@ func (i *Input) Correction() {
 func (i *Input) Repetition() {
 	command := GetMoveCursorXY(i.refX, i.refY)
 
-	if len(i.pre) > 0 {
-		command = append(command, EncodeMessage(i.pre)...)
+	if len(i.prefix) > 0 {
+		command = append(command, EncodeMessage(i.prefix)...)
 		command = append(command, GetMoveCursorRight(1)...)
 	}
 

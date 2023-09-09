@@ -106,7 +106,7 @@ func ServiceHandler(m *minigo.Minitel) {
 	for id >= sommaireId {
 		switch id {
 		case sommaireId:
-			id = PageSommaire(m)
+			_, id = NewPageSommaire(m).Run()
 		case ircId:
 			id = ServiceMiniChat(m)
 		default:

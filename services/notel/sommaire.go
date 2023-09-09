@@ -16,53 +16,50 @@ const (
 	guideId
 )
 
-func PageSommaire(m *minigo.Minitel) int {
-	entry := minigo.NewInput(m, 32, 24, 2, 1, "", true)
+func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
+	sommairePage := minigo.NewPage("sommaire", mntl, nil)
 
-	m.CleanScreen()
-	m.SendVDT("static/notel.vdt")
+	sommairePage.SetInitFunc(initSommaire)
+	sommairePage.SetCharFunc(keySommaire)
+	sommairePage.SetEnvoiFunc(envoiSommaire)
+	sommairePage.SetCorrectionFunc(correctionSommaire)
 
-	m.WriteAttributes(minigo.GrandeurNormale, minigo.InversionFond)
-	m.WriteStringXY(1, 8, " 1 ")
-	m.WriteAttributes(minigo.FondNormal)
-	m.WriteStringXY(5, 8, "Mini-Chat (IRC)")
+	return sommairePage
+}
 
-	m.CursorOnXY(32, 24)
+func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) {
+	mntl.CleanScreen()
+	mntl.SendVDT("static/notel.vdt")
 
-	for {
-		select {
-		case key := <-m.RecvKey:
-			if key == minigo.Envoi {
-				if len(entry.Value) == 0 {
-					warnLog.Println("empty choice")
-					continue
-				}
-				m.Reset()
+	list := minigo.NewList(mntl, []string{"Mini-Chat"})
+	list.Display()
 
-				infoLog.Printf("choose service: %s\n", entry.Value)
-				id, err := strconv.Atoi(string(entry.Value))
-				if err != nil {
-					warnLog.Println("unable to parse choice")
-					return 0
-				}
-				return id
+	form.AppendInput("choice", minigo.NewInput(mntl, 32, 24, 2, 1, "", true))
+	form.ActivateFirst()
+}
 
-			} else if key == minigo.Correction {
-				entry.Correction()
-
-			} else if minigo.IsUintAValidChar(key) {
-				entry.AppendKey(byte(key))
-
-			} else {
-				errorLog.Printf("not supported key: %d\n", key)
-			}
-
-		case <-m.Quit:
-			warnLog.Println("quit sommaire page")
-			return -1
-
-		default:
-			continue
-		}
+func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
+	if len(form.ValueActive()) == 0 {
+		warnLog.Println("empty choice")
+		return nil, minigo.NoOp
 	}
+
+	mntl.Reset()
+	infoLog.Printf("chosen service: %s\n", form.ValueActive())
+
+	id, err := strconv.Atoi(string(form.ValueActive()))
+	if err != nil {
+		warnLog.Println("unable to parse choice")
+		return nil, minigo.NoOp
+	}
+	return form.ToMap(), id
+}
+
+func correctionSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
+	form.CorrectionActive()
+	return nil, minigo.NoOp
+}
+
+func keySommaire(mntl *minigo.Minitel, form *minigo.Form, key uint) {
+	form.AppendKeyActive(byte(key))
 }

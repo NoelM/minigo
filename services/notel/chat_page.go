@@ -7,95 +7,98 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func chatPage(m *minigo.Minitel, ircDvr *IrcDriver) int {
-	infoLog.Printf("Opening chat page for nick=%s\n", ircDvr.Nick)
+func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
+	chatPage := minigo.NewPage("chat", m, nil)
 
 	messages := []Message{}
-	messageInput := minigo.NewInput(m, 1, InputLine, 40, 5, ">", true)
+	lastMsgId := 0
 
-	m.WriteStringXY(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", ircDvr.Nick))
-	time.Sleep(2 * time.Second)
-	m.CleanLine()
+	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) {
+		infoLog.Printf("opening chat page for nick=%s\n", ircDrv.Nick)
 
-	helpers(m)
+		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
 
-	messageInput.Repetition()
-	m.RouleauOn()
+		m.WriteStringXY(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", ircDrv.Nick))
+		time.Sleep(2 * time.Second)
+		m.CleanLine()
 
-	lastId := 0
-	for {
-		select {
-		case key := <-m.RecvKey:
-			if key == minigo.Envoi {
-				msg := Message{
-					Nick: ircDvr.Nick,
-					Text: string(messageInput.Value),
-					Type: Message_Teletel,
-					Time: time.Now(),
-				}
-				messages = append(messages, msg)
-				ircDvr.SendMessage <- msg
+		helpers(m)
 
-				infoLog.Printf("Send new message to IRC from nick=%s len=%d\n", ircDvr.Nick, len(msg.Text))
+		inputs.RepetitionActive()
+		m.RouleauOn()
+	})
 
-				messageInput.Clear()
-				updateScreen(m, messages, &lastId)
-
-				messageInput.Repetition()
-
-			} else if key == minigo.Repetition {
-				infoLog.Printf("User nick=%s asked for a refresh\n", ircDvr.Nick)
-
-				messageInput.ClearScreen()
-				updateScreen(m, messages, &lastId)
-				messageInput.Repetition()
-
-			} else if key == minigo.Correction {
-				messageInput.Correction()
-
-			} else if key == minigo.Sommaire {
-				return sommaireId
-
-			} else if minigo.IsUintAValidChar(key) {
-				messageInput.AppendKey(byte(key))
-
-			} else {
-				errorLog.Printf("Not supported key: %d\n", key)
-			}
-
-		case msg := <-ircDvr.RecvMessage:
-			messages = append(messages, msg)
-
-		case <-m.Quit:
-			warnLog.Printf("Quitting chatpage for nick: %s\n", ircDvr.Nick)
-			return quitId
-
-		default:
-			continue
+	chatPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		msg := Message{
+			Nick: ircDrv.Nick,
+			Text: string(inputs.ValueActive()),
+			Type: Message_Teletel,
+			Time: time.Now(),
 		}
-	}
+		messages = append(messages, msg)
+		ircDrv.SendMessage <- msg
+
+		infoLog.Printf("send new message to IRC from nick=%s len=%d\n", ircDrv.Nick, len(msg.Text))
+
+		inputs.ClearActive()
+		updateScreen(m, messages, &lastMsgId)
+
+		inputs.RepetitionActive()
+
+		return nil, minigo.NoOp
+	})
+
+	chatPage.SetRepetitionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		infoLog.Printf("user nick=%s asked for a refresh\n", ircDrv.Nick)
+
+		inputs.ClearScreenAll()
+		updateScreen(m, messages, &lastMsgId)
+		inputs.RepetitionAll()
+
+		return nil, minigo.NoOp
+	})
+
+	chatPage.SetCorrectionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		inputs.CorrectionActive()
+		return nil, minigo.NoOp
+	})
+
+	chatPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, sommaireId
+	})
+
+	chatPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
+		inputs.AppendKeyActive(byte(key))
+	})
+
+	return chatPage
 }
 
-const InputLine = 22
+const InputLine = 21
 
 func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 	m.CursorOff()
 	for i := *lastId; i < len(list); i += 1 {
-		// 3 because the format is: "nick > text"
-		msgLen := len(list[i].Nick) + len(list[i].Text) + 3
+		// 5 because of the date format "15:04"
+		// 3 because of " - "
+		// 1 because of "nick_msg" 1 white space
+		msgLen := 5 + 3 + len(list[i].Nick) + len(list[i].Text) + 1
 
-		// 2 because if msgLen < 40, the division gives 0 and one breaks another line for readability
+		// 1 because if msgLen < 40, the division gives 0 and one breaks another line for readability
 		// nick > text
-		// <blank>
 		// nick > text2
-		msgLines := msgLen/40 + 2
+		msgLines := msgLen/40 + 1
 
 		buf := minigo.GetMoveCursorXY(1, 24)
 		for k := 0; k < msgLines; k += 1 {
 			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 		}
 		buf = append(buf, minigo.GetMoveCursorXY(1, InputLine-msgLines)...)
-		buf = append(buf, minigo.EncodeSprintf("%s > ", list[i].Nick)...)
+
+		buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
+		buf = append(buf, minigo.EncodeSprintf("%s - %s", list[i].Time.Format("15:04"), list[i].Nick)...)
+		buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
+		buf = append(buf, minigo.GetMoveCursorRight(1)...)
 
 		if list[i].Type == Message_Teletel {
 			buf = append(buf, list[i].Text...)

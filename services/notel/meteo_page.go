@@ -60,7 +60,7 @@ func printReportsFrom(mntl *minigo.Minitel, reps []WeatherReport, from int) int 
 
 	id := from
 	numberOfReports := 0
-	for ; id < len(reps) && numberOfReports <= maxReportsPerPage; id += 1 {
+	for ; id < len(reps) && numberOfReports < maxReportsPerPage; id += 1 {
 		printWeatherReport(mntl, reps[id])
 		numberOfReports += 1
 	}
@@ -75,7 +75,7 @@ func printWeatherReport(mntl *minigo.Minitel, rep WeatherReport) {
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	// len 32 chars
-	buf = append(buf, minigo.EncodeSprintf("%2.f °C %3.f %% - %4.f hPA - %3.f m/s", rep.temperature, rep.humidity, rep.pressure, rep.windSpeed*3.6)...)
+	buf = append(buf, minigo.EncodeSprintf("%2.f C %3.f %% - %4.f hPA - %3.f m/s", rep.temperature-275., rep.humidity, rep.pressure/100., rep.windSpeed*3.6)...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	mntl.Send(buf)

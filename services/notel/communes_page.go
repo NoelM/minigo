@@ -61,12 +61,12 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 			return nil, sommaireId
 		}
 
-		if int(communeId) >= len(communes) {
+		if communeId > 0 && int(communeId-1) >= len(communes) {
 			errorLog.Printf("choice %d out of range\n", communeId)
 			return nil, sommaireId
 		}
 
-		data, err := json.Marshal(communes[communeId])
+		data, err := json.Marshal(communes[communeId-1])
 		if err != nil {
 			errorLog.Printf("unable to marshall JSON: %s\n", err.Error())
 			return nil, sommaireId

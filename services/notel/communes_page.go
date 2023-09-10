@@ -44,7 +44,7 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 		}
 		communeList.Display()
 
-		mntl.WriteStringXY(1, len(communes)+4, "CHOIX: .. + ")
+		mntl.WriteStringXY(1, len(communes)+5, "CHOIX: .. + ")
 		mntl.WriteAttributes(minigo.InversionFond)
 		mntl.Send(minigo.EncodeMessage("ENVOI"))
 		mntl.WriteAttributes(minigo.FondNormal)

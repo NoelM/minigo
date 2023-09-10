@@ -10,17 +10,17 @@ HOME:
 	}
 
 	out, serviceId = NewCommunesPage(m, out).Run()
-	if serviceId != minigo.NoOp && serviceId != minigo.QuitOp {
-		return serviceId
-	} else if serviceId == sommaireId {
+	if serviceId == sommaireId {
 		goto HOME
+	} else if serviceId != minigo.NoOp && serviceId != minigo.QuitOp {
+		return serviceId
 	}
 
 	_, serviceId = NewPrevisionPage(m, out).Run()
-	if serviceId != minigo.NoOp && serviceId != minigo.QuitOp {
-		return serviceId
-	} else if serviceId == sommaireId {
+	if serviceId == sommaireId {
 		goto HOME
+	} else if serviceId != minigo.NoOp && serviceId != minigo.QuitOp {
+		return serviceId
 	}
 
 	return sommaireId

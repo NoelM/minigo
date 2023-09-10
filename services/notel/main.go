@@ -116,7 +116,7 @@ func ServiceHandler(m *minigo.Minitel) {
 		case meteoId:
 			id = ServiceMeteo(m)
 		default:
-			continue
+			id = sommaireId
 		}
 	}
 }

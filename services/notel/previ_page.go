@@ -150,7 +150,7 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 	mntl.Send(minigo.EncodeMessage("RETOUR"))
 	mntl.WriteAttributes(minigo.FondNormal)
 
-	mntl.WriteStringXY(1, 28, "SUIV. ")
+	mntl.WriteStringXY(28, 23, "SUIV. ")
 	mntl.WriteAttributes(minigo.InversionFond)
 	mntl.Send(minigo.EncodeMessage("SUITE"))
 	mntl.WriteAttributes(minigo.FondNormal)

@@ -8,7 +8,12 @@ func ServiceMeteo(m *minigo.Minitel) int {
 		return serviceId
 	}
 
-	_, serviceId = NewCommunesPage(m, out).Run()
+	out, serviceId = NewCommunesPage(m, out).Run()
+	if serviceId != minigo.NoOp && serviceId != minigo.QuitOp {
+		return serviceId
+	}
+
+	_, serviceId = NewPrevisionPage(m, out).Run()
 	if serviceId != minigo.NoOp && serviceId != minigo.QuitOp {
 		return serviceId
 	}

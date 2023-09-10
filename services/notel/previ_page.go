@@ -57,6 +57,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 	})
 
 	previPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		infoLog.Println("request suite")
 		forecastId += 1
 		if forecastId >= len(forecastSort) {
 			forecastId = len(forecastSort) - 1
@@ -67,6 +68,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 	})
 
 	previPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		infoLog.Println("request retour")
 		forecastId -= 1
 		if forecastId < 0 {
 			forecastId = 0
@@ -125,7 +127,8 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 		warnLog.Printf("ignored entry %s: %s\n", date, err.Error())
 	}
 
-	mntl.WriteStringXY(1, 4, fmt.Sprintf("PREVISIONS POUR LE %s", forecastTime.Format("02/01/06 15:04")))
+	mntl.WriteStringXY(1, 3, fmt.Sprintf("PREVISIONS LE %s A %s", forecastTime.Format("02/01/06"), forecastTime.Format("15:04")))
+	mntl.WriteStringXY(1, 4, "DONNEES: INFO-CLIMAT")
 
 	mntl.CleanScreenFromXY(1, 6)
 
@@ -142,7 +145,21 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 	mntl.WriteStringXY(1, 11, fmt.Sprintf("DIR:  %s", windDirToString(f.VentDirection.One0M)))
 	mntl.WriteStringXY(1, 13, fmt.Sprintf("PLUIE: %.0f mm", f.Pluie))
 
-	mntl.WriteStringXY(1, 24, "DONNEES: INFO-CLIMAT")
+	mntl.WriteStringXY(1, 23, "PREC. ")
+	mntl.WriteAttributes(minigo.InversionFond)
+	mntl.Send(minigo.EncodeMessage("RETOUR"))
+	mntl.WriteAttributes(minigo.FondNormal)
+
+	mntl.WriteStringXY(1, 28, "SUIV. ")
+	mntl.WriteAttributes(minigo.InversionFond)
+	mntl.Send(minigo.EncodeMessage("SUITE"))
+	mntl.WriteAttributes(minigo.FondNormal)
+
+	mntl.WriteStringXY(1, 24, "CHOIX CODE POSTAL ")
+	mntl.WriteAttributes(minigo.InversionFond)
+	mntl.Send(minigo.EncodeMessage("SOMMAIRE"))
+	mntl.WriteAttributes(minigo.FondNormal)
+
 }
 
 func nebulositeToString(n float64) string {

@@ -10,10 +10,21 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 	codePostalPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
-		mntl.WriteStringXY(1, 1, "SERVICE DE PREVISION METEO")
-		mntl.WriteStringXY(1, 2, "CODE POSTAL: .....")
+		mntl.WriteAttributes(minigo.DoubleHauteur)
+		mntl.WriteStringXY(12, 2, "Prévisions Météo")
+		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 14, 2, 5, 1, "", true))
+		mntl.WriteStringXY(1, 4, "CODE POSTAL: ..... + ")
+		mntl.WriteAttributes(minigo.InversionFond)
+		mntl.Send(minigo.EncodeMessage("ENVOI"))
+		mntl.WriteAttributes(minigo.FondNormal)
+
+		mntl.WriteStringXY(1, 24, "CHOIX SERVICE ")
+		mntl.WriteAttributes(minigo.InversionFond)
+		mntl.Send(minigo.EncodeMessage("SOMMAIRE"))
+		mntl.WriteAttributes(minigo.FondNormal)
+
+		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 14, 4, 5, 1, "", true))
 		inputs.ActivateFirst()
 
 		return minigo.NoOp
@@ -21,8 +32,10 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 
 	codePostalPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		if len(inputs.ValueActive()) != 0 {
+			infoLog.Printf("chosen code postal: %s\n", inputs.ValueActive())
 			return inputs.ToMap(), minigo.QuitOp
 		}
+		warnLog.Println("empty code postal")
 		return nil, minigo.NoOp
 	})
 

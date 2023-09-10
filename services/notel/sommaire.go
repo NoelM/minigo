@@ -49,7 +49,7 @@ func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, 
 	id, err := strconv.Atoi(string(form.ValueActive()))
 	if err != nil {
 		warnLog.Println("unable to parse choice")
-		return nil, minigo.NoOp
+		return nil, sommaireId
 	}
 	return form.ToMap(), id
 }

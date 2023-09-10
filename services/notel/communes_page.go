@@ -31,10 +31,12 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 			return sommaireId
 		}
 
-		mntl.WriteStringXY(1, 1, "CHOISISSEZ UNE COMMUNE:")
+		mntl.WriteAttributes(minigo.DoubleHauteur)
+		mntl.WriteStringXY(1, 2, "CHOISISSEZ UNE COMMUNE:")
+		mntl.WriteAttributes(minigo.GrandeurNormale)
 
 		communeList := minigo.NewList(mntl, nil)
-		communeList.SetXY(1, 3)
+		communeList.SetXY(1, 4)
 		communeList.SetEntryHeight(1)
 
 		for _, c := range communes {
@@ -42,9 +44,17 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 		}
 		communeList.Display()
 
-		mntl.WriteStringXY(1, len(communes)+4, "CHOIX: ..")
+		mntl.WriteStringXY(1, len(communes)+4, "CHOIX: .. + ")
+		mntl.WriteAttributes(minigo.InversionFond)
+		mntl.Send(minigo.EncodeMessage("ENVOI"))
+		mntl.WriteAttributes(minigo.FondNormal)
 
-		inputs.AppendInput("commune_id", minigo.NewInput(mntl, 8, len(communes)+4, 2, 1, "", true))
+		mntl.WriteStringXY(1, 24, "CHOIX CODE POSTAL ")
+		mntl.WriteAttributes(minigo.InversionFond)
+		mntl.Send(minigo.EncodeMessage("SOMMAIRE"))
+		mntl.WriteAttributes(minigo.FondNormal)
+
+		inputs.AppendInput("commune_id", minigo.NewInput(mntl, 8, len(communes)+5, 2, 1, "", true))
 		inputs.ActivateFirst()
 
 		return minigo.NoOp
@@ -52,6 +62,7 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 
 	communesPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		if len(inputs.ValueActive()) == 0 {
+			warnLog.Println("empty commune choice")
 			return nil, minigo.NoOp
 		}
 
@@ -65,6 +76,7 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 			errorLog.Printf("choice %d out of range\n", communeId)
 			return nil, sommaireId
 		}
+		infoLog.Printf("chosen commune: %s\n", communes[communeId-1].NomCommune)
 
 		data, err := json.Marshal(communes[communeId-1])
 		if err != nil {

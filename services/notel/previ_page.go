@@ -125,7 +125,7 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 		warnLog.Printf("ignored entry %s: %s\n", date, err.Error())
 	}
 
-	mntl.WriteStringXY(1, 4, fmt.Sprintf("PREVISIONS POUR LE %s", forecastTime.Format("01/02/06 15:04")))
+	mntl.WriteStringXY(1, 4, fmt.Sprintf("PREVISIONS POUR LE %s", forecastTime.Format("02/01/06 15:04")))
 
 	mntl.CleanScreenFromXY(1, 6)
 

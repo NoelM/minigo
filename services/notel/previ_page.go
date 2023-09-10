@@ -11,11 +11,12 @@ import (
 
 const APIForecastFormat = "http://www.infoclimat.fr/public-api/gfs/json?_ll=%.5f,%f.5&_auth=U0kEEwZ4U3FVeAE2VyELIlgwBDFdKwEmB3sFZgBoUi8CYANhB2IAZFA4UC1VegAxUXwPaA0zAjxQNVc3AXNTL1MzBGAGZFM1VT0BYVdvCyBYdAR5XWMBJgd7BWsAb1IvAmADYAdkAHxQNlAsVWcANlFkD3ANLQI7UDVXOQFoUzNTNARlBm1TMVU7AXxXeAs5WG8EMl02AWgHNQVmAGRSNwI0AzYHNwBrUD1QLFVjADJRYA9tDTICP1A2VzIBc1MvU0kEEwZ4U3FVeAE2VyELIlg%%2BBDpdNg%%3D%%3D&_c=940e429e25a778ab4196831fbc0d51b8"
 
-func NewPrevisionPage(mntl *minigo.Minitel, commune map[string]string) *minigo.Page {
-	previPage := minigo.NewPage("previsions", mntl, commune)
+func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minigo.Page {
+	previPage := minigo.NewPage("previsions", mntl, communeMap)
 
 	var forecast APIForecastReply
 	var forecastSort map[int]string
+	var commune Commune
 
 	forecastId := 0
 
@@ -28,7 +29,6 @@ func NewPrevisionPage(mntl *minigo.Minitel, commune map[string]string) *minigo.P
 			return sommaireId
 		}
 
-		var commune Commune
 		if err := json.Unmarshal([]byte(communeJSON), &commune); err != nil {
 			errorLog.Printf("unable to parse the commune JSON: %s\n", err.Error())
 			return sommaireId
@@ -54,6 +54,26 @@ func NewPrevisionPage(mntl *minigo.Minitel, commune map[string]string) *minigo.P
 		printForecast(mntl, forecast.Forecasts[forecastSort[forecastId]], forecastSort[forecastId], &commune)
 
 		return minigo.NoOp
+	})
+
+	previPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		forecastId += 1
+		if forecastId >= len(forecastSort) {
+			forecastId = len(forecastSort) - 1
+			return nil, minigo.NoOp
+		}
+		printForecast(mntl, forecast.Forecasts[forecastSort[forecastId]], forecastSort[forecastId], &commune)
+		return nil, minigo.NoOp
+	})
+
+	previPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		forecastId -= 1
+		if forecastId < 0 {
+			forecastId = 0
+			return nil, minigo.NoOp
+		}
+		printForecast(mntl, forecast.Forecasts[forecastSort[forecastId]], forecastSort[forecastId], &commune)
+		return nil, minigo.NoOp
 	})
 
 	previPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

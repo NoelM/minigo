@@ -38,10 +38,10 @@ type Forecast struct {
 		Eight50HPa float64 `json:"850hPa"`
 	} `json:"temperature"`
 	Pression struct {
-		NiveauDeLaMer int `json:"niveau_de_la_mer"`
+		NiveauDeLaMer float64 `json:"niveau_de_la_mer"`
 	} `json:"pression"`
-	Pluie           int `json:"pluie"`
-	PluieConvective int `json:"pluie_convective"`
+	Pluie           float64 `json:"pluie"`
+	PluieConvective float64 `json:"pluie_convective"`
 	Humidite        struct {
 		TwoM float64 `json:"2m"`
 	} `json:"humidite"`
@@ -54,14 +54,14 @@ type Forecast struct {
 	VentDirection struct {
 		One0M int `json:"10m"`
 	} `json:"vent_direction"`
-	IsoZero     int    `json:"iso_zero"`
-	RisqueNeige string `json:"risque_neige"`
-	Cape        int    `json:"cape"`
+	IsoZero     float64 `json:"iso_zero"`
+	RisqueNeige string  `json:"risque_neige"`
+	Cape        float64 `json:"cape"`
 	Nebulosite  struct {
-		Haute   int `json:"haute"`
-		Moyenne int `json:"moyenne"`
-		Basse   int `json:"basse"`
-		Totale  int `json:"totale"`
+		Haute   float64 `json:"haute"`
+		Moyenne float64 `json:"moyenne"`
+		Basse   float64 `json:"basse"`
+		Totale  float64 `json:"totale"`
 	} `json:"nebulosite"`
 }
 
@@ -138,7 +138,7 @@ type CommuneDb struct {
 }
 
 func loadCommuneDatabase() error {
-	const filePath = "/media/code/commune-departement-region.csv"
+	const filePath = "/media/core/communes-departement-region.csv"
 
 	const codeCommuneColId = 0
 	const nomCommuneColId = 10

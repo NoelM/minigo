@@ -49,6 +49,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, commune map[string]string) *minigo.P
 			return sommaireId
 		}
 
+		forecastSort = make(map[int]string)
 		sortForecasts(&forecast, forecastSort)
 		printForecast(mntl, forecast.Forecasts[forecastSort[forecastId]], forecastSort[forecastId], &commune)
 

@@ -34,7 +34,7 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 		mntl.WriteStringXY(1, 1, "CHOISISSEZ UNE COMMUNE:")
 
 		communeList := minigo.NewList(mntl, nil)
-		communeList.SetXY(2, 3)
+		communeList.SetXY(1, 3)
 		communeList.SetEntryHeight(1)
 
 		for _, c := range communes {
@@ -42,9 +42,9 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 		}
 		communeList.Display()
 
-		mntl.WriteStringXY(1, len(communes)+3, "CHOIX: ..")
+		mntl.WriteStringXY(1, len(communes)+4, "CHOIX: ..")
 
-		inputs.AppendInput("commune_id", minigo.NewInput(mntl, 7, len(communes)+3, 2, 1, "", true))
+		inputs.AppendInput("commune_id", minigo.NewInput(mntl, 8, len(communes)+4, 2, 1, "", true))
 		inputs.ActivateFirst()
 
 		return minigo.NoOp
@@ -77,6 +77,11 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 
 	communesPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
 		inputs.AppendKeyActive(byte(key))
+	})
+
+	communesPage.SetCorrectionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		inputs.CorrectionActive()
+		return nil, minigo.NoOp
 	})
 
 	communesPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

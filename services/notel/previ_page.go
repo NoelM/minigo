@@ -107,6 +107,26 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 
 	mntl.WriteStringXY(1, 4, fmt.Sprintf("PREVISIONS POUR LE %s", forecastTime.Format("01/02/06 15:04")))
 
-	mntl.WriteStringXY(1, 6, fmt.Sprintf("TEMP: %.0f C", f.Temperature.TwoM-275.))
-	mntl.WriteStringXY(1, 7, fmt.Sprintf("VENT: %.0f km/h", f.VentMoyen.One0M*3.6))
+	mntl.WriteStringXY(1, 6, nebulositeToString(f.Nebulosite.Totale))
+
+	mntl.WriteStringXY(1, 8, fmt.Sprintf("TEMP:  %.0f C", f.Temperature.TwoM-275.))
+	mntl.WriteStringXY(1, 9, fmt.Sprintf("VENT:  %.0f km/h - DIRECTION: %s", f.VentMoyen.One0M*3.6, windDirToString(f.VentDirection.One0M)))
+	mntl.WriteStringXY(1, 10, fmt.Sprintf("PLUIE: %f mm", f.Pluie))
+}
+
+func nebulositeToString(n float64) string {
+	octas := 8. * n / 100.
+
+	if octas < 1 {
+		return "CIEL CLAIR"
+	} else if octas >= 1 && octas < 2 {
+		return "PEU NUAGEUX"
+	} else if octas >= 2 && octas < 5 {
+		return "NUAGEUX"
+	} else if octas >= 5 && octas < 7 {
+		return "TRES NUAGEUX"
+	} else if octas >= 7 {
+		return "CIEL COUVERT"
+	}
+	return ""
 }

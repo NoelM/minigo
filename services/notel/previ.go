@@ -52,7 +52,7 @@ type Forecast struct {
 		One0M float64 `json:"10m"`
 	} `json:"vent_rafales"`
 	VentDirection struct {
-		One0M int `json:"10m"`
+		One0M float64 `json:"10m"`
 	} `json:"vent_direction"`
 	IsoZero     float64 `json:"iso_zero"`
 	RisqueNeige string  `json:"risque_neige"`

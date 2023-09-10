@@ -9,7 +9,7 @@ import (
 const reportSizeInLines = 2
 const maxReportsPerPage = 25 / reportSizeInLines
 
-func NewMeteoPage(mntl *minigo.Minitel) *minigo.Page {
+func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	meteoPage := minigo.NewPage("meteo", mntl, nil)
 
 	currentReportId := 0
@@ -22,7 +22,7 @@ func NewMeteoPage(mntl *minigo.Minitel) *minigo.Page {
 		reports, err = getLastWeatherData()
 		if err != nil {
 			mntl.WriteStringXY(1, 1, "CONNECTION A METEO-FRANCE ECHOUEE")
-			mntl.WriteStringXY(1, 1, "RETOUR AU SOMMAIRE DANS 5 SEC.")
+			mntl.WriteStringXY(1, 2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
 			time.Sleep(5 * time.Second)
 			return sommaireId
 		}

@@ -11,13 +11,13 @@ const LatColId = 5
 const LonColId = 6
 
 type Commune struct {
-	CodeCommune     string
-	NomCommune      string
-	CodePostal      string
-	CodeDepartement string
-	NomDepartement  string
-	Latitude        float64
-	Longitude       float64
+	CodeCommune     string  `json:"codeCommune"`
+	NomCommune      string  `json:"nomCommune"`
+	CodePostal      string  `json:"codePostal"`
+	CodeDepartement string  `json:"codeDepartement"`
+	NomDepartement  string  `json:"nomDepartement"`
+	Latitude        float64 `json:"latitude"`
+	Longitude       float64 `json:"longitude"`
 }
 
 func getCommunesFromCodePostal(codePostal string) []Commune {

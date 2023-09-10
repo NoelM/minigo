@@ -91,11 +91,8 @@ func TestCheckByteParity(t *testing.T) {
 }
 
 func TestCharMapping(t *testing.T) {
-	c, err := EncodeChar('A')
-	if err != nil {
-		t.Fatalf("recived error: %s", err.Error())
-	}
-	if c != 0x41 {
+	c := EncodeChar('A')
+	if len(c) != 1 || c[0] != 0x41 {
 		t.Fatalf("recieved %x instead of %x", c, 0x41)
 	}
 }

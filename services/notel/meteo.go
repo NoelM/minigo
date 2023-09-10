@@ -158,6 +158,17 @@ func getLastWeatherData() ([]WeatherReport, error) {
 	return weatherReports, nil
 }
 
+func getRequestBody(url string) (io.ReadCloser, error) {
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	} else if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
+	}
+	return resp.Body, nil
+}
+
 func downloadFile(url string, filepath string) error {
 	// Create the file
 	out, err := os.Create(filepath)
@@ -166,15 +177,14 @@ func downloadFile(url string, filepath string) error {
 	}
 	defer out.Close()
 
-	// Get the data
-	resp, err := http.Get(url)
+	body, err := getRequestBody(url)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer body.Close()
 
 	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(out, body)
 	if err != nil {
 		return err
 	}

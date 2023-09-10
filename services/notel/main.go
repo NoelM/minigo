@@ -16,6 +16,8 @@ var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.Ltime|log.Lshort
 var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
+var CommuneDatabase CommuneDb
+
 func main() {
 	var wg sync.WaitGroup
 

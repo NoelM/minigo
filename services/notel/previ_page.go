@@ -135,7 +135,7 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 
 	mntl.WriteStringXY(1, 8, fmt.Sprintf("TEMP: %.0f C", f.Temperature.TwoM-275.))
 	if f.VentRafales.One0M > f.VentMoyen.One0M {
-		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f km/h", f.VentMoyen.One0M*3.6, f.VentRafales.One0M*3.6))
+		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f km/h", f.VentMoyen.One0M, f.VentRafales.One0M))
 	} else {
 		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h", f.VentMoyen.One0M*3.6))
 	}

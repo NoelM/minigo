@@ -107,10 +107,16 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 
 	mntl.WriteStringXY(1, 4, fmt.Sprintf("PREVISIONS POUR LE %s", forecastTime.Format("01/02/06 15:04")))
 
+	mntl.WriteAttributes(minigo.FondBleu, minigo.CaractereNoir)
 	mntl.WriteStringXY(1, 6, nebulositeToString(f.Nebulosite.Totale))
+	mntl.WriteAttributes(minigo.FondNormal, minigo.CaractereBlanc)
 
 	mntl.WriteStringXY(1, 8, fmt.Sprintf("TEMP: %.0f C", f.Temperature.TwoM-275.))
-	mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f", f.VentMoyen.One0M*3.6, f.VentRafales.One0M*3.6))
+	if f.VentRafales.One0M > f.VentMoyen.One0M {
+		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f km/h", f.VentMoyen.One0M*3.6, f.VentRafales.One0M*3.6))
+	} else {
+		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h", f.VentMoyen.One0M*3.6))
+	}
 	mntl.WriteStringXY(1, 11, fmt.Sprintf("DIR:  %s", windDirToString(f.VentDirection.One0M)))
 	mntl.WriteStringXY(1, 13, fmt.Sprintf("PLUIE: %.0f mm", f.Pluie))
 

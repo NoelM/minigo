@@ -13,7 +13,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 	messages := []Message{}
 	lastMsgId := 0
 
-	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) {
+	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		infoLog.Printf("opening chat page for nick=%s\n", ircDrv.Nick)
 
 		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
@@ -26,6 +26,8 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 
 		inputs.RepetitionActive()
 		m.RouleauOn()
+
+		return minigo.NoOp
 	})
 
 	chatPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

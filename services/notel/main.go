@@ -16,8 +16,12 @@ var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.Ltime|log.Lshort
 var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
+var CommuneDatabase CommuneDb
+
 func main() {
 	var wg sync.WaitGroup
+
+	loadCommuneDatabase()
 
 	wg.Add(2)
 
@@ -109,6 +113,8 @@ func ServiceHandler(m *minigo.Minitel) {
 			_, id = NewPageSommaire(m).Run()
 		case ircId:
 			id = ServiceMiniChat(m)
+		case meteoId:
+			id = ServiceMeteo(m)
 		default:
 			continue
 		}

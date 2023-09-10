@@ -88,7 +88,7 @@ func ServiceMiniChat(m *minigo.Minitel) int {
 	_, serviceId = NewChatPage(m, ircDvr).Run()
 	ircDvr.Quit()
 
-	if serviceId != noopId {
+	if serviceId != minigo.NoOp {
 		return serviceId
 	}
 

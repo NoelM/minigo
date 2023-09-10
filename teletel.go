@@ -132,20 +132,60 @@ func GetCleanLineToCursor() (buf []byte) {
 	return
 }
 
-func EncodeChar(c int32) (byte, error) {
+func EncodeChar(c int32) []byte {
+	if accuteChar := EncodeAccutes(c); accuteChar != nil {
+		return accuteChar
+	}
+
 	vdtByte := GetVideotextCharByte(byte(c))
 	if IsByteAValidChar(vdtByte) {
-		return vdtByte, nil
+		return []byte{vdtByte}
 	}
-	return 0, errors.New("invalid char byte")
+
+	return nil
+}
+
+func EncodeAccutes(c int32) []byte {
+	switch c {
+	case 'à':
+		return []byte{SS2, AccentGrave, 'a'}
+	case 'â':
+		return []byte{SS2, AccentCirconflexe, 'a'}
+	case 'ä':
+		return []byte{SS2, Trema, 'a'}
+	case 'è':
+		return []byte{SS2, AccentGrave, 'e'}
+	case 'é':
+		return []byte{SS2, AccentAigu, 'e'}
+	case 'ê':
+		return []byte{SS2, AccentCirconflexe, 'e'}
+	case 'ë':
+		return []byte{SS2, Trema, 'e'}
+	case 'î':
+		return []byte{SS2, AccentCirconflexe, 'i'}
+	case 'ï':
+		return []byte{SS2, Trema, 'i'}
+	case 'ö':
+		return []byte{SS2, Trema, 'o'}
+	case 'ô':
+		return []byte{SS2, AccentCirconflexe, 'o'}
+	case 'ù':
+		return []byte{SS2, AccentGrave, 'u'}
+	case 'û':
+		return []byte{SS2, AccentCirconflexe, 'u'}
+	case 'ü':
+		return []byte{SS2, Trema, 'u'}
+	case 'ç':
+		return []byte{SS2, Cedille, 'c'}
+	}
+
+	return nil
 }
 
 func EncodeMessage(msg string) (buf []byte) {
 	for _, c := range msg {
-		if b, err := EncodeChar(c); err == nil {
-			buf = append(buf, b)
-		} else {
-			continue
+		if b := EncodeChar(c); b != nil {
+			buf = append(buf, b...)
 		}
 	}
 	return

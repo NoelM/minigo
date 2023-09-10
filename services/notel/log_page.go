@@ -16,7 +16,7 @@ func NewLogPage(mntl *minigo.Minitel) *minigo.Page {
 	return logPage
 }
 
-func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) {
+func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
 	mntl.CleanScreen()
 
 	mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
@@ -28,6 +28,8 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 
 	form.AppendInput("nick", minigo.NewInput(mntl, 10, 13, 10, 1, "", true))
 	form.ActivateFirst()
+
+	return minigo.NoOp
 }
 
 func envoiLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {

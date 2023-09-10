@@ -74,7 +74,7 @@ func sortForecasts(f *APIForecastReply, order map[int]string) {
 	epochToText := make(map[int64]string)
 	var epochs SortableEpochs
 
-	for k, _ := range f.Forecasts {
+	for k := range f.Forecasts {
 		if len(k) > 0 && k[0] == '2' {
 			forecastTime, err := time.Parse("2006-01-02 15:04:05", k)
 			if err != nil {

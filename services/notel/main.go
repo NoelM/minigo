@@ -21,6 +21,8 @@ var CommuneDatabase CommuneDb
 func main() {
 	var wg sync.WaitGroup
 
+	loadCommuneDatabase()
+
 	wg.Add(2)
 
 	go serveWS(&wg)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"os"
 	"strconv"
 	"sync"
@@ -18,6 +19,101 @@ type Commune struct {
 	NomDepartement  string  `json:"nomDepartement"`
 	Latitude        float64 `json:"latitude"`
 	Longitude       float64 `json:"longitude"`
+}
+
+type APIForecastReply struct {
+	RequestState int    `json:"request_state"`
+	RequestKey   string `json:"request_key"`
+	Message      string `json:"message"`
+	ModelRun     string `json:"model_run"`
+	Source       string `json:"source"`
+	Forecasts    map[string]Forecast
+}
+
+type Forecast struct {
+	Temperature struct {
+		TwoM       float64 `json:"2m"`
+		Sol        float64 `json:"sol"`
+		Five00HPa  float64 `json:"500hPa"`
+		Eight50HPa float64 `json:"850hPa"`
+	} `json:"temperature"`
+	Pression struct {
+		NiveauDeLaMer int `json:"niveau_de_la_mer"`
+	} `json:"pression"`
+	Pluie           int `json:"pluie"`
+	PluieConvective int `json:"pluie_convective"`
+	Humidite        struct {
+		TwoM float64 `json:"2m"`
+	} `json:"humidite"`
+	VentMoyen struct {
+		One0M float64 `json:"10m"`
+	} `json:"vent_moyen"`
+	VentRafales struct {
+		One0M float64 `json:"10m"`
+	} `json:"vent_rafales"`
+	VentDirection struct {
+		One0M int `json:"10m"`
+	} `json:"vent_direction"`
+	IsoZero     int    `json:"iso_zero"`
+	RisqueNeige string `json:"risque_neige"`
+	Cape        int    `json:"cape"`
+	Nebulosite  struct {
+		Haute   int `json:"haute"`
+		Moyenne int `json:"moyenne"`
+		Basse   int `json:"basse"`
+		Totale  int `json:"totale"`
+	} `json:"nebulosite"`
+}
+
+func (f *APIForecastReply) UnmarshalJSON(d []byte) error {
+	tmp := map[string]json.RawMessage{}
+	err := json.Unmarshal(d, &tmp)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(tmp["request_state"], &f.RequestState)
+	if err != nil {
+		return err
+	}
+	delete(tmp, "request_state")
+
+	err = json.Unmarshal(tmp["request_key"], &f.RequestKey)
+	if err != nil {
+		return err
+	}
+	delete(tmp, "request_key")
+
+	err = json.Unmarshal(tmp["message"], &f.Message)
+	if err != nil {
+		return err
+	}
+	delete(tmp, "message")
+
+	err = json.Unmarshal(tmp["model_run"], &f.ModelRun)
+	if err != nil {
+		return err
+	}
+	delete(tmp, "model_run")
+
+	err = json.Unmarshal(tmp["source"], &f.Source)
+	if err != nil {
+		return err
+	}
+	delete(tmp, "source")
+
+	f.Forecasts = map[string]Forecast{}
+
+	for k, v := range tmp {
+		var item Forecast
+		err := json.Unmarshal(v, &item)
+		if err != nil {
+			return err
+		}
+
+		f.Forecasts[k] = item
+	}
+	return nil
 }
 
 func getCommunesFromCodePostal(codePostal string) []Commune {

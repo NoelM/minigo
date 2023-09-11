@@ -11,6 +11,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.CleanScreen()
 
 		mntl.SendVDT("static/meteo.vdt")
+		mntl.Send([]byte{minigo.Si})
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
 		mntl.WriteStringCenter(6, "Prévisions Météo")

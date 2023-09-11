@@ -272,7 +272,7 @@ func (m *Minitel) WriteHelperLeft(lineId int, helpText, button string) error {
 }
 
 func (m *Minitel) WriteHelperRight(lineId int, helpText, button string) error {
-	startCol := ColonnesSimple - m.charWidth()*(len(helpText)+len(button)-2) // free space
+	startCol := ColonnesSimple - m.charWidth()*(len(helpText)+len(button)+1) // free space
 	startCol = maxInt(startCol, 0)
 
 	m.WriteStringAt(startCol, lineId, helpText)

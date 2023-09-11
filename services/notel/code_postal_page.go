@@ -10,21 +10,18 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 	codePostalPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
+		mntl.SendVDT("static/meteo.vdt")
+		mntl.Send([]byte{minigo.Si})
+
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringXY(12, 2, "Prévisions Météo")
+		mntl.WriteStringCenter(10, "Prévisions Météo")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		mntl.WriteStringXY(1, 4, "CODE POSTAL: ..... + ")
-		mntl.WriteAttributes(minigo.InversionFond)
-		mntl.Send(minigo.EncodeMessage("ENVOI"))
-		mntl.WriteAttributes(minigo.FondNormal)
+		mntl.WriteHelperLeft(12, "CODE POSTAL: ..... +", "ENVOI")
 
-		mntl.WriteStringXY(1, 24, "CHOIX SERVICE ")
-		mntl.WriteAttributes(minigo.InversionFond)
-		mntl.Send(minigo.EncodeMessage("SOMMAIRE"))
-		mntl.WriteAttributes(minigo.FondNormal)
+		mntl.WriteHelperLeft(24, "CHOIX SERVICE", "SOMMAIRE")
 
-		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 14, 4, 5, 1, "", true))
+		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 14, 12, 5, 1, "", true))
 		inputs.ActivateFirst()
 
 		return minigo.NoOp

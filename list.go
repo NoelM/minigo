@@ -36,8 +36,8 @@ func (l *List) SetEntryHeight(h int) {
 func (l *List) Display() {
 	for i := 0; i < len(l.items); i += 1 {
 		l.mntl.WriteAttributes(GrandeurNormale, InversionFond)
-		l.mntl.WriteStringXY(l.refX, l.refY+l.entryHeight*i, fmt.Sprintf(" %d ", i+1))
+		l.mntl.WriteStringAt(l.refX, l.refY+l.entryHeight*i, fmt.Sprintf(" %d ", i+1))
 		l.mntl.WriteAttributes(FondNormal)
-		l.mntl.WriteStringXY(l.refX+4, l.refY+l.entryHeight*i, l.items[i])
+		l.mntl.WriteStringAt(l.refX+4, l.refY+l.entryHeight*i, l.items[i])
 	}
 }

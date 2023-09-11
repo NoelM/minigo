@@ -21,8 +21,8 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 		var err error
 		reports, err = getLastWeatherData()
 		if err != nil {
-			mntl.WriteStringXY(1, 1, "CONNECTION A METEO-FRANCE ECHOUEE")
-			mntl.WriteStringXY(1, 2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
+			mntl.WriteStringAt(1, 1, "CONNECTION A METEO-FRANCE ECHOUEE")
+			mntl.WriteStringAt(1, 2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
 			time.Sleep(5 * time.Second)
 			return sommaireId
 		}
@@ -56,7 +56,7 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 
 func printReportsFrom(mntl *minigo.Minitel, reps []WeatherReport, from int) int {
 	mntl.CleanScreen()
-	mntl.MoveCursorXY(1, 1)
+	mntl.MoveCursorAt(1, 1)
 
 	id := from
 	numberOfReports := 0

@@ -25,14 +25,14 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 		communes = getCommunesFromCodePostal(codePostal)
 		if communes == nil {
 			mntl.CleanScreen()
-			mntl.WriteStringXY(1, 1, "IMPOSSIBLE DE TROUVER UNE COMMUNE")
-			mntl.WriteStringXY(1, 2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
+			mntl.WriteStringLeft(1, "IMPOSSIBLE DE TROUVER UNE COMMUNE")
+			mntl.WriteStringLeft(2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
 			time.Sleep(5 * time.Second)
 			return sommaireId
 		}
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringXY(1, 2, "CHOISISSEZ UNE COMMUNE:")
+		mntl.WriteStringLeft(2, "CHOISISSEZ UNE COMMUNE:")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
 		communeList := minigo.NewList(mntl, nil)
@@ -44,15 +44,9 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 		}
 		communeList.Display()
 
-		mntl.WriteStringXY(1, len(communes)+5, "CHOIX: .. + ")
-		mntl.WriteAttributes(minigo.InversionFond)
-		mntl.Send(minigo.EncodeMessage("ENVOI"))
-		mntl.WriteAttributes(minigo.FondNormal)
+		mntl.WriteHelperLeft(len(communes)+5, "CHOIX: .. +", "ENVOI")
 
-		mntl.WriteStringXY(1, 24, "CHOIX CODE POSTAL ")
-		mntl.WriteAttributes(minigo.InversionFond)
-		mntl.Send(minigo.EncodeMessage("SOMMAIRE"))
-		mntl.WriteAttributes(minigo.FondNormal)
+		mntl.WriteHelperLeft(24, "CHOIX CODE POSTAL", "SOMMAIRE")
 
 		inputs.AppendInput("commune_id", minigo.NewInput(mntl, 8, len(communes)+5, 2, 1, "", true))
 		inputs.ActivateFirst()

@@ -118,8 +118,10 @@ func sortForecasts(f *APIForecastReply, order map[int]string) {
 
 func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 
+	mntl.CursorOff()
+
 	mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-	mntl.WriteStringXY(1, 2, c.NomCommune)
+	mntl.WriteStringLeft(2, c.NomCommune)
 	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
 
 	forecastTime, err := time.Parse("2006-01-02 15:04:05", date)
@@ -127,39 +129,25 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 		warnLog.Printf("ignored entry %s: %s\n", date, err.Error())
 	}
 
-	mntl.WriteStringXY(1, 3, fmt.Sprintf("PREVISIONS LE %s A %s", forecastTime.Format("02/01/06"), forecastTime.Format("15:04")))
-	mntl.WriteStringXY(1, 4, "DONNEES: INFO-CLIMAT")
+	mntl.WriteStringLeft(4, fmt.Sprintf("PREVISIONS LE %s %s A %s", weekDayIdToString(forecastTime.Weekday()), forecastTime.Format("02/01"), forecastTime.Format("15:04")))
+	mntl.WriteStringLeft(5, "DONNEES: INFO-CLIMAT")
 
-	mntl.CleanScreenFromXY(1, 6)
+	mntl.CleanScreenFromXY(1, 7)
 
-	mntl.WriteAttributes(minigo.InversionFond)
-	mntl.WriteStringXY(1, 6, nebulositeToString(f.Nebulosite.Totale))
-	mntl.WriteAttributes(minigo.FondNormal)
+	mntl.WriteStringAtWithAttributes(1, 7, nebulositeToString(f.Nebulosite.Totale), minigo.InversionFond)
 
-	mntl.WriteStringXY(1, 8, fmt.Sprintf("TEMP: %.0f C", f.Temperature.TwoM-275.))
-	if f.VentRafales.One0M > f.VentMoyen.One0M {
-		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f km/h", f.VentMoyen.One0M, f.VentRafales.One0M))
+	mntl.WriteStringLeft(9, fmt.Sprintf("TEMP: %.0f C", f.Temperature.TwoM-275.))
+	if f.VentRafales.One0M > 10 && f.VentRafales.One0M > f.VentMoyen.One0M {
+		mntl.WriteStringLeft(11, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f km/h", f.VentMoyen.One0M, f.VentRafales.One0M))
 	} else {
-		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h", f.VentMoyen.One0M*3.6))
+		mntl.WriteStringLeft(11, fmt.Sprintf("VENT: %.0f km/h", f.VentMoyen.One0M*3.6))
 	}
-	mntl.WriteStringXY(1, 11, fmt.Sprintf("DIR:  %s", windDirToString(f.VentDirection.One0M)))
-	mntl.WriteStringXY(1, 13, fmt.Sprintf("PLUIE: %.0f mm", f.Pluie))
+	mntl.WriteStringLeft(12, fmt.Sprintf("DIR:  %s", windDirToString(f.VentDirection.One0M)))
+	mntl.WriteStringLeft(14, fmt.Sprintf("PLUIE: %.0f mm", f.Pluie))
 
-	mntl.WriteStringXY(1, 23, "PREC. ")
-	mntl.WriteAttributes(minigo.InversionFond)
-	mntl.Send(minigo.EncodeMessage("RETOUR"))
-	mntl.WriteAttributes(minigo.FondNormal)
-
-	mntl.WriteStringXY(28, 23, "SUIV. ")
-	mntl.WriteAttributes(minigo.InversionFond)
-	mntl.Send(minigo.EncodeMessage("SUITE"))
-	mntl.WriteAttributes(minigo.FondNormal)
-
-	mntl.WriteStringXY(1, 24, "CHOIX CODE POSTAL ")
-	mntl.WriteAttributes(minigo.InversionFond)
-	mntl.Send(minigo.EncodeMessage("SOMMAIRE"))
-	mntl.WriteAttributes(minigo.FondNormal)
-
+	mntl.WriteHelperLeft(23, "PREC.", "RETOUR")
+	mntl.WriteHelperRight(23, "SUIV.", "SUITE")
+	mntl.WriteHelperLeft(24, "CHOIX CODE POSTAL", "SOMMAIRE")
 }
 
 func nebulositeToString(n float64) string {
@@ -175,6 +163,26 @@ func nebulositeToString(n float64) string {
 		return "TRES NUAGEUX"
 	} else if octas >= 7 {
 		return "CIEL COUVERT"
+	}
+	return ""
+}
+
+func weekDayIdToString(i time.Weekday) string {
+	switch i {
+	case time.Sunday:
+		return "Dim."
+	case time.Monday:
+		return "Lun."
+	case time.Tuesday:
+		return "Mar."
+	case time.Wednesday:
+		return "Mer."
+	case time.Thursday:
+		return "Jeu."
+	case time.Friday:
+		return "Ven."
+	case time.Saturday:
+		return "Sam."
 	}
 	return ""
 }

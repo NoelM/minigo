@@ -19,7 +19,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
 
 		m.WriteStringLeft(1, fmt.Sprintf(">>> CONNECTE COMME '%s' SUR IRC", ircDrv.Nick))
-		m.WriteStringLeft(1, ">>> LIBERA.CHAT #MINITEL")
+		m.WriteStringLeft(2, ">>> LIBERA.CHAT #MINITEL")
 		time.Sleep(2 * time.Second)
 		m.CleanLine()
 
@@ -35,7 +35,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		msg := Message{
 			Nick: ircDrv.Nick,
 			Text: string(inputs.ValueActive()),
-			Type: Message_Teletel,
+			Type: MessageTeletel,
 			Time: time.Now(),
 		}
 		messages = append(messages, msg)
@@ -103,7 +103,7 @@ func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 		buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
 		buf = append(buf, minigo.GetMoveCursorRight(1)...)
 
-		if list[i].Type == Message_Teletel {
+		if list[i].Type == MessageTeletel {
 			buf = append(buf, list[i].Text...)
 		} else {
 			buf = append(buf, minigo.EncodeMessage(list[i].Text)...)

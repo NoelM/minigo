@@ -54,7 +54,7 @@ func (i *IrcDriver) Loop() error {
 		i.RecvMessage <- Message{
 			Nick: event.Nick,
 			Text: event.Message(),
-			Type: Message_UTF8,
+			Type: MessageIRC,
 			Time: time.Now(),
 		}
 	})

@@ -148,35 +148,43 @@ func EncodeChar(c int32) []byte {
 func EncodeAccutes(c int32) []byte {
 	switch c {
 	case 'à':
-		return []byte{SS2, AccentGrave, 'a'}
+		return []byte{Ss2, AccentGrave, 'a'}
+	case 'À':
+		return []byte{Ss2, AccentGrave, 'A'}
 	case 'â':
-		return []byte{SS2, AccentCirconflexe, 'a'}
+		return []byte{Ss2, AccentCirconflexe, 'a'}
 	case 'ä':
-		return []byte{SS2, Trema, 'a'}
+		return []byte{Ss2, Trema, 'a'}
 	case 'è':
-		return []byte{SS2, AccentGrave, 'e'}
+		return []byte{Ss2, AccentGrave, 'e'}
+	case 'È':
+		return []byte{Ss2, AccentGrave, 'E'}
 	case 'é':
-		return []byte{SS2, AccentAigu, 'e'}
+		return []byte{Ss2, AccentAigu, 'e'}
+	case 'É':
+		return []byte{Ss2, AccentAigu, 'E'}
 	case 'ê':
-		return []byte{SS2, AccentCirconflexe, 'e'}
+		return []byte{Ss2, AccentCirconflexe, 'e'}
 	case 'ë':
-		return []byte{SS2, Trema, 'e'}
+		return []byte{Ss2, Trema, 'e'}
 	case 'î':
-		return []byte{SS2, AccentCirconflexe, 'i'}
+		return []byte{Ss2, AccentCirconflexe, 'i'}
 	case 'ï':
-		return []byte{SS2, Trema, 'i'}
+		return []byte{Ss2, Trema, 'i'}
 	case 'ö':
-		return []byte{SS2, Trema, 'o'}
+		return []byte{Ss2, Trema, 'o'}
 	case 'ô':
-		return []byte{SS2, AccentCirconflexe, 'o'}
+		return []byte{Ss2, AccentCirconflexe, 'o'}
 	case 'ù':
-		return []byte{SS2, AccentGrave, 'u'}
+		return []byte{Ss2, AccentGrave, 'u'}
 	case 'û':
-		return []byte{SS2, AccentCirconflexe, 'u'}
+		return []byte{Ss2, AccentCirconflexe, 'u'}
 	case 'ü':
-		return []byte{SS2, Trema, 'u'}
+		return []byte{Ss2, Trema, 'u'}
 	case 'ç':
-		return []byte{SS2, Cedille, 'c'}
+		return []byte{Ss2, Cedille, 'c'}
+	case 'Ç':
+		return []byte{Ss2, Cedille, 'C'}
 	}
 
 	return nil

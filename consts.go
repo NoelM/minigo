@@ -18,10 +18,6 @@ const (
 	LignesDouble   = 2 * LignesSimple
 )
 
-const (
-	SS2 = 0x19
-)
-
 // 1 Mode Vidéotex
 //
 // 1.2.3 Codage des caractères visualisables

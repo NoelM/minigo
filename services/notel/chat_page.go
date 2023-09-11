@@ -18,7 +18,8 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 
 		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
 
-		m.WriteStringAt(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", ircDrv.Nick))
+		m.WriteStringLeft(1, fmt.Sprintf(">>> CONNECTE COMME '%s' SUR IRC", ircDrv.Nick))
+		m.WriteStringLeft(1, ">>> LIBERA.CHAT #MINITEL")
 		time.Sleep(2 * time.Second)
 		m.CleanLine()
 

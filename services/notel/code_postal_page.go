@@ -14,14 +14,14 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.Send([]byte{minigo.Si})
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringCenter(6, "Prévisions Météo")
+		mntl.WriteStringCenter(10, "Prévisions Météo")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		mntl.WriteHelperLeft(8, "CODE POSTAL: ..... +", "ENVOI")
+		mntl.WriteHelperLeft(12, "CODE POSTAL: ..... +", "ENVOI")
 
 		mntl.WriteHelperLeft(24, "CHOIX SERVICE", "SOMMAIRE")
 
-		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 14, 8, 5, 1, "", true))
+		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 14, 12, 5, 1, "", true))
 		inputs.ActivateFirst()
 
 		return minigo.NoOp

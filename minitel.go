@@ -228,7 +228,7 @@ func (m *Minitel) WriteStringRight(lineId int, s string) error {
 
 func (m *Minitel) WriteStringCenter(lineId int, s string) error {
 	msgLen := len(s) * m.charWidth()
-	colId := maxInt(ColonnesSimple/2-msgLen, 0)
+	colId := maxInt((ColonnesSimple-msgLen)/2, 0)
 
 	return m.WriteStringAt(colId, lineId, s)
 }
@@ -258,7 +258,7 @@ func (m *Minitel) WriteAttributes(attributes ...byte) error {
 func (m *Minitel) WriteHelperAt(colId, lineId int, helpText, button string) error {
 	m.WriteStringAt(colId, lineId, helpText)
 
-	helpMsgLen := (1 + len(helpText)) * m.charWidth()
+	helpMsgLen := (len(helpText) + 1) * m.charWidth()
 	buttonCol := minInt(colId+helpMsgLen, ColonnesSimple)
 	return m.WriteStringAtWithAttributes(buttonCol, lineId, button, InversionFond)
 }
@@ -266,7 +266,7 @@ func (m *Minitel) WriteHelperAt(colId, lineId int, helpText, button string) erro
 func (m *Minitel) WriteHelperLeft(lineId int, helpText, button string) error {
 	m.WriteStringLeft(lineId, helpText)
 
-	helpMsgLen := (len(helpText) + 1) * m.charWidth()
+	helpMsgLen := (len(helpText) + 2) * m.charWidth()
 	buttonCol := minInt(helpMsgLen, ColonnesSimple)
 	return m.WriteStringAtWithAttributes(buttonCol, lineId, button, InversionFond)
 }

@@ -228,7 +228,7 @@ func (m *Minitel) WriteStringRight(lineId int, s string) error {
 
 func (m *Minitel) WriteStringCenter(lineId int, s string) error {
 	msgLen := len(s) * m.charWidth()
-	colId := maxInt((ColonnesSimple-msgLen)/2, 0)
+	colId := maxInt((ColonnesSimple-msgLen)/2+1, 0)
 
 	return m.WriteStringAt(colId, lineId, s)
 }

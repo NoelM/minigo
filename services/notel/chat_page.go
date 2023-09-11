@@ -18,7 +18,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 
 		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
 
-		m.WriteStringXY(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", ircDrv.Nick))
+		m.WriteStringAt(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", ircDrv.Nick))
 		time.Sleep(2 * time.Second)
 		m.CleanLine()
 
@@ -91,11 +91,11 @@ func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 		// nick > text2
 		msgLines := msgLen/40 + 1
 
-		buf := minigo.GetMoveCursorXY(1, 24)
+		buf := minigo.GetMoveCursorAt(1, 24)
 		for k := 0; k < msgLines; k += 1 {
 			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 		}
-		buf = append(buf, minigo.GetMoveCursorXY(1, InputLine-msgLines)...)
+		buf = append(buf, minigo.GetMoveCursorAt(1, InputLine-msgLines)...)
 
 		buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
 		buf = append(buf, minigo.EncodeSprintf("%s - %s", list[i].Time.Format("15:04"), list[i].Nick)...)
@@ -116,12 +116,12 @@ func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 }
 
 func helpers(m *minigo.Minitel) {
-	m.WriteStringXY(1, 24, "MAJ ECRAN ")
+	m.WriteStringAt(1, 24, "MAJ ECRAN ")
 	m.WriteAttributes(minigo.InversionFond)
 	m.Send(minigo.EncodeMessage("REPET."))
 	m.WriteAttributes(minigo.FondNormal)
 
-	m.WriteStringXY(25, 24, "MESSAGE + ")
+	m.WriteStringAt(25, 24, "MESSAGE + ")
 	m.WriteAttributes(minigo.InversionFond)
 	m.Send(minigo.EncodeMessage("ENVOI"))
 	m.WriteAttributes(minigo.FondNormal)

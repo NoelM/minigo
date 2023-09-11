@@ -37,7 +37,7 @@ func IsPosInBounds(x, y int, resolution uint) (bool, error) {
 	}
 }
 
-func GetMoveCursorXY(x, y int) (buf []byte) {
+func GetMoveCursorAt(x, y int) (buf []byte) {
 	buf = GetWord(Csi)
 	buf = append(buf, GetPCode(y)...)
 	buf = append(buf, 0x3B)

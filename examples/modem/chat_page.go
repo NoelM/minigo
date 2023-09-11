@@ -13,7 +13,7 @@ func chatPage(m *minigo.Minitel, ircDvr *IrcDriver) {
 	messages := []Message{}
 	messageInput := minigo.NewInput(m, 1, InputLine, 40, 5, ">", true)
 
-	m.WriteStringXY(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", ircDvr.Nick))
+	m.WriteStringAt(1, 1, fmt.Sprintf(">>> CONNECTE '%s' SUR #MINITEL", ircDvr.Nick))
 	time.Sleep(2 * time.Second)
 	m.CleanLine()
 
@@ -85,11 +85,11 @@ func updateScreen(m *minigo.Minitel, list []Message, lastId *int) {
 		// nick > text2
 		msgLines := msgLen/40 + 2
 
-		buf := minigo.GetMoveCursorXY(1, 24)
+		buf := minigo.GetMoveCursorAt(1, 24)
 		for k := 0; k < msgLines; k += 1 {
 			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 		}
-		buf = append(buf, minigo.GetMoveCursorXY(1, InputLine-msgLines)...)
+		buf = append(buf, minigo.GetMoveCursorAt(1, InputLine-msgLines)...)
 		buf = append(buf, minigo.EncodeSprintf("%s > ", list[i].Nick)...)
 
 		if list[i].Type == Message_Teletel {

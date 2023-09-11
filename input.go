@@ -35,7 +35,7 @@ func (i *Input) getAbsoluteXY() (x, y int) {
 }
 
 func (i *Input) AppendKey(key byte) {
-	command := GetMoveCursorXY(i.getAbsoluteXY())
+	command := GetMoveCursorAt(i.getAbsoluteXY())
 	command = append(command, key)
 	i.m.Send(command)
 
@@ -49,14 +49,14 @@ func (i *Input) Correction() {
 
 	i.Value = i.Value[:len(i.Value)-1]
 
-	command := GetMoveCursorXY(i.getAbsoluteXY())
+	command := GetMoveCursorAt(i.getAbsoluteXY())
 	command = append(command, GetCleanLineFromCursor()...)
 	i.m.Send(command)
 }
 
 // Repetition replays the print of the Input section
 func (i *Input) Repetition() {
-	command := GetMoveCursorXY(i.refX, i.refY)
+	command := GetMoveCursorAt(i.refX, i.refY)
 
 	if len(i.prefix) > 0 {
 		command = append(command, EncodeMessage(i.prefix)...)
@@ -83,7 +83,7 @@ func (i *Input) ClearScreen() {
 
 	command := []byte{}
 	for row := 0; row < i.height; row += 1 {
-		command = append(command, GetMoveCursorXY(i.refX, i.refY+row)...)
+		command = append(command, GetMoveCursorAt(i.refX, i.refY+row)...)
 		// TODO: handle input with a width < rowWidth
 		command = append(command, GetCleanLineFromCursor()...)
 	}
@@ -98,7 +98,7 @@ func (i *Input) Clear() {
 
 // Activate moves the cursor to its actual position and let it on
 func (i *Input) Activate() {
-	i.m.MoveCursorXY(i.getAbsoluteXY())
+	i.m.MoveCursorAt(i.getAbsoluteXY())
 	if i.cursor {
 		i.m.CursorOn()
 	}

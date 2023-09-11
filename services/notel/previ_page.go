@@ -119,7 +119,7 @@ func sortForecasts(f *APIForecastReply, order map[int]string) {
 func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 
 	mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-	mntl.WriteStringXY(1, 2, c.NomCommune)
+	mntl.WriteStringAt(1, 2, c.NomCommune)
 	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
 
 	forecastTime, err := time.Parse("2006-01-02 15:04:05", date)
@@ -127,35 +127,35 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 		warnLog.Printf("ignored entry %s: %s\n", date, err.Error())
 	}
 
-	mntl.WriteStringXY(1, 3, fmt.Sprintf("PREVISIONS LE %s A %s", forecastTime.Format("02/01/06"), forecastTime.Format("15:04")))
-	mntl.WriteStringXY(1, 4, "DONNEES: INFO-CLIMAT")
+	mntl.WriteStringAt(1, 3, fmt.Sprintf("PREVISIONS LE %s A %s", forecastTime.Format("02/01/06"), forecastTime.Format("15:04")))
+	mntl.WriteStringAt(1, 4, "DONNEES: INFO-CLIMAT")
 
 	mntl.CleanScreenFromXY(1, 6)
 
 	mntl.WriteAttributes(minigo.InversionFond)
-	mntl.WriteStringXY(1, 6, nebulositeToString(f.Nebulosite.Totale))
+	mntl.WriteStringAt(1, 6, nebulositeToString(f.Nebulosite.Totale))
 	mntl.WriteAttributes(minigo.FondNormal)
 
-	mntl.WriteStringXY(1, 8, fmt.Sprintf("TEMP: %.0f C", f.Temperature.TwoM-275.))
+	mntl.WriteStringAt(1, 8, fmt.Sprintf("TEMP: %.0f C", f.Temperature.TwoM-275.))
 	if f.VentRafales.One0M > f.VentMoyen.One0M {
-		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f km/h", f.VentMoyen.One0M, f.VentRafales.One0M))
+		mntl.WriteStringAt(1, 10, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f km/h", f.VentMoyen.One0M, f.VentRafales.One0M))
 	} else {
-		mntl.WriteStringXY(1, 10, fmt.Sprintf("VENT: %.0f km/h", f.VentMoyen.One0M*3.6))
+		mntl.WriteStringAt(1, 10, fmt.Sprintf("VENT: %.0f km/h", f.VentMoyen.One0M*3.6))
 	}
-	mntl.WriteStringXY(1, 11, fmt.Sprintf("DIR:  %s", windDirToString(f.VentDirection.One0M)))
-	mntl.WriteStringXY(1, 13, fmt.Sprintf("PLUIE: %.0f mm", f.Pluie))
+	mntl.WriteStringAt(1, 11, fmt.Sprintf("DIR:  %s", windDirToString(f.VentDirection.One0M)))
+	mntl.WriteStringAt(1, 13, fmt.Sprintf("PLUIE: %.0f mm", f.Pluie))
 
-	mntl.WriteStringXY(1, 23, "PREC. ")
+	mntl.WriteStringAt(1, 23, "PREC. ")
 	mntl.WriteAttributes(minigo.InversionFond)
 	mntl.Send(minigo.EncodeMessage("RETOUR"))
 	mntl.WriteAttributes(minigo.FondNormal)
 
-	mntl.WriteStringXY(28, 23, "SUIV. ")
+	mntl.WriteStringAt(28, 23, "SUIV. ")
 	mntl.WriteAttributes(minigo.InversionFond)
 	mntl.Send(minigo.EncodeMessage("SUITE"))
 	mntl.WriteAttributes(minigo.FondNormal)
 
-	mntl.WriteStringXY(1, 24, "CHOIX CODE POSTAL ")
+	mntl.WriteStringAt(1, 24, "CHOIX CODE POSTAL ")
 	mntl.WriteAttributes(minigo.InversionFond)
 	mntl.Send(minigo.EncodeMessage("SOMMAIRE"))
 	mntl.WriteAttributes(minigo.FondNormal)

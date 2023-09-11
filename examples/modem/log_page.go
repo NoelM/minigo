@@ -9,10 +9,10 @@ func logPage(m *minigo.Minitel) []byte {
 
 	m.CleanScreen()
 	m.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-	m.WriteStringXY(10, 10, "MINI-CHAT")
+	m.WriteStringAt(10, 10, "MINI-CHAT")
 
 	m.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-	m.WriteStringXY(10, 12, "PSEUDO : ")
+	m.WriteStringAt(10, 12, "PSEUDO : ")
 	m.CursorOnXY(10, 13)
 
 	for {

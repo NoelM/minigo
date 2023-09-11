@@ -11,15 +11,15 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.CleanScreen()
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringXY(12, 2, "Prévisions Météo")
+		mntl.WriteStringAt(12, 2, "Prévisions Météo")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		mntl.WriteStringXY(1, 4, "CODE POSTAL: ..... + ")
+		mntl.WriteStringAt(1, 4, "CODE POSTAL: ..... + ")
 		mntl.WriteAttributes(minigo.InversionFond)
 		mntl.Send(minigo.EncodeMessage("ENVOI"))
 		mntl.WriteAttributes(minigo.FondNormal)
 
-		mntl.WriteStringXY(1, 24, "CHOIX SERVICE ")
+		mntl.WriteStringAt(1, 24, "CHOIX SERVICE ")
 		mntl.WriteAttributes(minigo.InversionFond)
 		mntl.Send(minigo.EncodeMessage("SOMMAIRE"))
 		mntl.WriteAttributes(minigo.FondNormal)

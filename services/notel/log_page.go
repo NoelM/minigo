@@ -20,10 +20,10 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 	mntl.CleanScreen()
 
 	mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-	mntl.WriteStringXY(10, 10, "MINI-CHAT")
+	mntl.WriteStringAt(10, 10, "MINI-CHAT")
 
 	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-	mntl.WriteStringXY(10, 12, "PSEUDO : ")
+	mntl.WriteStringAt(10, 12, "PSEUDO : ")
 	mntl.CursorOnXY(10, 13)
 
 	form.AppendInput("nick", minigo.NewInput(mntl, 10, 13, 10, 1, "", true))

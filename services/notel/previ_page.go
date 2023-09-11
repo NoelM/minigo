@@ -118,6 +118,8 @@ func sortForecasts(f *APIForecastReply, order map[int]string) {
 
 func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 
+	mntl.CursorOff()
+
 	mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
 	mntl.WriteStringLeft(2, c.NomCommune)
 	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)

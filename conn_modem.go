@@ -158,6 +158,10 @@ func (m *Modem) Serve(forceRing bool) {
 			infoLog.Println("RING=1, phone rings")
 			forceRing = false
 			m.Connect()
+
+			if !m.connected {
+				m.Init()
+			}
 		}
 
 		time.Sleep(time.Second)

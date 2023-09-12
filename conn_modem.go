@@ -158,6 +158,10 @@ func (m *Modem) Serve(forceRing bool) {
 			infoLog.Println("RING=1, phone rings")
 			forceRing = false
 			m.Connect()
+
+			if !m.connected {
+				m.Init()
+			}
 		}
 
 		time.Sleep(time.Second)
@@ -174,20 +178,8 @@ func (m *Modem) Connect() {
 		return
 	}
 
-	status, err := m.port.GetModemStatusBits()
-	if err != nil {
-		warnLog.Printf("unable to get modem status: %s\n", err.Error())
-	}
-
 	if !isAck {
 		errorLog.Printf("unable to connect after RING got reply=%s\n", rep.Replace(result))
-		if status.DCD {
-			_, _, err = m.sendCommandAndWait(ATCommand{Command: "ATH0", Reply: "OK"})
-			if err != nil {
-				errorLog.Printf("unable to send and ack command: %s\n", err.Error())
-				return
-			}
-		}
 		return
 	} else {
 		infoLog.Printf("acknowledged command='ATA' with reply='%s'", rep.Replace(result))
@@ -195,7 +187,7 @@ func (m *Modem) Connect() {
 
 	time.Sleep(100 * time.Millisecond)
 
-	status, err = m.port.GetModemStatusBits()
+	status, err := m.port.GetModemStatusBits()
 	if err != nil {
 		warnLog.Printf("unable to get modem status: %s\n", err.Error())
 	}

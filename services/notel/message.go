@@ -31,23 +31,26 @@ type MessagesServer struct {
 	mutex           sync.RWMutex
 }
 
-func NewMessagesServer(filePath string) *MessagesServer {
-	return &MessagesServer{
-		filePath: filePath,
-	}
-}
-
-func (m *MessagesServer) LoadMessages() error {
+func (m *MessagesServer) LoadMessages(filePath string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	m.filePath = filePath
 
 	var err error
 	m.file, err = os.Open(m.filePath)
 
 	if os.IsNotExist(err) {
 		if m.file, err = os.Create(m.filePath); err != nil {
+			errorLog.Printf("unable to create database: %s\n", err.Error())
 			return err
 		}
+		infoLog.Printf("created database: %s\n", filePath)
+	} else if err != nil {
+		errorLog.Printf("unable to get database stats: %s\n", err.Error())
+		return err
+	} else {
+		infoLog.Printf("opened database: %s\n", filePath)
 	}
 
 	scanner := bufio.NewScanner(m.file)
@@ -63,6 +66,63 @@ func (m *MessagesServer) LoadMessages() error {
 
 		m.messages = append(m.messages, msg)
 	}
+	infoLog.Printf("loaded %d messages from database\n", len(m.messages))
 
 	return nil
+}
+
+func (m *MessagesServer) Subscribe() int {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.subscriberMaxId += 1
+	m.subscribers[m.subscriberMaxId] = 0
+
+	infoLog.Printf("got a new subscriber with id=%d\n", m.subscriberMaxId)
+	return m.subscriberMaxId
+}
+
+func (m *MessagesServer) Resign(subscriberId int) {
+	infoLog.Printf("resigned subscriber with id=%d\n", m.subscriberMaxId)
+	delete(m.subscribers, subscriberId)
+}
+
+func (m *MessagesServer) GetMessages(subscriberId int) []Message {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	lastMsg, ok := m.subscribers[subscriberId]
+	if !ok {
+		warnLog.Printf("unable to find subscriber with id=%d\n", subscriberId)
+		return nil
+	}
+
+	nbMsg := len(m.messages) - (lastMsg + 1)
+	messagesCopy := make([]Message, nbMsg)
+
+	copy(messagesCopy, m.messages[lastMsg:])
+	m.subscribers[subscriberId] = len(m.messages) - 1
+
+	infoLog.Printf("subscriber id=%d recieved %d messages\n", subscriberId, nbMsg)
+	return messagesCopy
+}
+
+func (m *MessagesServer) PushMessage(msg Message) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.messages = append(m.messages, msg)
+
+	buf, err := json.Marshal(msg)
+	if err != nil {
+		errorLog.Printf("unable to marshal message: %s\n", err.Error())
+	}
+	buf = append(buf, '\n')
+
+	_, err = m.file.Write(buf)
+	if err != nil {
+		errorLog.Printf("unable to write to database: %s\n", err.Error())
+	}
+
+	infoLog.Printf("sucessfully pushed message of length=%d to database\n")
 }

@@ -22,7 +22,7 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 			return sommaireId
 		}
 
-		communes = getCommunesFromCodePostal(codePostal)
+		communes = CommuneDb.GetCommunesFromCodePostal(codePostal)
 		if communes == nil {
 			mntl.CleanScreen()
 			mntl.WriteStringLeft(1, "IMPOSSIBLE DE TROUVER UNE COMMUNE")

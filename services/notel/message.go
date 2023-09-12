@@ -17,12 +17,12 @@ const (
 
 type Message struct {
 	Nick string      `json:"nick"`
-	Text []byte      `json:"text"`
+	Text string      `json:"text"`
 	Type MessageType `json:"type"`
 	Time time.Time   `json:"time"`
 }
 
-type MessagesServer struct {
+type MessageDatabase struct {
 	filePath        string
 	file            *os.File
 	messages        []Message
@@ -31,7 +31,7 @@ type MessagesServer struct {
 	mutex           sync.RWMutex
 }
 
-func (m *MessagesServer) LoadMessages(filePath string) error {
+func (m *MessageDatabase) LoadMessages(filePath string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -71,7 +71,7 @@ func (m *MessagesServer) LoadMessages(filePath string) error {
 	return nil
 }
 
-func (m *MessagesServer) Subscribe() int {
+func (m *MessageDatabase) Subscribe() int {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -82,12 +82,12 @@ func (m *MessagesServer) Subscribe() int {
 	return m.subscriberMaxId
 }
 
-func (m *MessagesServer) Resign(subscriberId int) {
+func (m *MessageDatabase) Resign(subscriberId int) {
 	infoLog.Printf("resigned subscriber with id=%d\n", m.subscriberMaxId)
 	delete(m.subscribers, subscriberId)
 }
 
-func (m *MessagesServer) GetMessages(subscriberId int) []Message {
+func (m *MessageDatabase) GetMessages(subscriberId int) []Message {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -107,7 +107,7 @@ func (m *MessagesServer) GetMessages(subscriberId int) []Message {
 	return messagesCopy
 }
 
-func (m *MessagesServer) PushMessage(msg Message) {
+func (m *MessageDatabase) PushMessage(msg Message) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -124,5 +124,9 @@ func (m *MessagesServer) PushMessage(msg Message) {
 		errorLog.Printf("unable to write to database: %s\n", err.Error())
 	}
 
-	infoLog.Printf("sucessfully pushed message of length=%d to database\n")
+	infoLog.Printf("sucessfully pushed message of length=%d to database\n", len(msg.Text))
+}
+
+func (m *MessageDatabase) Quit() {
+	m.file.Close()
 }

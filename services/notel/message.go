@@ -101,9 +101,12 @@ func (m *MessageDatabase) GetMessages(subscriberId int) []Message {
 		return nil
 	}
 
-	nbMsg := len(m.messages) - lastMsg
+	nbMsg := len(m.messages) - (lastMsg + 1)
 	messagesCopy := make([]Message, nbMsg)
 
+	if lastMsg < 0 {
+		lastMsg = 0
+	}
 	copy(messagesCopy, m.messages[lastMsg:])
 	m.subscribers[subscriberId] = len(m.messages) - 1
 

@@ -104,10 +104,7 @@ func (m *MessageDatabase) GetMessages(subscriberId int) []Message {
 	nbMsg := len(m.messages) - (lastMsg + 1)
 	messagesCopy := make([]Message, nbMsg)
 
-	if lastMsg < 0 {
-		lastMsg = 0
-	}
-	copy(messagesCopy, m.messages[lastMsg:])
+	copy(messagesCopy, m.messages[lastMsg+1:])
 	m.subscribers[subscriberId] = len(m.messages) - 1
 
 	infoLog.Printf("subscriber id=%d recieved %d messages\n", subscriberId, nbMsg)

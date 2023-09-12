@@ -37,23 +37,14 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 
 	m.filePath = filePath
 
-	var err error
-	m.file, err = os.Open(m.filePath)
-
-	if os.IsNotExist(err) {
-		if m.file, err = os.Create(m.filePath); err != nil {
-			errorLog.Printf("unable to create database: %s\n", err.Error())
-			return err
-		}
-		infoLog.Printf("created database: %s\n", filePath)
-	} else if err != nil {
-		errorLog.Printf("unable to get database stats: %s\n", err.Error())
+	filedb, err := os.OpenFile(m.filePath, os.O_RDONLY|os.O_CREATE, 0755)
+	if err != nil {
+		errorLog.Printf("unable to get database: %s\n", err.Error())
 		return err
-	} else {
-		infoLog.Printf("opened database: %s\n", filePath)
 	}
+	infoLog.Printf("opened database: %s\n", filePath)
 
-	scanner := bufio.NewScanner(m.file)
+	scanner := bufio.NewScanner(filedb)
 	scanner.Split(bufio.ScanLines)
 
 	line := 0
@@ -66,7 +57,16 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 
 		m.messages = append(m.messages, msg)
 	}
+	filedb.Close()
+
 	infoLog.Printf("loaded %d messages from database\n", len(m.messages))
+
+	m.file, err = os.OpenFile(m.filePath, os.O_RDWR|os.O_APPEND, 0755)
+	if err != nil {
+		errorLog.Printf("unable to get database: %s\n", err.Error())
+		return err
+	}
+	infoLog.Printf("opened database: %s\n", filePath)
 
 	return nil
 }
@@ -80,7 +80,7 @@ func (m *MessageDatabase) Subscribe() int {
 	}
 
 	m.subscriberMaxId += 1
-	m.subscribers[m.subscriberMaxId] = 0
+	m.subscribers[m.subscriberMaxId] = -1
 
 	infoLog.Printf("got a new subscriber with id=%d\n", m.subscriberMaxId)
 	return m.subscriberMaxId

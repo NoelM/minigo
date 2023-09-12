@@ -27,7 +27,7 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 
 	mntl.WriteStringCenter(16, "En simultané sur libera.chat#minitel")
 
-	form.AppendInput("nick", minigo.NewInput(mntl, 22, 13, 10, 1, "", true))
+	form.AppendInput("nick", minigo.NewInput(mntl, 19, 13, 10, 1, "", true))
 	form.ActivateFirst()
 
 	return minigo.NoOp

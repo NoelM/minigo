@@ -15,7 +15,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		infoLog.Printf("opening chat page for nick=%s\n", ircDrv.Nick)
 
 		subscriberId = MessageDb.Subscribe()
-		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 2, ">", true))
+		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
 
 		helpers(m)
 

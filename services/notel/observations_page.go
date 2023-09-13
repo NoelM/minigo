@@ -6,14 +6,14 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-const reportSizeInLines = 2
-const maxReportsPerPage = 25 / reportSizeInLines
-
 func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	meteoPage := minigo.NewPage("meteo", mntl, nil)
 
-	currentReportId := 0
-	var reports []WeatherReport
+	const reportsPerPage = 24 / 3
+	maxPageId := 0
+	pageId := 0
+
+	var reports map[string][]WeatherReport
 
 	meteoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
@@ -27,7 +27,9 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 			return sommaireId
 		}
 
-		currentReportId = printReportsFrom(mntl, reports, currentReportId)
+		maxPageId = len(reports) / reportsPerPage
+
+		printReportsFrom(mntl, reports, pageId, reportsPerPage)
 
 		return minigo.NoOp
 	})
@@ -37,38 +39,40 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	})
 
 	meteoPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		currentReportId = printReportsFrom(mntl, reports, currentReportId)
+		pageId += 1
+		if pageId > maxPageId {
+			pageId = maxPageId
+		}
+		printReportsFrom(mntl, reports, pageId, reportsPerPage)
 		return nil, minigo.NoOp
 	})
 
 	meteoPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		currentReportId -= 2 * maxReportsPerPage
-		if currentReportId < 0 {
-			currentReportId = 0
+		pageId -= 1
+		if pageId < 0 {
+			pageId = 0
 		}
 
-		currentReportId = printReportsFrom(mntl, reports, currentReportId)
+		printReportsFrom(mntl, reports, pageId, reportsPerPage)
 		return nil, minigo.NoOp
 	})
 
 	return meteoPage
 }
 
-func printReportsFrom(mntl *minigo.Minitel, reps []WeatherReport, from int) int {
+func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pageId, reportsPerPage int) {
 	mntl.CleanScreen()
 	mntl.MoveCursorAt(1, 1)
 
-	id := from
-	numberOfReports := 0
-	for ; id < len(reps) && numberOfReports < maxReportsPerPage; id += 1 {
-		printWeatherReport(mntl, reps[id])
+	for reportId := pageId * reportsPerPage; reportId < len(reps) && reportId < (pageId+1)*reportsPerPage; reportId += 1 {
+		printWeatherReport(mntl, reps[reportId])
 		numberOfReports += 1
 	}
 
 	return id
 }
 
-func printWeatherReport(mntl *minigo.Minitel, rep WeatherReport) {
+func printWeatherReport(mntl *minigo.Minitel, rep []WeatherReport) {
 	buf := minigo.EncodeAttributes(minigo.InversionFond)
 	buf = append(buf, minigo.EncodeMessage(rep.stationName)...)
 	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)

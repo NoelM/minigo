@@ -5,10 +5,23 @@ import "github.com/NoelM/minigo"
 func ServiceMeteo(m *minigo.Minitel) int {
 HOME:
 	out, serviceId := NewCodePostalPage(m).Run()
-	if serviceId != minigo.NoOp && serviceId != minigo.QuitPageOp {
+	if serviceId == minigo.SuiteOp {
+		goto OBS
+	} else if serviceId != minigo.NoOp && serviceId != minigo.QuitPageOp {
 		return serviceId
 	}
 
+	goto PREVI
+
+OBS:
+	out, serviceId = NewObservationsPage(m).Run()
+	if serviceId == sommaireId {
+		goto HOME
+	} else if serviceId != minigo.NoOp && serviceId != minigo.QuitPageOp {
+		return serviceId
+	}
+
+PREVI:
 	out, serviceId = NewCommunesPage(m, out).Run()
 	if serviceId == sommaireId {
 		goto HOME

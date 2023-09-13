@@ -1,8 +1,11 @@
 package minigo
 
-const NoOp = -100
-const DisconnectOp = -2
-const QuitPageOp = -1
+const (
+	NoOp = iota - 10
+	DisconnectOp
+	QuitPageOp
+	SuiteOp
+)
 
 type InitFunc func(mntl *Minitel, inputs *Form, initData map[string]string) int
 type KeyboardFunc func(mntl *Minitel, inputs *Form, key uint)

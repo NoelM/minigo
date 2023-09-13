@@ -14,12 +14,18 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.Send([]byte{minigo.Si})
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringCenter(10, "Prévisions Météo")
+		mntl.WriteStringLeft(10, "Prévisions Météo")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
 		mntl.WriteHelperLeft(12, "CODE POSTAL: ..... +", "ENVOI")
 
-		mntl.WriteHelperLeft(24, "CHOIX SERVICE", "SOMMAIRE")
+		mntl.WriteAttributes(minigo.DoubleHauteur)
+		mntl.WriteStringLeft(16, "Observations en Direct")
+		mntl.WriteAttributes(minigo.GrandeurNormale)
+
+		mntl.WriteHelperLeft(18, "APPUYEZ SUR", "SUITE")
+
+		mntl.WriteHelperLeft(12, "CODE POSTAL: ..... +", "ENVOI")
 
 		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 14, 12, 5, 1, "", true))
 		inputs.ActivateFirst()
@@ -47,6 +53,10 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 
 	codePostalPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		return nil, sommaireId
+	})
+
+	codePostalPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, minigo.SuiteOp
 	})
 
 	return codePostalPage

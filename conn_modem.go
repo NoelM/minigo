@@ -207,10 +207,14 @@ func (m *Modem) Connect() {
 
 func (m *Modem) Disconnect() {
 	m.port.SetDTR(false)
+	infoLog.Println("set DTR to false, waiting 5s")
 	time.Sleep(5 * time.Second)
-	m.port.SetDTR(true)
 
+	m.port.SetDTR(true)
+	infoLog.Println("set DTR to true, waiting 5s")
 	time.Sleep(5 * time.Second)
+
+	infoLog.Println("switch connected to false, relaunch init")
 	m.connected = false
 	m.Init()
 }

@@ -63,6 +63,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 
 	chatPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		MessageDb.Resign(subscriberId)
+		m.RouleauOff()
 		return nil, sommaireId
 	})
 

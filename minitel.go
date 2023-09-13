@@ -82,9 +82,9 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 	ok := false
 	switch m.ackType {
 	case AckRouleau:
-		ok = BitReadAt(m.fonctionnementByte, 6)
+		ok = BitReadAt(m.fonctionnementByte, 1)
 	case AckPage:
-		ok = !BitReadAt(m.fonctionnementByte, 6)
+		ok = !BitReadAt(m.fonctionnementByte, 1)
 	default:
 		fmt.Printf("not handled AckType: %d\n", m.ackType)
 		return

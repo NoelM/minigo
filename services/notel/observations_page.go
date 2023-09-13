@@ -87,7 +87,7 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	buf = append(buf, minigo.EncodeMessage(newestReport.stationName)...)
 	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
 	buf = append(buf, minigo.GetMoveCursorRight(2)...)
-	buf = append(buf, minigo.EncodeMessage(newestReport.date.Format("02/01/2006 A 15:04 UTC"))...)
+	buf = append(buf, minigo.EncodeMessage(newestReport.date.Format("02/01/2006 A 15:04"))...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	newTemp := newestReport.temperature - 275.

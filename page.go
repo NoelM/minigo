@@ -1,12 +1,14 @@
 package minigo
 
 const NoOp = -100
-const QuitOp = -1
+const DisconnectOp = -2
+const QuitPageOp = -1
 
 type InitFunc func(mntl *Minitel, inputs *Form, initData map[string]string) int
 type KeyboardFunc func(mntl *Minitel, inputs *Form, key uint)
 type InChanFunc func(mntl *Minitel, inputs *Form, message string)
 type NavigationFunc func(mntl *Minitel, inputs *Form) (map[string]string, int)
+type ConnexionFinFunc func(mntl *Minitel) int
 
 type Page struct {
 	InChan  chan string
@@ -17,35 +19,37 @@ type Page struct {
 	initData map[string]string
 	form     *Form
 
-	initFunc       InitFunc
-	charFunc       KeyboardFunc
-	inChanFunc     InChanFunc
-	envoiFunc      NavigationFunc
-	sommaireFunc   NavigationFunc
-	annulationFunc NavigationFunc
-	retourFunc     NavigationFunc
-	repetitionFunc NavigationFunc
-	guideFunc      NavigationFunc
-	correctionFunc NavigationFunc
-	suiteFunc      NavigationFunc
+	initFunc         InitFunc
+	charFunc         KeyboardFunc
+	inChanFunc       InChanFunc
+	connexionFinFunc ConnexionFinFunc
+	envoiFunc        NavigationFunc
+	sommaireFunc     NavigationFunc
+	annulationFunc   NavigationFunc
+	retourFunc       NavigationFunc
+	repetitionFunc   NavigationFunc
+	guideFunc        NavigationFunc
+	correctionFunc   NavigationFunc
+	suiteFunc        NavigationFunc
 }
 
 func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 	return &Page{
-		mntl:           mntl,
-		name:           name,
-		initData:       initData,
-		initFunc:       func(mntl *Minitel, inputs *Form, initData map[string]string) int { return NoOp },
-		charFunc:       func(mntl *Minitel, inputs *Form, key uint) {},
-		inChanFunc:     func(mntl *Minitel, inputs *Form, message string) {},
-		envoiFunc:      defaultNavigationHandlerFunc,
-		sommaireFunc:   defaultNavigationHandlerFunc,
-		annulationFunc: defaultNavigationHandlerFunc,
-		retourFunc:     defaultNavigationHandlerFunc,
-		repetitionFunc: defaultNavigationHandlerFunc,
-		guideFunc:      defaultNavigationHandlerFunc,
-		correctionFunc: defaultNavigationHandlerFunc,
-		suiteFunc:      defaultNavigationHandlerFunc,
+		mntl:             mntl,
+		name:             name,
+		initData:         initData,
+		initFunc:         func(mntl *Minitel, inputs *Form, initData map[string]string) int { return NoOp },
+		charFunc:         func(mntl *Minitel, inputs *Form, key uint) {},
+		inChanFunc:       func(mntl *Minitel, inputs *Form, message string) {},
+		connexionFinFunc: func(mntl *Minitel) int { mntl.Disconnect(); return DisconnectOp },
+		envoiFunc:        defaultNavigationHandlerFunc,
+		sommaireFunc:     defaultNavigationHandlerFunc,
+		annulationFunc:   defaultNavigationHandlerFunc,
+		retourFunc:       defaultNavigationHandlerFunc,
+		repetitionFunc:   defaultNavigationHandlerFunc,
+		guideFunc:        defaultNavigationHandlerFunc,
+		correctionFunc:   defaultNavigationHandlerFunc,
+		suiteFunc:        defaultNavigationHandlerFunc,
 	}
 }
 
@@ -95,6 +99,10 @@ func (p *Page) SetSuiteFunc(f NavigationFunc) {
 
 func (p *Page) SetInChanFunc(f InChanFunc) {
 	p.inChanFunc = f
+}
+
+func (p *Page) SetConnexionFinFunc(f ConnexionFinFunc) {
+	p.connexionFinFunc = f
 }
 
 func (p *Page) Run() (map[string]string, int) {
@@ -151,6 +159,12 @@ func (p *Page) Run() (map[string]string, int) {
 					return out, op
 				}
 
+			case ConnexionFin:
+				infoLog.Printf("disconnect: quitting %s page\n", p.name)
+				if op := p.connexionFinFunc(p.mntl); op != NoOp {
+					return nil, op
+				}
+
 			default:
 				if IsUintAValidChar(key) {
 					p.charFunc(p.mntl, p.form, key)
@@ -158,12 +172,7 @@ func (p *Page) Run() (map[string]string, int) {
 				} else {
 					errorLog.Printf("not supported key: %d\n", key)
 				}
-
 			}
-		case <-p.mntl.Quit:
-			warnLog.Printf("quitting %s page\n", p.name)
-			return nil, QuitOp
-
 		default:
 			continue
 		}

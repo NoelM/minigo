@@ -21,7 +21,6 @@ const (
 
 type Minitel struct {
 	RecvKey chan uint
-	Quit    chan bool
 
 	conn    Connector
 	ackType AckType
@@ -43,7 +42,6 @@ func NewMinitel(conn Connector, parity bool) *Minitel {
 		conn:            conn,
 		parity:          parity,
 		RecvKey:         make(chan uint),
-		Quit:            make(chan bool),
 		defaultCouleur:  CaractereBlanc,
 		defaultGrandeur: GrandeurNormale,
 		currentGrandeur: GrandeurNormale,
@@ -119,7 +117,7 @@ func (m *Minitel) Listen() {
 			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: closed connection: %s\n", err.Error())
-				m.Quit <- true
+				m.RecvKey <- ConnexionFin
 			}
 
 			fullRead = false
@@ -164,7 +162,11 @@ func (m *Minitel) Listen() {
 	}
 
 	warnLog.Printf("stop minitel listen: closed connection\n")
-	m.Quit <- true
+	m.RecvKey <- ConnexionFin
+}
+
+func (m *Minitel) Disconnect() {
+	m.conn.Disconnect()
 }
 
 func (m *Minitel) Send(buf []byte) error {

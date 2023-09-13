@@ -30,7 +30,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 	codePostalPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		if len(inputs.ValueActive()) != 0 {
 			infoLog.Printf("chosen code postal: %s\n", inputs.ValueActive())
-			return inputs.ToMap(), minigo.QuitOp
+			return inputs.ToMap(), minigo.QuitPageOp
 		}
 		warnLog.Println("empty code postal")
 		return nil, minigo.NoOp

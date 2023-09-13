@@ -36,12 +36,12 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 func envoiLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	if len(form.ValueActive()) == 0 {
 		warnLog.Println("empty nick input")
-		return nil, minigo.QuitOp
+		return nil, minigo.QuitPageOp
 	}
 	mntl.Reset()
 
 	infoLog.Printf("logged as: %s\n", form.ValueActive())
-	return form.ToMap(), minigo.QuitOp
+	return form.ToMap(), minigo.QuitPageOp
 }
 
 func sommaireLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {

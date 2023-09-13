@@ -201,3 +201,23 @@ func (m *Modem) Connect() {
 
 	go m.ringHandler(m)
 }
+
+func (m *Modem) Disconnect() {
+	rep := strings.NewReplacer("\n", " ", "\r", " ")
+
+	isAck, result, err := m.sendCommandAndWait(ATCommand{Command: "ATH0", Reply: "OK"})
+	if err != nil {
+		errorLog.Printf("unable to send and ack command: %s\n", err.Error())
+		return
+	}
+
+	if !isAck {
+		errorLog.Printf("unable to disconnect got reply: %s\n", rep.Replace(result))
+		return
+	} else {
+		infoLog.Printf("acknowledged disconnect 'ATAH0' with reply: '%s'", rep.Replace(result))
+	}
+
+	m.connected = false
+	m.Init()
+}

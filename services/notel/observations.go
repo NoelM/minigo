@@ -128,6 +128,8 @@ func getLastWeatherData() (map[string][]WeatherReport, error) {
 		var err error
 
 		fileName := fmt.Sprintf(FileFormat, lastPublicationDate.Add(-3*time.Hour*time.Duration(i)).Format("2006010215"))
+		infoLog.Printf("loading file: %s\n", fileName)
+
 		if filePath, err = downloadFileIfDoesNotExist(fileName); err != nil {
 			return nil, err
 		}

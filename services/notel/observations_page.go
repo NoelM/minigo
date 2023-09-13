@@ -65,7 +65,9 @@ func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pag
 	mntl.MoveCursorAt(1, 1)
 
 	for reportId := pageId * reportsPerPage; reportId < len(reps) && reportId < (pageId+1)*reportsPerPage; reportId += 1 {
-		printWeatherReport(mntl, reps[OrderedStationId[reportId]])
+		if rep, ok := reps[OrderedStationId[reportId]]; ok {
+			printWeatherReport(mntl, rep)
+		}
 	}
 }
 

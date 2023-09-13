@@ -71,14 +71,53 @@ func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pag
 	}
 }
 
-func printWeatherReport(mntl *minigo.Minitel, rep []WeatherReport) {
-	buf := minigo.EncodeAttributes(minigo.InversionFond)
-	buf = append(buf, minigo.EncodeMessage(rep[0].stationName)...)
-	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
+func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
+	var newestReport WeatherReport
+	var oldestReport WeatherReport
+
+	for _, r := range reps {
+		if r.date.Before(oldestReport.date) {
+			oldestReport = r
+		} else if r.date.After(newestReport.date) {
+			newestReport = r
+		}
+	}
+
+	buf := minigo.EncodeAttributes(minigo.InversionFond, minigo.DoubleHauteur)
+	buf = append(buf, minigo.EncodeMessage(newestReport.stationName)...)
+	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal, minigo.GrandeurNormale)...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
+	newTemp := newestReport.temperature - 275.
+	difTemp := oldestReport.temperature - newestReport.temperature
+
+	if difTemp > 0 {
+		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
+	} else {
+		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
+	}
+	buf = append(buf, minigo.EncodeSprintf(" %2.f", newTemp)...)
+	buf = append(buf, minigo.EncodeSprintf(" (%2.f) ", difTemp)...)
+	buf = append(buf, minigo.Ss2, minigo.Degre, minigo.Si)
+	buf = append(buf, minigo.EncodeMessage("C")...)
+
+	buf = append(buf, minigo.EncodeMessage(" - ")...)
+
+	newPres := newestReport.pressure / 100.
+	difPres := (oldestReport.pressure - newestReport.pressure) / 100.
+
+	if difTemp > 0 {
+		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
+	} else {
+		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
+	}
+	buf = append(buf, minigo.EncodeSprintf(" %4.f", newPres)...)
+	buf = append(buf, minigo.EncodeSprintf(" (%4.f) hPa", difPres)...)
+
 	// len 32 chars
-	buf = append(buf, minigo.EncodeSprintf("%2.f C %3.f %% - %4.f hPa - %2s %3.f km/h", rep[0].temperature-275., rep[0].humidity, rep[0].pressure/100., windDirToString(rep[0].windDir), rep[0].windSpeed*3.6)...)
+	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	buf = append(buf, minigo.EncodeSprintf("%2s %3.f km/h", windDirToString(reps[0].windDir), reps[0].windSpeed*3.6)...)
+
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	mntl.Send(buf)

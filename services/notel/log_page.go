@@ -23,10 +23,11 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 	mntl.WriteStringAt(10, 10, "MINI-CHAT")
 
 	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-	mntl.WriteStringAt(10, 12, "PSEUDO : ")
-	mntl.CursorOnXY(10, 13)
+	mntl.WriteHelperAt(10, 13, "PSEUDO : ......... +", "ENVOI")
 
-	form.AppendInput("nick", minigo.NewInput(mntl, 10, 13, 10, 1, "", true))
+	mntl.WriteStringCenter(16, "En simultané sur libera.chat#minitel")
+
+	form.AppendInput("nick", minigo.NewInput(mntl, 19, 13, 10, 1, "", true))
 	form.ActivateFirst()
 
 	return minigo.NoOp

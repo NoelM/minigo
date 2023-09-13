@@ -16,12 +16,14 @@ var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.Ltime|log.Lshort
 var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
-var CommuneDatabase CommuneDb
+var CommuneDb CommuneDatabase
+var MessageDb MessageDatabase
 
 func main() {
 	var wg sync.WaitGroup
 
-	loadCommuneDatabase()
+	CommuneDb.LoadCommuneDatabase("/media/core/communes-departement-region.csv")
+	MessageDb.LoadMessages("/media/core/messages.db")
 
 	wg.Add(2)
 
@@ -29,6 +31,8 @@ func main() {
 	go serveModem(&wg)
 
 	wg.Wait()
+
+	MessageDb.Quit()
 }
 
 func serveWS(wg *sync.WaitGroup) {

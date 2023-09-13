@@ -5,8 +5,9 @@ import (
 )
 
 func TestGetCodePostal(t *testing.T) {
-	loadCommuneDatabase()
-	communes := getCommunesFromCodePostal("07100")
+	cdb := CommuneDatabase{}
+	cdb.LoadCommuneDatabase("/media/core/communes-departement-region.csv")
+	communes := cdb.GetCommunesFromCodePostal("07100")
 	if communes == nil {
 		t.Fatal("unable to fetch API")
 	}

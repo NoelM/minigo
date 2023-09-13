@@ -51,12 +51,12 @@ func (i *IrcDriver) Loop() error {
 	i.conn.AddCallback("366", func(e *irc.Event) {})
 
 	i.conn.AddCallback("PRIVMSG", func(event *irc.Event) {
-		i.RecvMessage <- Message{
+		MessageDb.PushMessage(Message{
 			Nick: event.Nick,
 			Text: event.Message(),
-			Type: Message_UTF8,
+			Type: MessageIRC,
 			Time: time.Now(),
-		}
+		})
 	})
 
 	err := i.conn.Connect(serverssl)

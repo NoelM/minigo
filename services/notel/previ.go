@@ -116,15 +116,20 @@ func (f *APIForecastReply) UnmarshalJSON(d []byte) error {
 	return nil
 }
 
-func getCommunesFromCodePostal(codePostal string) []Commune {
+type CommuneDatabase struct {
+	mutex               sync.RWMutex
+	CodePostalToCommune map[string][]Commune
+}
+
+func (c *CommuneDatabase) GetCommunesFromCodePostal(codePostal string) []Commune {
 	if codePostal[0] == '0' {
 		codePostal = codePostal[1:]
 	}
 
-	CommuneDatabase.mutex.RLock()
-	defer CommuneDatabase.mutex.RUnlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 
-	communes, ok := CommuneDatabase.CodePostalToCommune[codePostal]
+	communes, ok := c.CodePostalToCommune[codePostal]
 	if !ok {
 		return nil
 	}
@@ -132,13 +137,8 @@ func getCommunesFromCodePostal(codePostal string) []Commune {
 	return communes
 }
 
-type CommuneDb struct {
-	mutex               sync.RWMutex
-	CodePostalToCommune map[string][]Commune
-}
-
-func loadCommuneDatabase() error {
-	const filePath = "/media/core/communes-departement-region.csv"
+func (c *CommuneDatabase) LoadCommuneDatabase(filePath string) error {
+	//const filePath = "/media/core/communes-departement-region.csv"
 
 	const codeCommuneColId = 0
 	const nomCommuneColId = 10
@@ -164,9 +164,9 @@ func loadCommuneDatabase() error {
 		return err
 	}
 
-	CommuneDatabase.CodePostalToCommune = make(map[string][]Commune)
-	CommuneDatabase.mutex.Lock()
-	defer CommuneDatabase.mutex.Unlock()
+	c.CodePostalToCommune = make(map[string][]Commune)
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
 	for _, record := range communeRecords {
 		communeName := record[nomCommuneColId]
@@ -178,7 +178,7 @@ func loadCommuneDatabase() error {
 			warnLog.Printf("unable to parse code departement for commune %s: %s\n", communeName, err.Error())
 			continue
 		} else if parsedDepCode > 95 {
-			infoLog.Printf("ignore commune %s because out of metropole\n", communeName)
+			//infoLog.Printf("ignore commune %s because out of metropole\n", communeName)
 			continue
 		}
 
@@ -194,9 +194,9 @@ func loadCommuneDatabase() error {
 			continue
 		}
 
-		_, ok := CommuneDatabase.CodePostalToCommune[codePostal]
+		_, ok := c.CodePostalToCommune[codePostal]
 		if !ok {
-			CommuneDatabase.CodePostalToCommune[codePostal] = []Commune{
+			c.CodePostalToCommune[codePostal] = []Commune{
 				{
 					CodeCommune:     record[codeCommuneColId],
 					NomCommune:      communeName,
@@ -208,7 +208,7 @@ func loadCommuneDatabase() error {
 				},
 			}
 		} else {
-			CommuneDatabase.CodePostalToCommune[codePostal] = append(CommuneDatabase.CodePostalToCommune[codePostal], Commune{
+			c.CodePostalToCommune[codePostal] = append(c.CodePostalToCommune[codePostal], Commune{
 				CodeCommune:     record[codeCommuneColId],
 				NomCommune:      communeName,
 				CodePostal:      codePostal,

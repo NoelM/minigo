@@ -93,13 +93,17 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	newTemp := newestReport.temperature - 275.
 	difTemp := newestReport.temperature - oldestReport.temperature
 
+	buf = append(buf, minigo.EncodeSprintf("%2.f", newTemp)...)
+	buf = append(buf, minigo.Ss2, minigo.Degre, minigo.Si)
+	buf = append(buf, minigo.EncodeMessage("C ")...)
+
 	if difTemp > 0 {
 		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
 	} else {
 		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
 	}
-	buf = append(buf, minigo.EncodeSprintf(" %2.f", newTemp)...)
-	buf = append(buf, minigo.EncodeSprintf(" (%2.f) ", difTemp)...)
+
+	buf = append(buf, minigo.EncodeSprintf(" %2.f", difTemp)...)
 	buf = append(buf, minigo.Ss2, minigo.Degre, minigo.Si)
 	buf = append(buf, minigo.EncodeMessage("C")...)
 
@@ -108,25 +112,28 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	newPres := newestReport.pressure / 100.
 	difPres := (newestReport.pressure - oldestReport.pressure) / 100.
 
-	if difTemp > 0 {
+	buf = append(buf, minigo.EncodeSprintf("%4.f hPa ", newPres)...)
+
+	if difPres > 0 {
 		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
 	} else {
 		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
 	}
-	buf = append(buf, minigo.EncodeSprintf(" %4.f", newPres)...)
-	buf = append(buf, minigo.EncodeSprintf(" (%4.f) hPa", difPres)...)
+	buf = append(buf, minigo.EncodeSprintf(" %4.f hPa", difPres)...)
 
 	// wind
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 	buf = append(buf, minigo.EncodeMessage(windDirToString(newestReport.windDir))...)
 	buf = append(buf, minigo.GetMoveCursorRight(1)...)
 
+	buf = append(buf, minigo.EncodeSprintf(" %3.f km/h ", newestReport.windSpeed*3.6)...)
+
 	if newestReport.windSpeed-oldestReport.windSpeed > 0 {
 		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
 	} else {
 		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
 	}
-	buf = append(buf, minigo.EncodeSprintf(" %3.f (%3.f) km/h", newestReport.windSpeed*3.6, (newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
+	buf = append(buf, minigo.EncodeSprintf(" %3.f km/h", (newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
 
 	buf = append(buf, minigo.GetMoveCursorReturn(2)...)
 

@@ -9,7 +9,7 @@ import (
 func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	meteoPage := minigo.NewPage("meteo", mntl, nil)
 
-	const reportsPerPage = 24 / 4
+	const reportsPerPage = 24 / 3
 	maxPageId := 0
 	pageId := 0
 
@@ -72,8 +72,8 @@ func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pag
 }
 
 func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
-	var newestReport WeatherReport
-	var oldestReport WeatherReport
+	newestReport := reps[0]
+	oldestReport := reps[0]
 
 	for _, r := range reps {
 		if r.date.Before(oldestReport.date) {
@@ -128,7 +128,7 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	}
 	buf = append(buf, minigo.EncodeSprintf(" %3.f (%3.f) km/h", newestReport.windSpeed*3.6, (newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
 
-	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	buf = append(buf, minigo.GetMoveCursorReturn(2)...)
 
 	mntl.Send(buf)
 }

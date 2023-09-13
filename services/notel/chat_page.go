@@ -17,11 +17,11 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		subscriberId = MessageDb.Subscribe()
 		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
 
+		m.RouleauOn()
 		updateScreen(m, subscriberId)
 		helpers(m)
 
 		inputs.RepetitionActive()
-		m.RouleauOn()
 
 		return minigo.NoOp
 	})

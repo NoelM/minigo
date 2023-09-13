@@ -9,7 +9,7 @@ import (
 func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	meteoPage := minigo.NewPage("meteo", mntl, nil)
 
-	const reportsPerPage = 24 / 3
+	const reportsPerPage = 24 / 4
 	maxPageId := 0
 	pageId := 0
 

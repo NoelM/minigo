@@ -9,13 +9,10 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-const APIForecastFormat = "http://www.infoclimat.fr/public-api/gfs/json?_ll=%.5f,%f.5&_auth=U0kEEwZ4U3FVeAE2VyELIlgwBDFdKwEmB3sFZgBoUi8CYANhB2IAZFA4UC1VegAxUXwPaA0zAjxQNVc3AXNTL1MzBGAGZFM1VT0BYVdvCyBYdAR5XWMBJgd7BWsAb1IvAmADYAdkAHxQNlAsVWcANlFkD3ANLQI7UDVXOQFoUzNTNARlBm1TMVU7AXxXeAs5WG8EMl02AWgHNQVmAGRSNwI0AzYHNwBrUD1QLFVjADJRYA9tDTICP1A2VzIBc1MvU0kEEwZ4U3FVeAE2VyELIlg%%2BBDpdNg%%3D%%3D&_c=940e429e25a778ab4196831fbc0d51b8"
-
 func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minigo.Page {
 	previPage := minigo.NewPage("previsions", mntl, communeMap)
 
-	var forecast APIForecastReply
-	var forecastSort map[int]string
+	var forecast OpenWeatherApiResponse
 	var commune Commune
 
 	forecastId := 0
@@ -34,7 +31,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 			return sommaireId
 		}
 
-		body, err := getRequestBody(fmt.Sprintf(APIForecastFormat, commune.Latitude, commune.Longitude))
+		body, err := getRequestBody(fmt.Sprintf(OWApiUrlFormat, commune.Latitude, commune.Longitude, OWApiKey))
 		if err != nil {
 			errorLog.Printf("unable to get forecasts: %s\n", err.Error())
 			return sommaireId
@@ -44,14 +41,12 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 		data := make([]byte, 100_000)
 		n, _ := body.Read(data)
 
-		if err := forecast.UnmarshalJSON(data[:n]); err != nil {
+		if err := json.Unmarshal(data[:n], &forecast); err != nil {
 			errorLog.Printf("unable to parse JSON: %s\n", err.Error())
 			return sommaireId
 		}
 
-		forecastSort = make(map[int]string)
-		sortForecasts(&forecast, forecastSort)
-		printForecast(mntl, forecast.Forecasts[forecastSort[forecastId]], forecastSort[forecastId], &commune)
+		printForecast(mntl, forecast, forecastId, commune)
 
 		return minigo.NoOp
 	})
@@ -116,7 +111,7 @@ func sortForecasts(f *APIForecastReply, order map[int]string) {
 	}
 }
 
-func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
+func printForecast(mntl *minigo.Minitel, f OpenWeatherApiResponse, fId int, c Commune) {
 
 	mntl.CursorOff()
 
@@ -129,7 +124,7 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 		warnLog.Printf("ignored entry %s: %s\n", date, err.Error())
 	}
 
-	mntl.WriteStringLeft(4, fmt.Sprintf("PREVISIONS LE %s %s A %s", weekdayIdToString(forecastTime.Weekday()), forecastTime.Format("02/01"), forecastTime.Format("15:04")))
+	mntl.WriteStringLeft(4, fmt.Sprintf("PREVISIONS LE %s %s A %s", weekdayIdToStringShort(forecastTime.Weekday()), forecastTime.Format("02/01"), forecastTime.Format("15:04")))
 	mntl.WriteStringLeft(5, "DONNEES: INFO-CLIMAT")
 
 	mntl.CleanScreenFromXY(1, 7)
@@ -148,71 +143,4 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 	mntl.WriteHelperLeft(23, "PREC.", "RETOUR")
 	mntl.WriteHelperRight(23, "SUIV.", "SUITE")
 	mntl.WriteHelperLeft(24, "CHOIX CODE POSTAL", "SOMMAIRE")
-}
-
-func nebulositeToString(n float64) string {
-	octas := 8. * n / 100.
-
-	if octas < 1 {
-		return "CIEL CLAIR"
-	} else if octas >= 1 && octas < 2 {
-		return "PEU NUAGEUX"
-	} else if octas >= 2 && octas < 5 {
-		return "NUAGEUX"
-	} else if octas >= 5 && octas < 7 {
-		return "TRES NUAGEUX"
-	} else if octas >= 7 {
-		return "CIEL COUVERT"
-	}
-	return ""
-}
-
-func weekdayIdToString(i time.Weekday) string {
-	switch i {
-	case time.Sunday:
-		return "Dim."
-	case time.Monday:
-		return "Lun."
-	case time.Tuesday:
-		return "Mar."
-	case time.Wednesday:
-		return "Mer."
-	case time.Thursday:
-		return "Jeu."
-	case time.Friday:
-		return "Ven."
-	case time.Saturday:
-		return "Sam."
-	}
-	return ""
-}
-
-func monthIdToString(i time.Month) string {
-	switch i {
-	case time.January:
-		return "Janvier"
-	case time.February:
-		return "Février"
-	case time.March:
-		return "Mars"
-	case time.April:
-		return "Avril"
-	case time.May:
-		return "Mai"
-	case time.June:
-		return "Juin"
-	case time.July:
-		return "Juillet"
-	case time.August:
-		return "Août"
-	case time.September:
-		return "Septembre"
-	case time.October:
-		return "Octobre"
-	case time.November:
-		return "Novembre"
-	case time.December:
-		return "Décembre"
-	}
-	return ""
 }

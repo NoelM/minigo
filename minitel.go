@@ -22,30 +22,32 @@ const (
 type Minitel struct {
 	RecvKey chan uint
 
-	conn    Connector
-	ackType AckType
+	conn   Connector
+	parity bool
 
 	defaultCouleur  uint
 	defaultGrandeur uint
 	currentGrandeur uint
 	defaultFond     uint
 
+	ackType            AckType
 	terminalByte       byte
 	vitesseByte        byte
 	fonctionnementByte byte
 	protocoleByte      byte
-	parity             bool
+	cursorRow          uint
+	cursorCol          uint
 }
 
 func NewMinitel(conn Connector, parity bool) *Minitel {
 	return &Minitel{
 		conn:            conn,
 		parity:          parity,
-		RecvKey:         make(chan uint),
 		defaultCouleur:  CaractereBlanc,
 		defaultGrandeur: GrandeurNormale,
 		currentGrandeur: GrandeurNormale,
 		defaultFond:     FondNormal,
+		RecvKey:         make(chan uint),
 	}
 }
 
@@ -92,7 +94,7 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 
 	if !ok {
 		err = fmt.Errorf("not verified for acknowledgment ackType=%d", m.ackType)
-		errorLog.Panicln(err.Error())
+		errorLog.Println(err.Error())
 	} else {
 		infoLog.Printf("verified acknowledgement ackType=%d\n", m.ackType)
 	}

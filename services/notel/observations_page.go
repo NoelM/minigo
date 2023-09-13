@@ -93,33 +93,14 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	newTemp := newestReport.temperature - 275.
 	difTemp := newestReport.temperature - oldestReport.temperature
 
-	buf = append(buf, minigo.EncodeSprintf("%2.f", newTemp)...)
-	buf = append(buf, minigo.Ss2, minigo.Degre, minigo.Si)
-	buf = append(buf, minigo.EncodeMessage("C ")...)
-
-	if difTemp > 0 {
-		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
-	} else {
-		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
-	}
-
-	buf = append(buf, minigo.EncodeSprintf(" %2.f", difTemp)...)
-	buf = append(buf, minigo.Ss2, minigo.Degre, minigo.Si)
-	buf = append(buf, minigo.EncodeMessage("C")...)
+	buf = append(buf, minigo.EncodeSprintf("%s %2.f°C (%+2.f°C)", getArrow(difTemp), newTemp, difTemp)...)
 
 	buf = append(buf, minigo.EncodeMessage(" - ")...)
 
 	newPres := newestReport.pressure / 100.
 	difPres := (newestReport.pressure - oldestReport.pressure) / 100.
 
-	buf = append(buf, minigo.EncodeSprintf("%4.f hPa ", newPres)...)
-
-	if difPres > 0 {
-		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
-	} else {
-		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
-	}
-	buf = append(buf, minigo.EncodeSprintf(" %4.f hPa", difPres)...)
+	buf = append(buf, minigo.EncodeSprintf("%s %4.f hPa (%+4.f hPa)", getArrow(difPres), newPres, difPres)...)
 
 	// wind
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
@@ -134,6 +115,14 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
 	}
 	buf = append(buf, minigo.EncodeSprintf(" %3.f km/h", (newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
+
+	buf = append(buf, minigo.GetMoveCursorReturn(2)...)
+
+	buf = append(buf, minigo.EncodeSprintf(
+		"%s %3.f km/h (%+3.f km/h)",
+		windDirToString(newestReport.windDir),
+		newestReport.windSpeed*3.6,
+		(newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
 
 	buf = append(buf, minigo.GetMoveCursorReturn(2)...)
 

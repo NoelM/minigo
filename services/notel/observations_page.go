@@ -65,21 +65,18 @@ func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pag
 	mntl.MoveCursorAt(1, 1)
 
 	for reportId := pageId * reportsPerPage; reportId < len(reps) && reportId < (pageId+1)*reportsPerPage; reportId += 1 {
-		printWeatherReport(mntl, reps[reportId])
-		numberOfReports += 1
+		printWeatherReport(mntl, reps[OrderedStationId[reportId]])
 	}
-
-	return id
 }
 
 func printWeatherReport(mntl *minigo.Minitel, rep []WeatherReport) {
 	buf := minigo.EncodeAttributes(minigo.InversionFond)
-	buf = append(buf, minigo.EncodeMessage(rep.stationName)...)
+	buf = append(buf, minigo.EncodeMessage(rep[0].stationName)...)
 	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	// len 32 chars
-	buf = append(buf, minigo.EncodeSprintf("%2.f C %3.f %% - %4.f hPa - %2s %3.f km/h", rep.temperature-275., rep.humidity, rep.pressure/100., windDirToString(rep.windDir), rep.windSpeed*3.6)...)
+	buf = append(buf, minigo.EncodeSprintf("%2.f C %3.f %% - %4.f hPa - %2s %3.f km/h", rep[0].temperature-275., rep[0].humidity, rep[0].pressure/100., windDirToString(rep[0].windDir), rep[0].windSpeed*3.6)...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	mntl.Send(buf)

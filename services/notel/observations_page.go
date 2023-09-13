@@ -82,8 +82,6 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 			newestReport = r
 		}
 	}
-	infoLog.Printf("min date %s\n", oldestReport.date.Format(time.RFC3339))
-	infoLog.Printf("max date %s\n", newestReport.date.Format(time.RFC3339))
 
 	buf := minigo.EncodeAttributes(minigo.InversionFond)
 	buf = append(buf, minigo.EncodeMessage(newestReport.stationName)...)

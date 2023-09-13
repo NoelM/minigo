@@ -227,8 +227,8 @@ func openAndParseFile(filePath string, globalReports map[string][]WeatherReport)
 				windDir:     windDir,
 			}
 
-			if stationReports, ok := globalReports[stationId]; ok {
-				stationReports = append(stationReports, rep)
+			if _, ok := globalReports[stationId]; ok {
+				globalReports[stationId] = append(globalReports[stationId], rep)
 			} else {
 				globalReports[stationId] = []WeatherReport{rep}
 			}

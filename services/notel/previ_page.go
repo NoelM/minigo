@@ -129,7 +129,7 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 		warnLog.Printf("ignored entry %s: %s\n", date, err.Error())
 	}
 
-	mntl.WriteStringLeft(4, fmt.Sprintf("PREVISIONS LE %s %s A %s", weekDayIdToString(forecastTime.Weekday()), forecastTime.Format("02/01"), forecastTime.Format("15:04")))
+	mntl.WriteStringLeft(4, fmt.Sprintf("PREVISIONS LE %s %s A %s", weekdayIdToString(forecastTime.Weekday()), forecastTime.Format("02/01"), forecastTime.Format("15:04")))
 	mntl.WriteStringLeft(5, "DONNEES: INFO-CLIMAT")
 
 	mntl.CleanScreenFromXY(1, 7)
@@ -167,7 +167,7 @@ func nebulositeToString(n float64) string {
 	return ""
 }
 
-func weekDayIdToString(i time.Weekday) string {
+func weekdayIdToString(i time.Weekday) string {
 	switch i {
 	case time.Sunday:
 		return "Dim."

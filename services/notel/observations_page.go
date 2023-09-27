@@ -6,14 +6,14 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-const reportSizeInLines = 2
-const maxReportsPerPage = 25 / reportSizeInLines
-
 func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	meteoPage := minigo.NewPage("meteo", mntl, nil)
 
-	currentReportId := 0
-	var reports []WeatherReport
+	const reportsPerPage = 24 / 4
+	maxPageId := 0
+	pageId := 0
+
+	var reports map[string][]WeatherReport
 
 	meteoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
@@ -27,7 +27,9 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 			return sommaireId
 		}
 
-		currentReportId = printReportsFrom(mntl, reports, currentReportId)
+		maxPageId = len(reports) / reportsPerPage
+
+		printReportsFrom(mntl, reports, pageId, reportsPerPage)
 
 		return minigo.NoOp
 	})
@@ -37,46 +39,103 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	})
 
 	meteoPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		currentReportId = printReportsFrom(mntl, reports, currentReportId)
+		pageId += 1
+		if pageId > maxPageId {
+			pageId = maxPageId
+		}
+		printReportsFrom(mntl, reports, pageId, reportsPerPage)
 		return nil, minigo.NoOp
 	})
 
 	meteoPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		currentReportId -= 2 * maxReportsPerPage
-		if currentReportId < 0 {
-			currentReportId = 0
+		pageId -= 1
+		if pageId < 0 {
+			pageId = 0
 		}
 
-		currentReportId = printReportsFrom(mntl, reports, currentReportId)
+		printReportsFrom(mntl, reports, pageId, reportsPerPage)
 		return nil, minigo.NoOp
 	})
 
 	return meteoPage
 }
 
-func printReportsFrom(mntl *minigo.Minitel, reps []WeatherReport, from int) int {
+func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pageId, reportsPerPage int) {
 	mntl.CleanScreen()
 	mntl.MoveCursorAt(1, 1)
 
-	id := from
-	numberOfReports := 0
-	for ; id < len(reps) && numberOfReports < maxReportsPerPage; id += 1 {
-		printWeatherReport(mntl, reps[id])
-		numberOfReports += 1
+	for reportId := pageId * reportsPerPage; reportId < len(reps) && reportId < (pageId+1)*reportsPerPage; reportId += 1 {
+		if rep, ok := reps[OrderedStationId[reportId]]; ok {
+			printWeatherReport(mntl, rep)
+		}
 	}
-
-	return id
 }
 
-func printWeatherReport(mntl *minigo.Minitel, rep WeatherReport) {
+func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
+	newestReport := reps[0]
+	oldestReport := reps[0]
+
+	for _, r := range reps {
+		if r.date.Before(oldestReport.date) {
+			oldestReport = r
+		} else if r.date.After(newestReport.date) {
+			newestReport = r
+		}
+	}
+
 	buf := minigo.EncodeAttributes(minigo.InversionFond)
-	buf = append(buf, minigo.EncodeMessage(rep.stationName)...)
+	buf = append(buf, minigo.EncodeMessage(newestReport.stationName)...)
 	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
+	buf = append(buf, minigo.GetMoveCursorRight(2)...)
+	buf = append(buf, minigo.EncodeMessage(newestReport.date.Format("02/01/2006 A 15:04"))...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
-	// len 32 chars
-	buf = append(buf, minigo.EncodeSprintf("%2.f C %3.f %% - %4.f hPa - %2s %3.f km/h", rep.temperature-275., rep.humidity, rep.pressure/100., windDirToString(rep.windDir), rep.windSpeed*3.6)...)
+	newTemp := newestReport.temperature - 275.
+	difTemp := newestReport.temperature - oldestReport.temperature
+
+	buf = append(buf, minigo.EncodeSprintf("%2.f", newTemp)...)
+	buf = append(buf, minigo.Ss2, minigo.Degre, minigo.Si)
+	buf = append(buf, minigo.EncodeMessage("C ")...)
+
+	if difTemp > 0 {
+		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
+	} else {
+		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
+	}
+
+	buf = append(buf, minigo.EncodeSprintf(" %2.f", difTemp)...)
+	buf = append(buf, minigo.Ss2, minigo.Degre, minigo.Si)
+	buf = append(buf, minigo.EncodeMessage("C")...)
+
+	buf = append(buf, minigo.EncodeMessage(" - ")...)
+
+	newPres := newestReport.pressure / 100.
+	difPres := (newestReport.pressure - oldestReport.pressure) / 100.
+
+	buf = append(buf, minigo.EncodeSprintf("%4.f hPa ", newPres)...)
+
+	if difPres > 0 {
+		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
+	} else {
+		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
+	}
+	buf = append(buf, minigo.EncodeSprintf(" %4.f hPa", difPres)...)
+
+	// wind
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	buf = append(buf, minigo.EncodeMessage(windDirToString(newestReport.windDir))...)
+	buf = append(buf, minigo.GetMoveCursorRight(1)...)
+
+	buf = append(buf, minigo.EncodeSprintf(" %3.f km/h ", newestReport.windSpeed*3.6)...)
+
+	if newestReport.windSpeed-oldestReport.windSpeed > 0 {
+		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
+	} else {
+		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
+	}
+	buf = append(buf, minigo.EncodeSprintf(" %3.f km/h", (newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
+
+	buf = append(buf, minigo.GetMoveCursorReturn(2)...)
 
 	mntl.Send(buf)
 }

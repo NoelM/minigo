@@ -78,7 +78,7 @@ func ServiceMiniChat(m *minigo.Minitel) int {
 
 	if len(nick) == 0 || !ok {
 		return sommaireId
-	} else if serviceId != minigo.NoOp && serviceId != minigo.QuitOp {
+	} else if serviceId != minigo.NoOp && serviceId != minigo.QuitPageOp {
 		return serviceId
 	}
 

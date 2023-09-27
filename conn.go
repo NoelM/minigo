@@ -12,6 +12,8 @@ type Connector interface {
 	Read() ([]byte, error)
 
 	Connected() bool
+
+	Disconnect()
 }
 
 type ConnectorErrorCode int

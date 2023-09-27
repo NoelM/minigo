@@ -175,7 +175,7 @@ const (
 	Sommaire     = 0x1346
 	Correction   = 0x1347
 	Suite        = 0x1348
-	ConnexionFin = 0x1359 // Non documenté
+	ConnexionFin = 0x1349
 )
 
 // 7 Codes et séquences émis par les touches de gestion du curseur et d'édition en mode Vidéotex ou Mixte (voir p.124)

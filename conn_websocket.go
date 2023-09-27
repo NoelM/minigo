@@ -64,3 +64,5 @@ func (ws *Websocket) Read() ([]byte, error) {
 func (ws *Websocket) Connected() bool {
 	return ws.connected
 }
+
+func (ws *Websocket) Disconnect() {}

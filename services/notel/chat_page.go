@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -17,11 +18,11 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		subscriberId = MessageDb.Subscribe()
 		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
 
+		m.RouleauOn()
 		updateScreen(m, subscriberId)
 		helpers(m)
 
 		inputs.RepetitionActive()
-		m.RouleauOn()
 
 		return minigo.NoOp
 	})
@@ -63,6 +64,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 
 	chatPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		MessageDb.Resign(subscriberId)
+		m.RouleauOff()
 		return nil, sommaireId
 	})
 
@@ -84,37 +86,59 @@ func updateScreen(m *minigo.Minitel, subscriberId int) {
 	}
 	lastMsg = lastMsg[firstMsg:]
 
+	lastDate := time.Time{}
+
 	for _, msg := range lastMsg {
-		// 5 because of the date format "15:04"
-		// 3 because of " - "
-		// 1 because of "nick_msg" 1 white space
-		msgLen := 5 + 3 + len(msg.Nick) + len(msg.Text) + 1
 
-		// 1 because if msgLen < 40, the division gives 0 and one breaks another line for readability
-		// nick > text
-		// nick > text2
-		msgLines := msgLen/40 + 1
-
-		buf := minigo.GetMoveCursorAt(1, 24)
-		for k := 0; k < msgLines; k += 1 {
-			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+		if lastDate.YearDay() != msg.Time.YearDay() ||
+			lastDate.Year() != msg.Time.Year() {
+			printDate(m, msg.Time)
 		}
-		buf = append(buf, minigo.GetMoveCursorAt(1, InputLine-msgLines-1)...)
-
-		buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
-		buf = append(buf, minigo.EncodeSprintf("%s - %s", msg.Time.Format("15:04"), msg.Nick)...)
-		buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
-		buf = append(buf, minigo.GetMoveCursorRight(1)...)
-
-		if msg.Type == MessageTeletel {
-			buf = append(buf, msg.Text...)
-		} else {
-			buf = append(buf, minigo.EncodeMessage(msg.Text)...)
-		}
-		m.Send(buf)
+		lastDate = msg.Time
+		printOneMsg(m, msg)
 	}
 
 	helpers(m)
+}
+
+func printDate(m *minigo.Minitel, date time.Time) {
+
+	buf := minigo.GetMoveCursorAt(1, 24)
+	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	m.Send(buf)
+
+	dayString := fmt.Sprintf("%s %d %s", weekdayIdToString(date.Weekday()), date.Day(), monthIdToString(date.Month()))
+	m.WriteStringCenter(InputLine-2, dayString)
+}
+
+func printOneMsg(m *minigo.Minitel, msg Message) {
+	// 5 because of the date format "15:04"
+	// 3 because of " - "
+	// 1 because of "nick_msg" 1 white space
+	msgLen := 5 + 3 + len(msg.Nick) + len(msg.Text) + 1
+
+	// 1 because if msgLen < 40, the division gives 0 and one breaks another line for readability
+	// nick > text
+	// nick > text2
+	msgLines := msgLen/40 + 1
+
+	buf := minigo.GetMoveCursorAt(1, 24)
+	for k := 0; k < msgLines; k += 1 {
+		buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	}
+	buf = append(buf, minigo.GetMoveCursorAt(1, InputLine-msgLines-1)...)
+
+	buf = append(buf, minigo.EncodeAttributes(minigo.InversionFond)...)
+	buf = append(buf, minigo.EncodeSprintf("%s - %s", msg.Time.Format("15:04"), msg.Nick)...)
+	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
+	buf = append(buf, minigo.GetMoveCursorRight(1)...)
+
+	if msg.Type == MessageTeletel {
+		buf = append(buf, msg.Text...)
+	} else {
+		buf = append(buf, minigo.EncodeMessage(msg.Text)...)
+	}
+	m.Send(buf)
 }
 
 func helpers(m *minigo.Minitel) {

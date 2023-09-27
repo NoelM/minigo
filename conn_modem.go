@@ -148,17 +148,20 @@ func (m *Modem) Serve(forceRing bool) {
 			warnLog.Printf("unable to get modem status: %s\n", err.Error())
 		}
 
+		// Connection lost
 		if !status.DCD && m.connected {
 			infoLog.Println("closed connection")
 			m.connected = false
 			m.Init()
 		}
 
+		// Call recieved
 		if status.RI || forceRing {
 			infoLog.Println("RING=1, phone rings")
 			forceRing = false
 			m.Connect()
 
+			// Unable to connect, phone call?
 			if !m.connected {
 				m.Init()
 			}
@@ -200,4 +203,18 @@ func (m *Modem) Connect() {
 	}
 
 	go m.ringHandler(m)
+}
+
+func (m *Modem) Disconnect() {
+	m.port.SetDTR(false)
+	infoLog.Println("set DTR to false, waiting 5s")
+	time.Sleep(5 * time.Second)
+
+	m.port.SetDTR(true)
+	infoLog.Println("set DTR to true, waiting 5s")
+	time.Sleep(5 * time.Second)
+
+	infoLog.Println("switch connected to false, relaunch init")
+	m.connected = false
+	m.Init()
 }

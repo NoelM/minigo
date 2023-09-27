@@ -78,7 +78,7 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 			return nil, sommaireId
 		}
 
-		return map[string]string{"commune": string(data)}, minigo.QuitOp
+		return map[string]string{"commune": string(data)}, minigo.QuitPageOp
 	})
 
 	communesPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {

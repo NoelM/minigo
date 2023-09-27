@@ -129,7 +129,7 @@ func printForecast(mntl *minigo.Minitel, f Forecast, date string, c *Commune) {
 		warnLog.Printf("ignored entry %s: %s\n", date, err.Error())
 	}
 
-	mntl.WriteStringLeft(4, fmt.Sprintf("PREVISIONS LE %s %s A %s", weekDayIdToString(forecastTime.Weekday()), forecastTime.Format("02/01"), forecastTime.Format("15:04")))
+	mntl.WriteStringLeft(4, fmt.Sprintf("PREVISIONS LE %s %s A %s", weekdayIdToString(forecastTime.Weekday()), forecastTime.Format("02/01"), forecastTime.Format("15:04")))
 	mntl.WriteStringLeft(5, "DONNEES: INFO-CLIMAT")
 
 	mntl.CleanScreenFromXY(1, 7)
@@ -167,7 +167,7 @@ func nebulositeToString(n float64) string {
 	return ""
 }
 
-func weekDayIdToString(i time.Weekday) string {
+func weekdayIdToString(i time.Weekday) string {
 	switch i {
 	case time.Sunday:
 		return "Dim."
@@ -183,6 +183,36 @@ func weekDayIdToString(i time.Weekday) string {
 		return "Ven."
 	case time.Saturday:
 		return "Sam."
+	}
+	return ""
+}
+
+func monthIdToString(i time.Month) string {
+	switch i {
+	case time.January:
+		return "Janvier"
+	case time.February:
+		return "Février"
+	case time.March:
+		return "Mars"
+	case time.April:
+		return "Avril"
+	case time.May:
+		return "Mai"
+	case time.June:
+		return "Juin"
+	case time.July:
+		return "Juillet"
+	case time.August:
+		return "Août"
+	case time.September:
+		return "Septembre"
+	case time.October:
+		return "Octobre"
+	case time.November:
+		return "Novembre"
+	case time.December:
+		return "Décembre"
 	}
 	return ""
 }

@@ -176,8 +176,6 @@ func (p *Page) Run() (map[string]string, int) {
 					errorLog.Printf("not supported key: %d\n", key)
 				}
 			}
-		default:
-			continue
 		}
 	}
 }

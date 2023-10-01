@@ -118,6 +118,7 @@ func (m *Minitel) Listen() {
 			if err != nil {
 				warnLog.Printf("stop minitel listen: closed connection: %s\n", err.Error())
 				m.RecvKey <- ConnexionFin
+				return
 			}
 
 			fullRead = false

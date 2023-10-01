@@ -110,6 +110,7 @@ func serveModem(wg *sync.WaitGroup) {
 }
 
 func ServiceHandler(m *minigo.Minitel) {
+	infoLog.Println("enters service handler")
 	var id int
 	for id >= sommaireId {
 		switch id {
@@ -123,4 +124,5 @@ func ServiceHandler(m *minigo.Minitel) {
 			id = sommaireId
 		}
 	}
+	infoLog.Println("quits service handler")
 }

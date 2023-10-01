@@ -65,4 +65,6 @@ func (ws *Websocket) Connected() bool {
 	return ws.connected
 }
 
-func (ws *Websocket) Disconnect() {}
+func (ws *Websocket) Disconnect() {
+	ws.connected = false
+}

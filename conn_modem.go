@@ -3,6 +3,7 @@ package minigo
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"go.bug.st/serial"
@@ -15,6 +16,7 @@ type Modem struct {
 	init        []ATCommand
 	ringHandler func(modem *Modem)
 	connected   bool
+	mutex       sync.RWMutex
 }
 
 type ATCommand struct {
@@ -131,7 +133,15 @@ func (m *Modem) ReadTimeout(d time.Duration) ([]byte, error) {
 }
 
 func (m *Modem) Connected() bool {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 	return m.connected
+}
+
+func (m *Modem) SetConnected(status bool) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.connected = status
 }
 
 func (m *Modem) RingHandler(f func(modem *Modem)) {
@@ -149,9 +159,9 @@ func (m *Modem) Serve(forceRing bool) {
 		}
 
 		// Connection lost
-		if !status.DCD && m.connected {
-			infoLog.Println("closed connection")
-			m.connected = false
+		if !status.DCD && m.Connected() {
+			infoLog.Println("lost connection")
+			m.SetConnected(false)
 			m.Init()
 		}
 
@@ -162,7 +172,7 @@ func (m *Modem) Serve(forceRing bool) {
 			m.Connect()
 
 			// Unable to connect, phone call?
-			if !m.connected {
+			if !m.Connected() {
 				m.Init()
 			}
 		}
@@ -195,7 +205,7 @@ func (m *Modem) Connect() {
 		warnLog.Printf("unable to get modem status: %s\n", err.Error())
 	}
 	if status.DCD {
-		m.connected = true
+		m.SetConnected(true)
 		infoLog.Println("connection V.23 established")
 	} else {
 		errorLog.Println("unable establish connection")
@@ -206,15 +216,17 @@ func (m *Modem) Connect() {
 }
 
 func (m *Modem) Disconnect() {
+	infoLog.Println("switch connected to false")
+	m.SetConnected(false)
+
 	m.port.SetDTR(false)
-	infoLog.Println("set DTR to false, waiting 5s")
+	infoLog.Println("set DTR=false, waiting 5s")
 	time.Sleep(5 * time.Second)
 
 	m.port.SetDTR(true)
-	infoLog.Println("set DTR to true, waiting 5s")
+	infoLog.Println("set DTR=true, waiting 5s")
 	time.Sleep(5 * time.Second)
 
-	infoLog.Println("switch connected to false, relaunch init")
-	m.connected = false
+	infoLog.Println("relaunch init")
 	m.Init()
 }

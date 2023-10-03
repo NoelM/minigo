@@ -109,14 +109,17 @@ func (m *Minitel) Listen() {
 	var done bool
 	var pro bool
 
-	for m.conn.Connected() {
+	for m.Connected() {
+		if !m.Connected() {
+			infoLog.Println("new loop with closed connection")
+		}
 		var err error
 		var inBytes []byte
 
 		if fullRead {
 			inBytes, err = m.conn.Read()
 			if err != nil {
-				warnLog.Printf("stop minitel listen: closed connection: %s\n", err.Error())
+				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
 				m.RecvKey <- ConnexionFin
 				return
 			}
@@ -138,18 +141,19 @@ func (m *Minitel) Listen() {
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
 			if err != nil {
-				errorLog.Printf("Unable to read key=%x: %s\n", keyBuffer, err.Error())
+				errorLog.Printf("unable to read key=%x: %s\n", keyBuffer, err.Error())
 				keyBuffer = []byte{}
 			}
 
 			if done {
 				if pro {
-					infoLog.Printf("Recieved procode=%x\n", keyBuffer)
+					infoLog.Printf("recieved procode=%x\n", keyBuffer)
 					err = m.ackChecker(keyBuffer)
 					if err != nil {
-						errorLog.Printf("Unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
+						errorLog.Printf("unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
 					}
 				} else {
+					infoLog.Printf("sent key=%x\n", keyValue)
 					m.RecvKey <- keyValue
 				}
 
@@ -168,6 +172,10 @@ func (m *Minitel) Listen() {
 
 func (m *Minitel) Disconnect() {
 	m.conn.Disconnect()
+}
+
+func (m *Minitel) Connected() bool {
+	return m.conn.Connected()
 }
 
 func (m *Minitel) Send(buf []byte) error {

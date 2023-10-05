@@ -115,7 +115,7 @@ func (p *Page) Run() (map[string]string, int) {
 		return nil, op
 	}
 
-	for {
+	for p.mntl.Connected() {
 		select {
 		case msg := <-p.InChan:
 			p.inChanFunc(p.mntl, p.form, msg)
@@ -124,47 +124,55 @@ func (p *Page) Run() (map[string]string, int) {
 			switch key {
 			case Envoi:
 				if out, op := p.envoiFunc(p.mntl, p.form); op != NoOp {
+					infoLog.Printf("key Envoi: quit page %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Sommaire:
 				if out, op := p.sommaireFunc(p.mntl, p.form); op != NoOp {
+					infoLog.Printf("key Sommaire: quit page %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Annulation:
 				if out, op := p.annulationFunc(p.mntl, p.form); op != NoOp {
+					infoLog.Printf("key Annulation: quit page %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Retour:
 				if out, op := p.retourFunc(p.mntl, p.form); op != NoOp {
+					infoLog.Printf("key Retour: quit page %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Repetition:
 				if out, op := p.repetitionFunc(p.mntl, p.form); op != NoOp {
+					infoLog.Printf("key Repetition: quit page %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Guide:
 				if out, op := p.guideFunc(p.mntl, p.form); op != NoOp {
+					infoLog.Printf("key Guide: quit page %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Correction:
 				if out, op := p.correctionFunc(p.mntl, p.form); op != NoOp {
+					infoLog.Printf("key Correction: quit page %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Suite:
 				if out, op := p.suiteFunc(p.mntl, p.form); op != NoOp {
+					infoLog.Printf("key Suite: quit page %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case ConnexionFin:
-				infoLog.Printf("disconnect: quitting %s page\n", p.name)
 				if op := p.connexionFinFunc(p.mntl); op != NoOp {
+					infoLog.Printf("key ConnexionFin: disconnect %s page\n", p.name)
 					return nil, op
 				}
 
@@ -178,4 +186,7 @@ func (p *Page) Run() (map[string]string, int) {
 			}
 		}
 	}
+
+	infoLog.Printf("connection closed: quitting page loop: %s\n", p.name)
+	return nil, NoOp
 }

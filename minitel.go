@@ -120,8 +120,7 @@ func (m *Minitel) Listen() {
 			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
-				m.RecvKey <- ConnexionFin
-				return
+				break
 			}
 
 			fullRead = false
@@ -166,8 +165,11 @@ func (m *Minitel) Listen() {
 		}
 	}
 
-	warnLog.Printf("stop minitel listen: closed connection\n")
-	m.RecvKey <- ConnexionFin
+	if m.Connected() {
+		infoLog.Println("sent ConnexionFin to the application loop")
+		m.RecvKey <- ConnexionFin
+	}
+	infoLog.Println("stop minitel listen: closed connection")
 }
 
 func (m *Minitel) Disconnect() {

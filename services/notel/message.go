@@ -10,16 +10,10 @@ import (
 
 type MessageType int
 
-const (
-	MessageIRC MessageType = iota
-	MessageTeletel
-)
-
 type Message struct {
-	Nick string      `json:"nick"`
-	Text string      `json:"text"`
-	Type MessageType `json:"type"`
-	Time time.Time   `json:"time"`
+	Nick string    `json:"nick"`
+	Text string    `json:"text"`
+	Time time.Time `json:"time"`
 }
 
 type MessageDatabase struct {

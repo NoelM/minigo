@@ -7,6 +7,31 @@ import (
 	"github.com/NoelM/minigo"
 )
 
+func ServiceMiniChat(m *minigo.Minitel) int {
+	out, serviceId := NewLogPage(m).Run()
+	nick, ok := out["nick"]
+
+	if len(nick) == 0 || !ok {
+		return sommaireId
+	} else if serviceId != minigo.NoOp && serviceId != minigo.QuitPageOp {
+		return serviceId
+	}
+
+	ircDvr := NewIrcDriver(string(nick))
+	go ircDvr.Loop()
+
+	_, serviceId = NewChatPage(m, ircDvr).Run()
+	ircDvr.Quit()
+
+	if serviceId != minigo.NoOp {
+		return serviceId
+	}
+
+	infoLog.Printf("minichat session closed for nick=%s\n", out)
+
+	return sommaireId
+}
+
 func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 	chatPage := minigo.NewPage("chat", m, nil)
 
@@ -20,7 +45,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 
 		m.RouleauOn()
 		updateScreen(m, subscriberId)
-		helpers(m)
+		printHelpers(m)
 
 		inputs.RepetitionActive()
 
@@ -31,11 +56,10 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		msg := Message{
 			Nick: ircDrv.Nick,
 			Text: string(inputs.ValueActive()),
-			Type: MessageTeletel,
 			Time: time.Now(),
 		}
 		MessageDb.PushMessage(msg)
-		ircDrv.SendMessage <- msg
+		ircDrv.SendMessage(msg)
 
 		infoLog.Printf("send new message to IRC from nick=%s len=%d\n", ircDrv.Nick, len(msg.Text))
 
@@ -95,10 +119,10 @@ func updateScreen(m *minigo.Minitel, subscriberId int) {
 			printDate(m, msg.Time)
 		}
 		lastDate = msg.Time
-		printOneMsg(m, msg)
+		printOneMessage(m, msg)
 	}
 
-	helpers(m)
+	printHelpers(m)
 }
 
 func printDate(m *minigo.Minitel, date time.Time) {
@@ -111,7 +135,7 @@ func printDate(m *minigo.Minitel, date time.Time) {
 	m.WriteStringCenter(InputLine-2, dayString)
 }
 
-func printOneMsg(m *minigo.Minitel, msg Message) {
+func printOneMessage(m *minigo.Minitel, msg Message) {
 	// 5 because of the date format "15:04"
 	// 3 because of " - "
 	// 1 because of "nick_msg" 1 white space
@@ -133,15 +157,12 @@ func printOneMsg(m *minigo.Minitel, msg Message) {
 	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
 	buf = append(buf, minigo.GetMoveCursorRight(1)...)
 
-	if msg.Type == MessageTeletel {
-		buf = append(buf, msg.Text...)
-	} else {
-		buf = append(buf, minigo.EncodeMessage(msg.Text)...)
-	}
+	buf = append(buf, minigo.EncodeMessage(msg.Text)...)
+
 	m.Send(buf)
 }
 
-func helpers(m *minigo.Minitel) {
+func printHelpers(m *minigo.Minitel) {
 	m.WriteHelperLeft(24, "MAJ ECRAN", "REPET.")
 	m.WriteHelperRight(24, "MESSAGE +", "ENVOI")
 }

@@ -115,7 +115,7 @@ func (p *Page) Run() (map[string]string, int) {
 		return nil, op
 	}
 
-	for p.mntl.Connected() {
+	for {
 		select {
 		case msg := <-p.InChan:
 			p.inChanFunc(p.mntl, p.form, msg)
@@ -186,7 +186,4 @@ func (p *Page) Run() (map[string]string, int) {
 			}
 		}
 	}
-
-	infoLog.Printf("connection closed: quitting page loop: %s\n", p.name)
-	return nil, NoOp
 }

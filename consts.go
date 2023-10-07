@@ -2,8 +2,6 @@ package minigo
 
 import "strings"
 
-const MaxRetry = 3
-
 const ParityBitPosition = 7
 
 const (
@@ -14,8 +12,8 @@ const (
 const (
 	ColonnesSimple = 40
 	LignesSimple   = 25
-	ColonnesDouble = 2 * ColonnesSimple
-	LignesDouble   = 2 * LignesSimple
+	ColonnesDouble = ColonnesSimple / 2
+	LignesDouble   = LignesSimple / 2
 )
 
 // 1 Mode Vidéotex

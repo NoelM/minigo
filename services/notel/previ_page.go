@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
+	"io"
+	"os"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -15,14 +16,19 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 	var forecast OpenWeatherApiResponse
 	var commune Commune
 
-	forecastId := 0
+	// Setups the range of forecasts now -> now + 8 days
+	now := time.Now()
+	firstForecastDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	forecastDate := firstForecastDate
+	lastForecastDate := forecastDate.Add(5 * 24 * time.Hour) // 5 days of forecasts
 
 	previPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
+		mntl.CursorOff()
 
 		communeJSON, ok := initData["commune"]
 		if !ok {
-			errorLog.Println("no commune data for prevision")
+			errorLog.Println("no commune data")
 			return sommaireId
 		}
 
@@ -31,6 +37,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 			return sommaireId
 		}
 
+		OWApiKey := os.Getenv("OWAPIKEY")
 		body, err := getRequestBody(fmt.Sprintf(OWApiUrlFormat, commune.Latitude, commune.Longitude, OWApiKey))
 		if err != nil {
 			errorLog.Printf("unable to get forecasts: %s\n", err.Error())
@@ -38,38 +45,49 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 		}
 		defer body.Close()
 
-		data := make([]byte, 100_000)
-		n, _ := body.Read(data)
-
-		if err := json.Unmarshal(data[:n], &forecast); err != nil {
-			errorLog.Printf("unable to parse JSON: %s\n", err.Error())
+		data, err := io.ReadAll(body)
+		if err != nil {
+			errorLog.Printf("unable to get API response: %s\n", err.Error())
 			return sommaireId
 		}
 
-		printForecast(mntl, forecast, forecastId, commune)
+		if err := json.Unmarshal(data, &forecast); err != nil {
+			errorLog.Printf("unable to parse JSON: %s\n", err.Error())
+			return sommaireId
+		}
+		printForecast(mntl, forecast, forecastDate, commune)
+		printPreviHelpers(mntl, forecastDate, firstForecastDate, lastForecastDate)
 
 		return minigo.NoOp
 	})
 
 	previPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		infoLog.Println("request suite")
-		forecastId += 1
-		if forecastId >= len(forecastSort) {
-			forecastId = len(forecastSort) - 1
+		if forecastDate.Equal(lastForecastDate) {
+			return nil, minigo.NoOp
+		} else if forecastDate.After(lastForecastDate) {
+			forecastDate = lastForecastDate
 			return nil, minigo.NoOp
 		}
-		printForecast(mntl, forecast.Forecasts[forecastSort[forecastId]], forecastSort[forecastId], &commune)
+
+		forecastDate = forecastDate.Add(24 * time.Hour)
+		printForecast(mntl, forecast, forecastDate, commune)
+		printPreviHelpers(mntl, forecastDate, firstForecastDate, lastForecastDate)
+
 		return nil, minigo.NoOp
 	})
 
 	previPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		infoLog.Println("request retour")
-		forecastId -= 1
-		if forecastId < 0 {
-			forecastId = 0
+		if forecastDate.Equal(firstForecastDate) {
+			return nil, minigo.NoOp
+		} else if forecastDate.Before(firstForecastDate) {
+			forecastDate = firstForecastDate
 			return nil, minigo.NoOp
 		}
-		printForecast(mntl, forecast.Forecasts[forecastSort[forecastId]], forecastSort[forecastId], &commune)
+
+		forecastDate = forecastDate.Add(-24 * time.Hour)
+		printForecast(mntl, forecast, forecastDate, commune)
+		printPreviHelpers(mntl, forecastDate, firstForecastDate, lastForecastDate)
+
 		return nil, minigo.NoOp
 	})
 
@@ -80,67 +98,99 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 	return previPage
 }
 
-type SortableEpochs struct {
-	items []int64
+func printPreviHelpers(mntl *minigo.Minitel, forecastDate, firstForecastDate, lastForecastDate time.Time) {
+	if forecastDate.After(firstForecastDate) {
+		mntl.WriteHelperLeft(23, forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR")
+	}
+	if forecastDate.Before(lastForecastDate) {
+		mntl.WriteHelperRight(23, forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE")
+	}
+	mntl.WriteHelperLeft(24, "Menu INFOMETEO", "SOMMAIRE")
 }
 
-func (s *SortableEpochs) Len() int           { return len(s.items) }
-func (s *SortableEpochs) Less(i, j int) bool { return s.items[i] < s.items[j] }
-func (s *SortableEpochs) Swap(i, j int)      { tmp := s.items[i]; s.items[i] = s.items[j]; s.items[j] = tmp }
+func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c Commune) {
+	mntl.CleanScreen()
+	location, _ := time.LoadLocation("Europe/Paris")
 
-func sortForecasts(f *APIForecastReply, order map[int]string) {
-	epochToText := make(map[int64]string)
-	var epochs SortableEpochs
+	// City name
+	mntl.WriteAttributes(minigo.DoubleHauteur)
+	if len(c.NomCommune) >= minigo.ColonnesSimple {
+		mntl.WriteStringLeft(2, c.NomCommune[:minigo.ColonnesSimple-1])
+	} else {
+		mntl.WriteStringLeft(2, c.NomCommune)
+	}
+	mntl.WriteAttributes(minigo.GrandeurNormale)
 
-	for k := range f.Forecasts {
-		if len(k) > 0 && k[0] == '2' {
-			forecastTime, err := time.Parse("2006-01-02 15:04:05", k)
-			if err != nil {
-				warnLog.Printf("ignored entry %s: %s\n", k, err.Error())
+	// Date of the forecast
+	mntl.WriteStringLeft(3, fmt.Sprintf("%s %d %s",
+		weekdayIdToString(forecastDate.Weekday()),
+		forecastDate.Day(),
+		monthIdToString(forecastDate.Month()),
+	))
+
+	maxTemp := 0.
+	minTemp := 100.
+
+	maxPress := 0
+	minPress := 10000
+
+	minWind := 100.
+	maxWind := 0.
+
+	// Print previsions
+	lineId := 5
+	for fDate := forecastDate; fDate.Before(forecastDate.Add(24 * time.Hour)); fDate = fDate.Add(3 * time.Hour) {
+		for _, fct := range forecast.List {
+			hourlyDate := time.Unix(fct.Dt, 0)
+			if hourlyDate.After(fDate.Add(-time.Hour)) && hourlyDate.Before(fDate.Add(time.Hour)) {
+				previsionString := fmt.Sprintf("%s> %2.f°C %s",
+					fDate.In(location).Format("15:04"),
+					fct.Main.Temp,
+					weatherConditionCodeToString(fct.Weather[0].ID, forecastDate))
+
+				mntl.WriteStringLeft(lineId, previsionString)
+				lineId += 2
+
+				if fct.Main.Temp < minTemp {
+					minTemp = fct.Main.Temp
+				}
+				if fct.Main.Temp > maxTemp {
+					maxTemp = fct.Main.Temp
+				}
+
+				if fct.Wind.Speed < minWind {
+					minWind = fct.Wind.Speed
+				}
+				if fct.Wind.Speed > maxWind {
+					maxWind = fct.Wind.Speed
+				}
+
+				if fct.Main.Pressure < minPress {
+					minPress = fct.Main.Pressure
+				}
+				if fct.Main.Pressure > maxPress {
+					maxPress = fct.Main.Pressure
+				}
+
 			}
-
-			epochToText[forecastTime.Unix()] = k
-			epochs.items = append(epochs.items, forecastTime.Unix())
 		}
 	}
 
-	sort.Sort(&epochs)
+	mntl.WriteStringAtWithAttributes(25, 5, fmt.Sprintf("Températures"), minigo.InversionFond)
+	mntl.WriteStringAt(25, 6, fmt.Sprintf("Min: %2.f°C", minTemp))
+	mntl.WriteStringAt(25, 7, fmt.Sprintf("Max: %2.f°C", maxTemp))
 
-	for id, epoch := range epochs.items {
-		order[id] = epochToText[epoch]
-	}
-}
+	mntl.WriteStringAtWithAttributes(25, 9, fmt.Sprintf("Vent"), minigo.InversionFond)
+	mntl.WriteStringAt(25, 10, fmt.Sprintf("Min: %2.f km/h", minWind))
+	mntl.WriteStringAt(25, 11, fmt.Sprintf("Max: %2.f km/h", maxWind))
 
-func printForecast(mntl *minigo.Minitel, f OpenWeatherApiResponse, fId int, c Commune) {
+	mntl.WriteStringAtWithAttributes(25, 13, fmt.Sprintf("Pression"), minigo.InversionFond)
+	mntl.WriteStringAt(25, 14, fmt.Sprintf("Min: %d hPa", minPress))
+	mntl.WriteStringAt(25, 15, fmt.Sprintf("Max: %d hPa", maxPress))
 
-	mntl.CursorOff()
-
-	mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-	mntl.WriteStringLeft(2, c.NomCommune)
-	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-
-	forecastTime, err := time.Parse("2006-01-02 15:04:05", date)
-	if err != nil {
-		warnLog.Printf("ignored entry %s: %s\n", date, err.Error())
-	}
-
-	mntl.WriteStringLeft(4, fmt.Sprintf("PREVISIONS LE %s %s A %s", weekdayIdToStringShort(forecastTime.Weekday()), forecastTime.Format("02/01"), forecastTime.Format("15:04")))
-	mntl.WriteStringLeft(5, "DONNEES: INFO-CLIMAT")
-
-	mntl.CleanScreenFromXY(1, 7)
-
-	mntl.WriteStringAtWithAttributes(1, 7, nebulositeToString(f.Nebulosite.Totale), minigo.InversionFond)
-
-	mntl.WriteStringLeft(9, fmt.Sprintf("TEMP: %.0f C", f.Temperature.TwoM-275.))
-	if f.VentRafales.One0M > 10 && f.VentRafales.One0M > f.VentMoyen.One0M {
-		mntl.WriteStringLeft(11, fmt.Sprintf("VENT: %.0f km/h - RAFALES: %.0f km/h", f.VentMoyen.One0M, f.VentRafales.One0M))
-	} else {
-		mntl.WriteStringLeft(11, fmt.Sprintf("VENT: %.0f km/h", f.VentMoyen.One0M*3.6))
-	}
-	mntl.WriteStringLeft(12, fmt.Sprintf("DIR:  %s", windDirToString(f.VentDirection.One0M)))
-	mntl.WriteStringLeft(14, fmt.Sprintf("PLUIE: %.0f mm", f.Pluie))
-
-	mntl.WriteHelperLeft(23, "PREC.", "RETOUR")
-	mntl.WriteHelperRight(23, "SUIV.", "SUITE")
-	mntl.WriteHelperLeft(24, "CHOIX CODE POSTAL", "SOMMAIRE")
+	mntl.WriteStringAtWithAttributes(25, 17, fmt.Sprintf("Ephéméride"), minigo.InversionFond)
+	mntl.WriteStringAt(25, 18, fmt.Sprintf("Lev.: %s",
+		time.Unix(forecast.City.Sunrise, 0).In(location).Format("15:04")))
+	mntl.WriteStringAt(25, 19, fmt.Sprintf("Cou.: %s",
+		time.Unix(forecast.City.Sunset, 0).In(location).Format("15:04")))
 }

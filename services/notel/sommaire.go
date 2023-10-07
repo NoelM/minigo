@@ -10,7 +10,7 @@ const (
 	sommaireId = iota
 	ircId
 	meteoId
-	guideId
+	infoId
 )
 
 func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
@@ -28,8 +28,11 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.CleanScreen()
 	mntl.SendVDT("static/notel.vdt")
 
-	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO"})
+	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO", "INFO"})
 	list.Display()
+
+	mntl.WriteStringCenter(18, "Serveur bientôt multi-voies")
+	mntl.WriteStringCenter(19, "Nouveau numéro ICI dans quelques jours")
 
 	form.AppendInput("choice", minigo.NewInput(mntl, 32, 24, 2, 1, "", true))
 	form.ActivateFirst()

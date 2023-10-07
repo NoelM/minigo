@@ -154,7 +154,6 @@ func (m *Minitel) Listen() {
 						errorLog.Printf("unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
 					}
 				} else {
-					infoLog.Printf("sent key=%x\n", keyValue)
 					m.RecvKey <- keyValue
 				}
 

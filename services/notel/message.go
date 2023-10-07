@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-type MessageType int
-
 type Message struct {
 	Nick string    `json:"nick"`
 	Text string    `json:"text"`
@@ -21,6 +19,7 @@ type MessageDatabase struct {
 	file            *os.File
 	messages        []Message
 	subscribers     map[int]int
+	nicknames       map[string]bool
 	subscriberMaxId int
 	mutex           sync.RWMutex
 }
@@ -65,7 +64,7 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 	return nil
 }
 
-func (m *MessageDatabase) Subscribe() int {
+func (m *MessageDatabase) Subscribe(nick string) int {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -75,6 +74,8 @@ func (m *MessageDatabase) Subscribe() int {
 
 	m.subscriberMaxId += 1
 	m.subscribers[m.subscriberMaxId] = -1
+
+	m.nicknames[nick] = true
 
 	infoLog.Printf("got a new subscriber with id=%d\n", m.subscriberMaxId)
 	return m.subscriberMaxId
@@ -105,9 +106,16 @@ func (m *MessageDatabase) GetMessages(subscriberId int) []Message {
 	return messagesCopy
 }
 
-func (m *MessageDatabase) PushMessage(msg Message) {
+func (m *MessageDatabase) PushMessage(msg Message, filterNick bool) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	if filterNick {
+		if _, ok := m.nicknames[msg.Nick]; ok {
+			// Locally connected user, message already in DB
+			return
+		}
+	}
 
 	m.messages = append(m.messages, msg)
 

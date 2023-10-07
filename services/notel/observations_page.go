@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -9,7 +10,15 @@ import (
 func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	meteoPage := minigo.NewPage("meteo", mntl, nil)
 
-	const reportsPerPage = 24 / 4
+	// 5 lines, because
+	// line=0   -- Reserved TELETEL
+	// line=1   -- Date update
+	// line=2   -- Blank
+	// ...      -- Reports
+	// line=22  -- Blank
+	// line=23  -- Navigation Retour/Suite
+	// line=24  -- Navigation Sommaire
+	const reportsPerPage = (minigo.LignesSimple - 6) / 4
 	maxPageId := 0
 	pageId := 0
 
@@ -17,19 +26,24 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 
 	meteoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
+		mntl.CursorOff()
 
 		var err error
 		reports, err = getLastWeatherData()
 		if err != nil {
-			mntl.WriteStringAt(1, 1, "CONNECTION A METEO-FRANCE ECHOUEE")
-			mntl.WriteStringAt(1, 2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
+			mntl.WriteStringAt(1, 1, "Connection à Météo-France echouée")
+			mntl.WriteStringAt(1, 2, "Retour au sommaire dans 5 sec.")
 			time.Sleep(5 * time.Second)
 			return sommaireId
 		}
 
-		maxPageId = len(reports) / reportsPerPage
+		// pageId goes from 0 to maxPageId
+		// e.g. for 3 items per page, and 9 items to display
+		// 3/9 = 3, but maxPageId = 2
+		// because pageId = [0, 1, 2] and len([0, 1, 2]) = 3
+		maxPageId = len(reports)/reportsPerPage - 1
 
-		printReportsFrom(mntl, reports, pageId, reportsPerPage)
+		printReportsFrom(mntl, reports, pageId, reportsPerPage, maxPageId)
 
 		return minigo.NoOp
 	})
@@ -39,36 +53,42 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	})
 
 	meteoPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		pageId += 1
-		if pageId > maxPageId {
-			pageId = maxPageId
+		if pageId == maxPageId {
+			return nil, minigo.NoOp
 		}
-		printReportsFrom(mntl, reports, pageId, reportsPerPage)
+
+		pageId += 1
+		printReportsFrom(mntl, reports, pageId, reportsPerPage, maxPageId)
 		return nil, minigo.NoOp
 	})
 
 	meteoPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		pageId -= 1
-		if pageId < 0 {
-			pageId = 0
+		if pageId == 0 {
+			return nil, minigo.NoOp
 		}
 
-		printReportsFrom(mntl, reports, pageId, reportsPerPage)
+		pageId -= 1
+		printReportsFrom(mntl, reports, pageId, reportsPerPage, maxPageId)
 		return nil, minigo.NoOp
 	})
 
 	return meteoPage
 }
 
-func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pageId, reportsPerPage int) {
+func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pageId, reportsPerPage, maxPageId int) {
 	mntl.CleanScreen()
+
 	mntl.MoveCursorAt(1, 1)
+	mntl.WriteStringLeft(1, fmt.Sprintf("Mise à jour le: %s UTC", reps["07149"][0].date.Format("02/01/2006 15:04")))
+	mntl.MoveCursorAt(1, 3)
 
 	for reportId := pageId * reportsPerPage; reportId < len(reps) && reportId < (pageId+1)*reportsPerPage; reportId += 1 {
 		if rep, ok := reps[OrderedStationId[reportId]]; ok {
 			printWeatherReport(mntl, rep)
 		}
 	}
+
+	printHelpers(mntl, pageId, maxPageId)
 }
 
 func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
@@ -78,7 +98,9 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	for _, r := range reps {
 		if r.date.Before(oldestReport.date) {
 			oldestReport = r
-		} else if r.date.After(newestReport.date) {
+		}
+
+		if r.date.After(newestReport.date) {
 			newestReport = r
 		}
 	}
@@ -86,47 +108,45 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	buf := minigo.EncodeAttributes(minigo.InversionFond)
 	buf = append(buf, minigo.EncodeMessage(newestReport.stationName)...)
 	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
-	buf = append(buf, minigo.GetMoveCursorRight(2)...)
-	buf = append(buf, minigo.EncodeMessage(newestReport.date.Format("02/01/2006 A 15:04"))...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
+	// Temperature
 	newTemp := newestReport.temperature - 275.
 	difTemp := newestReport.temperature - oldestReport.temperature
+	buf = append(buf, minigo.EncodeSprintf("%s%2.f°C (%+3.f°C) | ", getArrow(difTemp), newTemp, difTemp)...)
 
-	buf = append(buf, minigo.EncodeSprintf("%s %2.f°C (%+2.f°C)", getArrow(difTemp), newTemp, difTemp)...)
-
-	buf = append(buf, minigo.EncodeMessage(" - ")...)
-
+	// Pressure
 	newPres := newestReport.pressure / 100.
 	difPres := (newestReport.pressure - oldestReport.pressure) / 100.
+	buf = append(buf, minigo.EncodeSprintf("%s%4.f hPa (%+5.f hPa)", getArrow(difPres), newPres, difPres)...)
 
-	buf = append(buf, minigo.EncodeSprintf("%s %4.f hPa (%+4.f hPa)", getArrow(difPres), newPres, difPres)...)
-
-	// wind
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
-	buf = append(buf, minigo.EncodeMessage(windDirToString(newestReport.windDir))...)
-	buf = append(buf, minigo.GetMoveCursorRight(1)...)
 
-	buf = append(buf, minigo.EncodeSprintf(" %3.f km/h ", newestReport.windSpeed*3.6)...)
-
-	if newestReport.windSpeed-oldestReport.windSpeed > 0 {
-		buf = append(buf, minigo.Ss2, minigo.FlecheHaut, minigo.Si)
-	} else {
-		buf = append(buf, minigo.Ss2, minigo.FlecheBas, minigo.Si)
-	}
-	buf = append(buf, minigo.EncodeSprintf(" %3.f km/h", (newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
-
-	buf = append(buf, minigo.GetMoveCursorReturn(2)...)
-
+	// Wind
+	arrow := getArrow(newestReport.windSpeed - oldestReport.windSpeed)
 	buf = append(buf, minigo.EncodeSprintf(
-		"%s %3.f km/h (%+3.f km/h)",
+		"%-10s %s%3.f km/h (%+3.f km/h)",
 		windDirToString(newestReport.windDir),
+		arrow,
 		newestReport.windSpeed*3.6,
 		(newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
 
 	buf = append(buf, minigo.GetMoveCursorReturn(2)...)
 
 	mntl.Send(buf)
+}
+
+func printHelpers(mntl *minigo.Minitel, pageId, maxPageId int) {
+	// pageId goes from 0 to maxPageId
+	// PreviousPageNumber = (PageId + 1) - 1
+	// NextPageNumber = (PageId + 1) + 1
+	if pageId > 0 {
+		mntl.WriteHelperLeft(23, fmt.Sprintf("Page %d/%d", pageId, maxPageId+1), "RETOUR")
+	}
+	if pageId < maxPageId {
+		mntl.WriteHelperRight(23, fmt.Sprintf("Page %d/%d", pageId+2, maxPageId+1), "SUITE")
+	}
+	mntl.WriteHelperLeft(24, "Menu INFOMETEO", "SOMMAIRE")
 }
 
 func windDirToString(deg float64) string {

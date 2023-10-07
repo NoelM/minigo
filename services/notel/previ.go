@@ -25,6 +25,12 @@ type CommuneDatabase struct {
 	CodePostalToCommune map[string][]Commune
 }
 
+func NewCommuneDatabase() *CommuneDatabase {
+	return &CommuneDatabase{
+		CodePostalToCommune: make(map[string][]Commune),
+	}
+}
+
 func (c *CommuneDatabase) GetCommunesFromCodePostal(codePostal string) []Commune {
 	if codePostal[0] == '0' {
 		codePostal = codePostal[1:]
@@ -66,7 +72,6 @@ func (c *CommuneDatabase) LoadCommuneDatabase(filePath string) error {
 		return err
 	}
 
-	c.CodePostalToCommune = make(map[string][]Commune)
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 

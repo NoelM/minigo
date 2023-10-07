@@ -7,9 +7,6 @@ import (
 	"sync"
 )
 
-const LatColId = 5
-const LonColId = 6
-
 type Commune struct {
 	CodeCommune     string  `json:"code_commune"`
 	NomCommune      string  `json:"nom_commune"`

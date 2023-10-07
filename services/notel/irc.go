@@ -13,15 +13,12 @@ const ircServerURL = "irc.libera.chat:7000"
 
 type IrcDriver struct {
 	conn *irc.Connection
-
-	Nick        string
-	RecvMessage chan Message
+	Nick string
 }
 
 func NewIrcDriver(nick string) *IrcDriver {
 	return &IrcDriver{
-		Nick:        nick,
-		RecvMessage: make(chan Message),
+		Nick: nick,
 	}
 }
 
@@ -45,7 +42,8 @@ func (i *IrcDriver) Loop() error {
 			Nick: event.Nick,
 			Text: event.Message(),
 			Time: time.Now(),
-		})
+		},
+			true)
 	})
 
 	err := i.conn.Connect(ircServerURL)

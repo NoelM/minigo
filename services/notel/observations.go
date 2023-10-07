@@ -144,7 +144,7 @@ func getLastWeatherData() (map[string][]WeatherReport, error) {
 }
 
 func downloadFileIfDoesNotExist(fileName string) (string, error) {
-	filePath := fmt.Sprintf("/media/core/%s", fileName)
+	filePath := fmt.Sprintf("/media/core/synop/%s", fileName)
 	fileURL := fmt.Sprintf(URLFormat, fileName)
 
 	if _, err := os.Stat(filePath); err != nil {

@@ -16,13 +16,16 @@ var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.Ltime|log.Lshort
 var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
-var CommuneDb CommuneDatabase
-var MessageDb MessageDatabase
+var CommuneDb *CommuneDatabase
+var MessageDb *MessageDatabase
 
 func main() {
 	var wg sync.WaitGroup
 
+	CommuneDb = NewCommuneDatabase()
 	CommuneDb.LoadCommuneDatabase("/media/core/communes-departement-region.csv")
+
+	MessageDb = NewMessageDatabase()
 	MessageDb.LoadMessages("/media/core/messages.db")
 
 	wg.Add(2)
@@ -120,6 +123,8 @@ func ServiceHandler(m *minigo.Minitel) {
 			id = ServiceMiniChat(m)
 		case meteoId:
 			id = ServiceMeteo(m)
+		case serveurId:
+			_, id = NewServeurPage(m).Run()
 		default:
 			id = sommaireId
 		}

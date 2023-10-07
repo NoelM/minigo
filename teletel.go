@@ -133,8 +133,8 @@ func GetCleanLineToCursor() (buf []byte) {
 }
 
 func EncodeChar(c int32) []byte {
-	if accuteChar := EncodeAccutes(c); accuteChar != nil {
-		return accuteChar
+	if specialChar := EncodeSpecial(c); specialChar != nil {
+		return specialChar
 	}
 
 	vdtByte := GetVideotextCharByte(byte(c))
@@ -145,7 +145,7 @@ func EncodeChar(c int32) []byte {
 	return nil
 }
 
-func EncodeAccutes(c int32) []byte {
+func EncodeSpecial(c int32) []byte {
 	switch c {
 	case 'à':
 		return []byte{Ss2, AccentGrave, 'a'}
@@ -185,6 +185,40 @@ func EncodeAccutes(c int32) []byte {
 		return []byte{Ss2, Cedille, 'c'}
 	case 'Ç':
 		return []byte{Ss2, Cedille, 'C'}
+	case '£':
+		return []byte{Ss2, Livre}
+	case '$':
+		return []byte{Ss2, Dollar}
+	case '#':
+		return []byte{Ss2, Diese}
+	case '§':
+		return []byte{Ss2, Paragraphe}
+	case '←':
+		return []byte{Ss2, FlecheGauche}
+	case '↑':
+		return []byte{Ss2, FlecheHaut}
+	case '→':
+		return []byte{Ss2, FlecheDroite}
+	case '↓':
+		return []byte{Ss2, FlecheBas}
+	case '°':
+		return []byte{Ss2, Degre}
+	case '±':
+		return []byte{Ss2, PlusOuMoins}
+	case '÷':
+		return []byte{Ss2, Division}
+	case '¼':
+		return []byte{Ss2, UnQuart}
+	case '½':
+		return []byte{Ss2, UnDemi}
+	case '¾':
+		return []byte{Ss2, TroisQuart}
+	case 'œ':
+		return []byte{Ss2, OeMinuscule}
+	case 'Œ':
+		return []byte{Ss2, OeMajuscule}
+	case 'ß':
+		return []byte{Ss2, Beta}
 	}
 
 	return nil

@@ -123,8 +123,8 @@ func ServiceHandler(m *minigo.Minitel) {
 			id = ServiceMiniChat(m)
 		case meteoId:
 			id = ServiceMeteo(m)
-		case infoId:
-			_, id = NewInfoPage(m).Run()
+		case serveurId:
+			_, id = NewServeurPage(m).Run()
 		default:
 			id = sommaireId
 		}

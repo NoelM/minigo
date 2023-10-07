@@ -4,8 +4,8 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func NewInfoPage(mntl *minigo.Minitel) *minigo.Page {
-	infoPage := minigo.NewPage("info", mntl, nil)
+func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
+	infoPage := minigo.NewPage("serveur", mntl, nil)
 
 	infoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
@@ -24,7 +24,7 @@ func NewInfoPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteStringLeft(8, "- Nouvelle météo, plus détaillée et")
 		mntl.WriteStringLeft(9, "  plus simple à lire")
 		mntl.WriteStringLeft(10, "- DB de Chat et nouvel affichage")
-		mntl.WriteStringLeft(11, "  nouvel affichage des dates")
+		mntl.WriteStringLeft(11, "  des dates")
 		mntl.WriteStringLeft(12, "- Beaucoup d'améliorations de la")
 		mntl.WriteStringLeft(13, "  librairie 'minigo'")
 		mntl.WriteStringLeft(14, "- Prochaine étape, unifier la navi-")

@@ -79,7 +79,9 @@ func weatherConditionCodeToString(code int, forecastDate time.Time) string {
 			} else {
 				return "Clair"
 			}
-		} else if code == 802 || code == 803 {
+		} else if code == 802 {
+			return "Qlq Nuages"
+		} else if code == 803 {
 			return "Nuageux"
 		} else if code == 804 {
 			return "Couvert"

@@ -146,7 +146,7 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 				previsionString := fmt.Sprintf("%s> %2.f°C %s",
 					fDate.In(location).Format("15:04"),
 					fct.Main.Temp,
-					weatherConditionCodeToString(fct.Weather[0].ID, forecastDate))
+					weatherConditionCodeToString(fct.Weather[0].ID, fDate.In(location)))
 
 				mntl.WriteStringLeft(lineId, previsionString)
 				lineId += 2

@@ -20,8 +20,8 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 	now := time.Now()
 	// The range of forecast goes from 00:00 to 21:00 UTC
 	// If now is beyond 21:00, we skip to the next day
-	if now.Hour() > 21 {
-		now = now.Add(3 * time.Hour)
+	if now.Hour() >= 21 {
+		now = now.Add(4 * time.Hour)
 	}
 	firstForecastDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	forecastDate := firstForecastDate

@@ -18,6 +18,11 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 
 	// Setups the range of forecasts now -> now + 8 days
 	now := time.Now()
+	// The range of forecast goes from 00:00 to 21:00 UTC
+	// If now is beyond 21:00, we skip to the next day
+	if now.Hour() > 21 {
+		now = now.Add(3 * time.Hour)
+	}
 	firstForecastDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	forecastDate := firstForecastDate
 	lastForecastDate := forecastDate.Add(5 * 24 * time.Hour) // 5 days of forecasts
@@ -70,10 +75,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 		}
 
 		forecastDate = forecastDate.Add(24 * time.Hour)
-		if hasForecast := printForecast(mntl, forecast, forecastDate, commune); !hasForecast {
-			forecastDate = forecastDate.Add(24 * time.Hour)
-			printForecast(mntl, forecast, forecastDate, commune)
-		}
+		printForecast(mntl, forecast, forecastDate, commune)
 		printPreviHelpers(mntl, forecastDate, firstForecastDate, lastForecastDate)
 
 		return nil, minigo.NoOp
@@ -88,10 +90,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 		}
 
 		forecastDate = forecastDate.Add(-24 * time.Hour)
-		if hasForecast := printForecast(mntl, forecast, forecastDate, commune); !hasForecast {
-			forecastDate = forecastDate.Add(24 * time.Hour)
-			printForecast(mntl, forecast, forecastDate, commune)
-		}
+		printForecast(mntl, forecast, forecastDate, commune)
 		printPreviHelpers(mntl, forecastDate, firstForecastDate, lastForecastDate)
 
 		return nil, minigo.NoOp
@@ -114,7 +113,7 @@ func printPreviHelpers(mntl *minigo.Minitel, forecastDate, firstForecastDate, la
 	mntl.WriteHelperLeft(24, "Menu INFOMETEO", "SOMMAIRE")
 }
 
-func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c Commune) (hasForecast bool) {
+func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c Commune) {
 	mntl.CleanScreen()
 	location, _ := time.LoadLocation("Europe/Paris")
 
@@ -180,11 +179,6 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 
 			}
 		}
-
-		// Has no forecast
-		if lineId == 5 {
-			return
-		}
 	}
 
 	mntl.WriteStringAtWithAttributes(25, 5, fmt.Sprintf("Températures"), minigo.InversionFond)
@@ -204,6 +198,4 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 		time.Unix(forecast.City.Sunrise, 0).In(location).Format("15:04")))
 	mntl.WriteStringAt(25, 19, fmt.Sprintf("Cou.: %s",
 		time.Unix(forecast.City.Sunset, 0).In(location).Format("15:04")))
-
-	return true
 }

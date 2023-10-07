@@ -24,6 +24,13 @@ type MessageDatabase struct {
 	mutex           sync.RWMutex
 }
 
+func NewMessageDatabase() *MessageDatabase {
+	return &MessageDatabase{
+		subscribers: make(map[int]int),
+		nicknames:   make(map[string]bool),
+	}
+}
+
 func (m *MessageDatabase) LoadMessages(filePath string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -67,10 +74,6 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 func (m *MessageDatabase) Subscribe(nick string) int {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-
-	if m.subscribers == nil {
-		m.subscribers = make(map[int]int)
-	}
 
 	m.subscriberMaxId += 1
 	m.subscribers[m.subscriberMaxId] = -1

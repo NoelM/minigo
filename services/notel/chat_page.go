@@ -165,15 +165,13 @@ func printDate(m *minigo.Minitel, lastDate *time.Time, date time.Time) {
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 	m.Send(buf)
 
-	m.WriteAttributes(minigo.FondRouge)
 	m.WriteStringCenter(InputLine-2, dateString)
-	m.WriteAttributes(minigo.FondNormal)
 }
 
 func printOneMsg(m *minigo.Minitel, msg Message) {
 	// Message Format
-	// [nick]__[msg]
-	// 2 because of "  "
+	// [nick]>_[msg]
+	// 2 because of ">_"
 	msgLen := len(msg.Nick) + 2 + len(msg.Text)
 
 	// 1 because if msgLen < 40, the division gives 0 and one breaks another line for readability
@@ -189,11 +187,9 @@ func printOneMsg(m *minigo.Minitel, msg Message) {
 	buf = append(buf, minigo.GetMoveCursorAt(1, InputLine-msgLines-1)...)
 
 	// Print nickname
-	buf = append(buf, minigo.EncodeAttribute(minigo.FondBleu)...)
-	buf = append(buf, minigo.EncodeMessage(msg.Nick)...)
-	buf = append(buf, minigo.EncodeAttribute(minigo.FondNormal)...)
+	buf = append(buf, minigo.EncodeSprintf("%s> ", msg.Nick)...)
 
-	buf = append(buf, minigo.GetMoveCursorRight(2)...)
+	// Print Message
 	buf = append(buf, minigo.EncodeMessage(msg.Text)...)
 
 	m.Send(buf)

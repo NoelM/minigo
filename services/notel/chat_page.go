@@ -34,17 +34,18 @@ func ServiceMiniChat(m *minigo.Minitel) int {
 
 func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 	chatPage := minigo.NewPage("chat", m, nil)
-	subscriberId := 0
 	lastMessageDate := time.Time{}
+	nickname := ""
 
 	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		infoLog.Printf("opening chat page for nick=%s\n", ircDrv.Nick)
+		nickname = ircDrv.Nick
+		infoLog.Printf("opening chat page for nick=%s\n", nickname)
 
-		subscriberId = MessageDb.Subscribe(ircDrv.Nick)
+		MessageDb.Subscribe(nickname)
 		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
 
 		m.RouleauOn()
-		updateScreen(m, subscriberId, &lastMessageDate)
+		updateScreen(m, nickname, &lastMessageDate)
 
 		inputs.RepetitionActive()
 
@@ -63,7 +64,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		infoLog.Printf("send new message to IRC from nick=%s len=%d\n", ircDrv.Nick, len(msg.Text))
 
 		inputs.ClearActive()
-		updateScreen(m, subscriberId, &lastMessageDate)
+		updateScreen(m, nickname, &lastMessageDate)
 
 		inputs.RepetitionActive()
 
@@ -74,7 +75,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		infoLog.Printf("user nick=%s asked for a refresh\n", ircDrv.Nick)
 
 		inputs.ClearScreenAll()
-		updateScreen(m, subscriberId, &lastMessageDate)
+		updateScreen(m, nickname, &lastMessageDate)
 		inputs.RepetitionAll()
 
 		return nil, minigo.NoOp
@@ -86,7 +87,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 	})
 
 	chatPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		MessageDb.Resign(subscriberId)
+		MessageDb.Resign(nickname)
 		m.RouleauOff()
 		return nil, sommaireId
 	})
@@ -100,11 +101,11 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 
 const InputLine = 22
 
-func updateScreen(m *minigo.Minitel, subscriberId int, lastMessageDate *time.Time) {
+func updateScreen(m *minigo.Minitel, nick string, lastMessageDate *time.Time) {
 	m.CursorOff()
 
 	// Get all the messages from the DB
-	lastMessages := MessageDb.GetMessages(subscriberId)
+	lastMessages := MessageDb.GetMessages(nick)
 
 	// Display only the messages that fit in screen
 	// line=1           -- Message Zone

@@ -15,19 +15,16 @@ type Message struct {
 }
 
 type MessageDatabase struct {
-	filePath        string
-	file            *os.File
-	messages        []Message
-	subscribers     map[int]int
-	nicknames       map[string]bool
-	subscriberMaxId int
-	mutex           sync.RWMutex
+	filePath    string
+	file        *os.File
+	messages    []Message
+	subscribers map[string]int
+	mutex       sync.RWMutex
 }
 
 func NewMessageDatabase() *MessageDatabase {
 	return &MessageDatabase{
-		subscribers: make(map[int]int),
-		nicknames:   make(map[string]bool),
+		subscribers: make(map[string]int),
 	}
 }
 
@@ -71,31 +68,27 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 	return nil
 }
 
-func (m *MessageDatabase) Subscribe(nick string) int {
+func (m *MessageDatabase) Subscribe(nick string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.subscriberMaxId += 1
-	m.subscribers[m.subscriberMaxId] = -1
+	m.subscribers[nick] = -1
 
-	m.nicknames[nick] = true
-
-	infoLog.Printf("got a new subscriber with id=%d\n", m.subscriberMaxId)
-	return m.subscriberMaxId
+	infoLog.Printf("got a new subscriber with id=%s\n", nick)
 }
 
-func (m *MessageDatabase) Resign(subscriberId int) {
-	infoLog.Printf("resigned subscriber with id=%d\n", m.subscriberMaxId)
-	delete(m.subscribers, subscriberId)
+func (m *MessageDatabase) Resign(nick string) {
+	infoLog.Printf("resigned subscriber with id=%s\n", nick)
+	delete(m.subscribers, nick)
 }
 
-func (m *MessageDatabase) GetMessages(subscriberId int) []Message {
+func (m *MessageDatabase) GetMessages(nick string) []Message {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	lastMsg, ok := m.subscribers[subscriberId]
+	lastMsg, ok := m.subscribers[nick]
 	if !ok {
-		warnLog.Printf("unable to find subscriber with id=%d\n", subscriberId)
+		warnLog.Printf("unable to find subscriber with id=%s\n", nick)
 		return nil
 	}
 
@@ -103,9 +96,9 @@ func (m *MessageDatabase) GetMessages(subscriberId int) []Message {
 	messagesCopy := make([]Message, nbMsg)
 
 	copy(messagesCopy, m.messages[lastMsg+1:])
-	m.subscribers[subscriberId] = len(m.messages) - 1
+	m.subscribers[nick] = len(m.messages) - 1
 
-	infoLog.Printf("subscriber id=%d recieved %d messages\n", subscriberId, nbMsg)
+	infoLog.Printf("subscriber id=%s received %d messages\n", nick, nbMsg)
 	return messagesCopy
 }
 
@@ -114,7 +107,7 @@ func (m *MessageDatabase) PushMessage(msg Message, filterNick bool) {
 	defer m.mutex.Unlock()
 
 	if filterNick {
-		if _, ok := m.nicknames[msg.Nick]; ok {
+		if _, ok := m.subscribers[msg.Nick]; ok {
 			// Locally connected user, message already in DB
 			return
 		}

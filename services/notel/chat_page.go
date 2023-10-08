@@ -146,7 +146,7 @@ func printDate(m *minigo.Minitel, lastDate *time.Time, date time.Time) {
 			monthIdToString(date.Month()),
 			date.Year(),
 			date.Format("15:04"))
-	} else if durationSinceLastMsg >= 24*time.Hour {
+	} else if durationSinceLastMsg >= 24*time.Hour || date.Day() != lastDate.Day() {
 		dateString = fmt.Sprintf("%s %d %s, %s",
 			weekdayIdToString(date.Weekday()),
 			date.Day(),
@@ -165,13 +165,15 @@ func printDate(m *minigo.Minitel, lastDate *time.Time, date time.Time) {
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 	m.Send(buf)
 
+	m.WriteAttributes(minigo.FondRouge)
 	m.WriteStringCenter(InputLine-2, dateString)
+	m.WriteAttributes(minigo.FondNormal)
 }
 
 func printOneMsg(m *minigo.Minitel, msg Message) {
 	// Message Format
-	// [nick]> [msg]
-	// 2 because of "> "
+	// [nick]__[msg]
+	// 2 because of "  "
 	msgLen := len(msg.Nick) + 2 + len(msg.Text)
 
 	// 1 because if msgLen < 40, the division gives 0 and one breaks another line for readability
@@ -179,12 +181,19 @@ func printOneMsg(m *minigo.Minitel, msg Message) {
 	// nick > text2
 	msgLines := msgLen/40 + 1
 
+	// Rouleau mode, push to the top the messages
 	buf := minigo.GetMoveCursorAt(1, 24)
 	for k := 0; k < msgLines; k += 1 {
 		buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 	}
 	buf = append(buf, minigo.GetMoveCursorAt(1, InputLine-msgLines-1)...)
-	buf = append(buf, minigo.EncodeSprintf("%s> ", msg.Nick)...)
+
+	// Print nickname
+	buf = append(buf, minigo.EncodeAttribute(minigo.FondBleu)...)
+	buf = append(buf, minigo.EncodeMessage(msg.Nick)...)
+	buf = append(buf, minigo.EncodeAttribute(minigo.FondNormal)...)
+
+	buf = append(buf, minigo.GetMoveCursorRight(2)...)
 	buf = append(buf, minigo.EncodeMessage(msg.Text)...)
 
 	m.Send(buf)

@@ -113,8 +113,15 @@ func updateScreen(m *minigo.Minitel, nick string, lastMessageDate *time.Time) {
 	// line=InputLine-1 -- End of Message Zone
 	nbLines := 0
 	firstMsgId := 0
+	localLastDate := *lastMessageDate
 	for id := len(lastMessages) - 1; id >= 0; id -= 1 {
 		nbLines += len(lastMessages[id].Text)/minigo.ColonnesSimple + 1
+
+		if getDateString(localLastDate, lastMessages[id].Time) != "" {
+			nbLines += 3
+		}
+		localLastDate = lastMessages[id].Time
+
 		if nbLines >= InputLine-1 {
 			firstMsgId = id
 			break
@@ -126,7 +133,7 @@ func updateScreen(m *minigo.Minitel, nick string, lastMessageDate *time.Time) {
 
 	// Print those messages with date separators if needed
 	for _, msg := range lastMessages {
-		printDate(m, lastMessageDate, msg.Time)
+		printDate(m, *lastMessageDate, msg.Time)
 		*lastMessageDate = msg.Time
 
 		printOneMsg(m, msg)
@@ -135,10 +142,22 @@ func updateScreen(m *minigo.Minitel, nick string, lastMessageDate *time.Time) {
 	printChatHelpers(m)
 }
 
-func printDate(m *minigo.Minitel, lastDate *time.Time, date time.Time) {
-	durationSinceLastMsg := date.Sub(*lastDate)
+func printDate(m *minigo.Minitel, lastDate time.Time, date time.Time) {
+	dateString := getDateString(lastDate, date)
 
-	dateString := ""
+	buf := minigo.GetMoveCursorAt(1, 24)
+	// this is not a repetition
+	// needed in rouleau mode
+	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	m.Send(buf)
+
+	m.WriteStringCenter(InputLine-2, dateString)
+}
+
+func getDateString(lastDate time.Time, date time.Time) (dateString string) {
+	durationSinceLastMsg := date.Sub(lastDate)
+
 	if durationSinceLastMsg >= 365*24*time.Hour {
 		dateString = fmt.Sprintf("%s %d %s %d, %s",
 			weekdayIdToString(date.Weekday()),
@@ -154,18 +173,9 @@ func printDate(m *minigo.Minitel, lastDate *time.Time, date time.Time) {
 			date.Format("15:04"))
 	} else if durationSinceLastMsg > 10*time.Minute {
 		dateString = date.Format("15:04")
-	} else {
-		return
 	}
 
-	buf := minigo.GetMoveCursorAt(1, 24)
-	// this is not a repetition
-	// needed in rouleau mode
-	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
-	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
-	m.Send(buf)
-
-	m.WriteStringCenter(InputLine-2, dateString)
+	return
 }
 
 func printOneMsg(m *minigo.Minitel, msg Message) {

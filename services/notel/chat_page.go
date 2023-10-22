@@ -144,6 +144,9 @@ func updateScreen(m *minigo.Minitel, nick string, lastMessageDate *time.Time) {
 
 func printDate(m *minigo.Minitel, lastDate time.Time, date time.Time) {
 	dateString := getDateString(lastDate, date)
+	if dateString == "" {
+		return
+	}
 
 	buf := minigo.GetMoveCursorAt(1, 24)
 	// this is not a repetition

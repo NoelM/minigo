@@ -22,6 +22,8 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteStringLeft(6, "  2 modems US Robotics arrivés")
 		mntl.WriteStringLeft(7, "- Lancement samedi de statistiques")
 		mntl.WriteStringLeft(8, "  de connexion sur le serveur")
+		mntl.WriteStringLeft(9, "- Service d'actualités basées")
+		mntl.WriteStringLeft(10, "  sur des flux RSS.")
 
 		mntl.WriteHelperLeft(24, "Menu NOTEL", "SOMMAIRE")
 		return minigo.NoOp

@@ -31,8 +31,8 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO", "SERVEUR"})
 	list.Display()
 
-	mntl.WriteStringCenter(18, "Serveur multi-voies le 28 Oct.")
-	mntl.WriteStringCenter(19, "Au même nouveau numéro !")
+	mntl.WriteStringCenter(18, "Serveur multivoies le 28 Oct.")
+	mntl.WriteStringCenter(19, "Au même numéro !")
 
 	form.AppendInput("choice", minigo.NewInput(mntl, 32, 24, 2, 1, "", true))
 	form.ActivateFirst()

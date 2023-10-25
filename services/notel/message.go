@@ -102,6 +102,19 @@ func (m *MessageDatabase) GetMessages(nick string) []Message {
 	return messagesCopy
 }
 
+func (m *MessageDatabase) HasNewMessage(nick string) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	lastMsg, ok := m.subscribers[nick]
+	if !ok {
+		warnLog.Printf("unable to find subscriber with id=%s\n", nick)
+		return false
+	}
+
+	return len(m.messages)-(lastMsg+1) > 0
+}
+
 func (m *MessageDatabase) PushMessage(msg Message, filterNick bool) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()

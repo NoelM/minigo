@@ -25,6 +25,13 @@ func (f *Form) ValueActive() string {
 	return string(f.inputs[f.active].Value)
 }
 
+func (f *Form) InitAll() {
+	for _, i := range f.inputs {
+		i.Init()
+	}
+	f.ActivateFirst()
+}
+
 func (f *Form) AppendKeyActive(key rune) {
 	f.inputs[f.active].AppendKey(key)
 }
@@ -33,43 +40,45 @@ func (f *Form) CorrectionActive() {
 	f.inputs[f.active].Correction()
 }
 
-func (f *Form) RepetitionActive() {
-	f.inputs[f.active].Repetition()
+func (f *Form) UnHideActive() {
+	f.inputs[f.active].UnHide()
 }
 
-func (f *Form) RepetitionAll() {
+func (f *Form) UnHideAll() {
 	for i := 0; i < len(f.inputs); i += 1 {
-		f.inputs[i].Repetition()
+		f.inputs[i].UnHide()
+	}
+	f.activateInput()
+}
+
+func (f *Form) HideActive() {
+	f.inputs[f.active].Hide()
+}
+
+func (f *Form) HideAll() {
+	for i := 0; i < len(f.inputs); i += 1 {
+		f.inputs[i].Hide()
 	}
 }
 
-func (f *Form) ClearScreenActive() {
-	f.inputs[f.active].ClearScreen()
+func (f *Form) ResetActive() {
+	f.inputs[f.active].Reset()
 }
 
-func (f *Form) ClearScreenAll() {
+func (f *Form) ResetAll() {
 	for i := 0; i < len(f.inputs); i += 1 {
-		f.inputs[i].ClearScreen()
+		f.inputs[i].Reset()
 	}
+	f.ActivateFirst()
 }
 
-func (f *Form) ClearActive() {
-	f.inputs[f.active].Clear()
-}
-
-func (f *Form) ClearAll() {
-	for i := 0; i < len(f.inputs); i += 1 {
-		f.inputs[i].Clear()
-	}
-}
-
-func (f *Form) activateActive() {
+func (f *Form) activateInput() {
 	f.inputs[f.active].Activate()
 }
 
 func (f *Form) ActivateFirst() {
 	f.active = 0
-	f.activateActive()
+	f.activateInput()
 }
 
 func (f *Form) ActivateNext() {
@@ -78,10 +87,10 @@ func (f *Form) ActivateNext() {
 		if f.allowActiveCycling {
 			f.active = 0
 		} else {
-			f.active = len(f.inputs)
+			f.active = len(f.inputs) - 1
 		}
 	}
-	f.activateActive()
+	f.activateInput()
 }
 
 func (f *Form) ActivatePrev() {
@@ -93,5 +102,5 @@ func (f *Form) ActivatePrev() {
 			f.active = 0
 		}
 	}
-	f.activateActive()
+	f.activateInput()
 }

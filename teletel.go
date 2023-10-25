@@ -37,11 +37,11 @@ func IsPosInBounds(x, y int, resolution uint) (bool, error) {
 	}
 }
 
-func GetMoveCursorAt(x, y int) (buf []byte) {
+func GetMoveCursorAt(row, col int) (buf []byte) {
 	buf = GetWord(Csi)
-	buf = append(buf, GetPCode(y)...)
+	buf = append(buf, GetPCode(row)...)
 	buf = append(buf, 0x3B)
-	buf = append(buf, GetPCode(x)...)
+	buf = append(buf, GetPCode(col)...)
 	buf = append(buf, 0x48)
 	return
 }
@@ -129,6 +129,13 @@ func GetCleanLineFromCursor() (buf []byte) {
 func GetCleanLineToCursor() (buf []byte) {
 	buf = GetWord(Csi)
 	buf = append(buf, 0x31, 0x4B)
+	return
+}
+
+func GetCleanNItemsFromCursor(n int) (buf []byte) {
+	buf = GetWord(Csi)
+	buf = append(buf, GetPCode(n)...)
+	buf = append(buf, 0x50)
 	return
 }
 
@@ -294,6 +301,17 @@ func DecodeAccent(keyBuffer []byte) rune {
 	}
 
 	return 0
+}
+
+func GetRepeatRune(r rune, n int) (buf []byte) {
+	if n > 40 {
+		return
+	}
+
+	buf = EncodeRune(r)
+	buf = append(buf, Rep)
+	buf = append(buf, 0x40+byte(n))
+	return
 }
 
 func EncodeMessage(msg string) (buf []byte) {

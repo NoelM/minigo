@@ -9,10 +9,30 @@ import (
 
 const (
 	sommaireId = iota
-	ircId
+	chatId
 	meteoId
 	serveurId
 )
+
+func SommaireHandler(m *minigo.Minitel, login string) {
+	infoLog.Println("enters sommaire handler")
+	var id int
+	for id >= sommaireId {
+		switch id {
+		case sommaireId:
+			_, id = NewPageSommaire(m).Run()
+		case chatId:
+			id = ServiceMiniChat(m, login)
+		case meteoId:
+			id = ServiceMeteo(m)
+		case serveurId:
+			_, id = NewServeurPage(m).Run()
+		default:
+			id = sommaireId
+		}
+	}
+	infoLog.Println("quits sommaire handler")
+}
 
 func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 	sommairePage := minigo.NewPage("sommaire", mntl, nil)
@@ -37,9 +57,8 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.WriteStringCenter(19, "RDV Dim. 5 à 20h sur le chat")
 
 	mntl.WriteStringLeft(24, fmt.Sprintf("> Connectés: %d", NbConnectedUsers.Load()))
-
-	form.AppendInput("choice", minigo.NewInput(mntl, 32, 24, 2, 1, "", true))
-	form.ActivateFirst()
+	form.AppendInput("choice", minigo.NewInput(mntl, 24, 32, 2, 1, true))
+	form.InitAll()
 
 	return minigo.NoOp
 }

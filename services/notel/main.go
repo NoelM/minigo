@@ -28,7 +28,7 @@ func main() {
 	MessageDb = NewMessageDatabase()
 	MessageDb.LoadMessages("/media/core/messages.db")
 
-	wg.Add(2)
+	wg.Add(3)
 
 	go serveWS(&wg)
 

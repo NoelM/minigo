@@ -28,10 +28,57 @@ func main() {
 	MessageDb = NewMessageDatabase()
 	MessageDb.LoadMessages("/media/core/messages.db")
 
-	wg.Add(2)
+	wg.Add(3)
 
 	go serveWS(&wg)
-	go serveModem(&wg)
+
+	USR56KPro := []minigo.ATCommand{
+		{
+			Command: "ATZ",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&F1+MCA=0",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATL0M0",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&N2",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATS27=16",
+			Reply:   "OK",
+		},
+	}
+	go serveModem(&wg, USR56KPro, "/dev/ttyUSB0")
+
+	USRSportster := []minigo.ATCommand{
+		{
+			Command: "ATZ",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&F1",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATL0M0",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&N2",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATS27=16",
+			Reply:   "OK",
+		},
+	}
+	go serveModem(&wg, USRSportster, "/dev/ttyUSB1")
 
 	wg.Wait()
 
@@ -72,25 +119,10 @@ func serveWS(wg *sync.WaitGroup) {
 	log.Fatal(err)
 }
 
-func serveModem(wg *sync.WaitGroup) {
+func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string) {
 	defer wg.Done()
 
-	init := []minigo.ATCommand{
-		{
-			Command: "AT&F1+MCA=0",
-			Reply:   "OK",
-		},
-		{
-			Command: "AT&N2",
-			Reply:   "OK",
-		},
-		{
-			Command: "ATS27=16",
-			Reply:   "OK",
-		},
-	}
-
-	modem, err := minigo.NewModem("/dev/ttyUSB0", 115200, init)
+	modem, err := minigo.NewModem(tty, 115200, init)
 	if err != nil {
 		log.Fatal(err)
 	}

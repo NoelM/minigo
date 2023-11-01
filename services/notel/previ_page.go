@@ -186,8 +186,8 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 	mntl.WriteStringAt(25, 7, fmt.Sprintf("Max: %2.f°C", maxTemp))
 
 	mntl.WriteStringAtWithAttributes(25, 9, fmt.Sprintf("Vent"), minigo.InversionFond)
-	mntl.WriteStringAt(25, 10, fmt.Sprintf("Min: %2.f km/h", minWind))
-	mntl.WriteStringAt(25, 11, fmt.Sprintf("Max: %2.f km/h", maxWind))
+	mntl.WriteStringAt(25, 10, fmt.Sprintf("Min: %2.f km/h", 3.6*minWind))
+	mntl.WriteStringAt(25, 11, fmt.Sprintf("Max: %2.f km/h", 3.6*maxWind))
 
 	mntl.WriteStringAtWithAttributes(25, 13, fmt.Sprintf("Pression"), minigo.InversionFond)
 	mntl.WriteStringAt(25, 14, fmt.Sprintf("Min: %d hPa", minPress))

@@ -9,7 +9,7 @@ import (
 	"go.bug.st/serial"
 )
 
-const ModemReadTimeout = 20 * time.Second
+const ModemReadTimeout = 30 * time.Second
 
 type Modem struct {
 	port        serial.Port

@@ -38,6 +38,10 @@ func main() {
 			Reply:   "OK",
 		},
 		{
+			Command: "ATL0MO",
+			Reply:   "OK",
+		},
+		{
 			Command: "AT&N2",
 			Reply:   "OK",
 		},
@@ -51,6 +55,10 @@ func main() {
 	USRSportster := []minigo.ATCommand{
 		{
 			Command: "AT&F1",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATL0MO",
 			Reply:   "OK",
 		},
 		{

@@ -10,6 +10,10 @@ import (
 
 	"github.com/NoelM/minigo"
 	"nhooyr.io/websocket"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
@@ -18,6 +22,23 @@ var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lsho
 
 var CommuneDb *CommuneDatabase
 var MessageDb *MessageDatabase
+
+var (
+	promConnNb = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "notel_connection_number",
+		Help: "The total number connection to NOTEL",
+	})
+
+	promConnDur = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "notel_connection_duration",
+		Help: "The total connection duration to NOTEL",
+	})
+
+	promMsgNb = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "notel_messages_number",
+		Help: "The total number of postel messages to NOTEL",
+	})
+)
 
 func main() {
 	var wg sync.WaitGroup
@@ -28,7 +49,7 @@ func main() {
 	MessageDb = NewMessageDatabase()
 	MessageDb.LoadMessages("/media/core/messages.db")
 
-	wg.Add(3)
+	wg.Add(4)
 
 	go serveWS(&wg)
 
@@ -80,6 +101,8 @@ func main() {
 	}
 	go serveModem(&wg, USRSportster, "/dev/ttyUSB1")
 
+	go serverMetrics(&wg)
+
 	wg.Wait()
 
 	MessageDb.Quit()
@@ -119,6 +142,13 @@ func serveWS(wg *sync.WaitGroup) {
 	log.Fatal(err)
 }
 
+func serverMetrics(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(":2112", nil)
+}
+
 func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string) {
 	defer wg.Done()
 
@@ -146,6 +176,10 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string) {
 
 func ServiceHandler(m *minigo.Minitel) {
 	infoLog.Println("enters service handler")
+
+	promConnNb.Inc()
+	startConn := time.Now()
+
 	var id int
 	for id >= sommaireId {
 		switch id {
@@ -161,5 +195,7 @@ func ServiceHandler(m *minigo.Minitel) {
 			id = sommaireId
 		}
 	}
+
+	promConnDur.Add(time.Since(startConn).Seconds())
 	infoLog.Println("quits service handler")
 }

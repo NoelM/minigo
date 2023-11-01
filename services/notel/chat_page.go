@@ -53,6 +53,11 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 	})
 
 	chatPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		if len(inputs.ValueActive()) == 0 {
+			return nil, minigo.NoOp
+		}
+		promMsgNb.Inc()
+
 		msg := Message{
 			Nick: ircDrv.Nick,
 			Text: string(inputs.ValueActive()),

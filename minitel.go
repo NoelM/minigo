@@ -122,6 +122,7 @@ func (m *Minitel) Listen() {
 			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
+				m.RecvKey <- ConnexionFin
 				break
 			}
 

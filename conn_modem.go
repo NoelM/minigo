@@ -200,16 +200,16 @@ func (m *Modem) Connect() {
 		warnLog.Printf("unable to get modem status: %s\n", err.Error())
 	}
 
-	if status.DCD {
-		m.SetConnected(true)
-		infoLog.Println("connection V.23 established")
-		go m.ringHandler(m)
-
-	} else {
+	if !status.DCD {
 		errorLog.Println("unable establish connection")
 		infoLog.Println("relaunch modem init sequence")
 		m.Init()
+		return
 	}
+
+	m.SetConnected(true)
+	infoLog.Println("connection V.23 established")
+	go m.ringHandler(m)
 }
 
 func (m *Modem) Disconnect() {

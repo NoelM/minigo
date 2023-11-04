@@ -183,10 +183,12 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string) {
 }
 
 func ServiceHandler(m *minigo.Minitel) {
-	infoLog.Println("enters service handler")
 
 	promConnNb.Inc()
-	promConnActive.Set(float64(NbConnectedUsers.Add(1)))
+	active := NbConnectedUsers.Add(1)
+	promConnActive.Set(float64(active))
+
+	infoLog.Printf("enters service handler, connected=%d\n")
 
 	startConn := time.Now()
 
@@ -207,7 +209,9 @@ func ServiceHandler(m *minigo.Minitel) {
 	}
 
 	promConnDur.Add(time.Since(startConn).Seconds())
-	promConnActive.Set(float64(NbConnectedUsers.Add(-1)))
 
-	infoLog.Println("quits service handler")
+	active = NbConnectedUsers.Add(-1)
+	promConnActive.Set(float64(active))
+
+	infoLog.Println("quits service handler, connected=%d\n")
 }

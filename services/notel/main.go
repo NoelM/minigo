@@ -188,7 +188,7 @@ func ServiceHandler(m *minigo.Minitel) {
 	active := NbConnectedUsers.Add(1)
 	promConnActive.Set(float64(active))
 
-	infoLog.Printf("enters service handler, connected=%d\n")
+	infoLog.Printf("enters service handler, connected=%d\n", active)
 
 	startConn := time.Now()
 
@@ -213,5 +213,5 @@ func ServiceHandler(m *minigo.Minitel) {
 	active = NbConnectedUsers.Add(-1)
 	promConnActive.Set(float64(active))
 
-	infoLog.Println("quits service handler, connected=%d\n")
+	infoLog.Println("quits service handler, connected=%d\n", active)
 }

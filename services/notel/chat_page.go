@@ -17,11 +17,7 @@ func ServiceMiniChat(m *minigo.Minitel) int {
 		return serviceId
 	}
 
-	ircDvr := NewIrcDriver(string(nick))
-	go ircDvr.Loop()
-
-	_, serviceId = NewChatPage(m, ircDvr).Run()
-	ircDvr.Quit()
+	_, serviceId = NewChatPage(m, nick).Run()
 
 	if serviceId != minigo.NoOp {
 		return serviceId
@@ -32,13 +28,11 @@ func ServiceMiniChat(m *minigo.Minitel) int {
 	return sommaireId
 }
 
-func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
+func NewChatPage(m *minigo.Minitel, nickname string) *minigo.Page {
 	chatPage := minigo.NewPage("chat", m, nil)
 	lastMessageDate := time.Time{}
-	nickname := ""
 
 	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		nickname = ircDrv.Nick
 		infoLog.Printf("opening chat page for nick=%s\n", nickname)
 
 		MessageDb.Subscribe(nickname)
@@ -59,14 +53,14 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 		promMsgNb.Inc()
 
 		msg := Message{
-			Nick: ircDrv.Nick,
+			Nick: nickname,
 			Text: string(inputs.ValueActive()),
 			Time: time.Now(),
 		}
 		MessageDb.PushMessage(msg, false)
-		ircDrv.SendMessage(msg)
+		//ircDrv.SendMessage(msg)
 
-		infoLog.Printf("send new message to IRC from nick=%s len=%d\n", ircDrv.Nick, len(msg.Text))
+		infoLog.Printf("send new message to IRC from nick=%s len=%d\n", nickname, len(msg.Text))
 
 		inputs.ClearActive()
 		updateScreen(m, nickname, &lastMessageDate)
@@ -77,7 +71,7 @@ func NewChatPage(m *minigo.Minitel, ircDrv *IrcDriver) *minigo.Page {
 	})
 
 	chatPage.SetRepetitionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		infoLog.Printf("user nick=%s asked for a refresh\n", ircDrv.Nick)
+		infoLog.Printf("user nick=%s asked for a refresh\n", nickname)
 
 		inputs.ClearScreenAll()
 		updateScreen(m, nickname, &lastMessageDate)

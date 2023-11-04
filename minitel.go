@@ -35,8 +35,6 @@ type Minitel struct {
 	vitesseByte        byte
 	fonctionnementByte byte
 	protocoleByte      byte
-	cursorRow          uint
-	cursorCol          uint
 }
 
 func NewMinitel(conn Connector, parity bool) *Minitel {
@@ -111,6 +109,8 @@ func (m *Minitel) Listen() {
 	var done bool
 	var pro bool
 
+	var connexionFinRcvd bool
+
 	for m.Connected() {
 		if !m.Connected() {
 			infoLog.Println("new loop with closed connection")
@@ -155,6 +155,7 @@ func (m *Minitel) Listen() {
 						errorLog.Printf("unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
 					}
 				} else {
+					connexionFinRcvd = keyValue == ConnexionFin
 					m.RecvKey <- keyValue
 				}
 
@@ -167,7 +168,7 @@ func (m *Minitel) Listen() {
 		}
 	}
 
-	if m.Connected() {
+	if !connexionFinRcvd {
 		infoLog.Println("sent ConnexionFin to the application loop")
 		m.RecvKey <- ConnexionFin
 	}

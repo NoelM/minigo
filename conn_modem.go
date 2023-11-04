@@ -217,8 +217,8 @@ func (m *Modem) Connect() {
 }
 
 func (m *Modem) Disconnect() {
-	if !m.connected {
-		infoLog.Panicln("asked for modem disconnect, but already disconnected")
+	if !m.Connected() {
+		infoLog.Println("asked for modem disconnect, but already disconnected")
 		return
 	}
 

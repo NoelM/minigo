@@ -170,6 +170,11 @@ func (m *Modem) Serve(forceRing bool) {
 			infoLog.Println("we got a call, modem bit RING=1")
 			forceRing = false
 			m.Connect()
+
+			// Fail to establish connection, reset the bouzin
+			if !m.Connected() {
+				m.Init()
+			}
 		}
 
 		time.Sleep(time.Second)
@@ -202,13 +207,12 @@ func (m *Modem) Connect() {
 
 	if !status.DCD {
 		errorLog.Println("unable establish connection")
-		infoLog.Println("relaunch modem init sequence")
-		m.Init()
 		return
 	}
 
 	m.SetConnected(true)
 	infoLog.Println("connection V.23 established")
+
 	go m.ringHandler(m)
 }
 

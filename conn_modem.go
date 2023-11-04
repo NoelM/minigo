@@ -213,6 +213,15 @@ func (m *Modem) Connect() {
 	m.SetConnected(true)
 	infoLog.Println("connection V.23 established")
 
+	// Better to avoid any odd chars on the screen
+	if err := m.port.ResetInputBuffer(); err != nil {
+		errorLog.Printf("unable to reset input buffer: %s\n", err.Error())
+	}
+	if err := m.port.ResetOutputBuffer(); err != nil {
+		errorLog.Printf("unable to reset output buffer: %s\n", err.Error())
+	}
+
+	// start to serve the teletel content
 	go m.ringHandler(m)
 }
 

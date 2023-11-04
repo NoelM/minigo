@@ -28,14 +28,15 @@ func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
 	mntl.CleanScreen()
 	mntl.SendVDT("static/notel.vdt")
+	mntl.WriteAttributes(minigo.FondNormal, minigo.GrandeurNormale)
 
-	mntl.WriteStringLeft(7, fmt.Sprintf("> Connectés: %d", NbConnectedUsers.Load()))
 	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO", "SERVEUR"})
-	list.SetXY(1, 9)
 	list.Display()
 
 	mntl.WriteStringCenter(18, "Le serveur est bi-voies !")
 	mntl.WriteStringCenter(19, "RDV Dim. 5 à 20h sur le chat")
+
+	mntl.WriteStringLeft(24, fmt.Sprintf("> Connectés: %d", NbConnectedUsers.Load()))
 
 	form.AppendInput("choice", minigo.NewInput(mntl, 32, 24, 2, 1, "", true))
 	form.ActivateFirst()

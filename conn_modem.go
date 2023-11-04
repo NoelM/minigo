@@ -160,21 +160,16 @@ func (m *Modem) Serve(forceRing bool) {
 
 		// Connection lost
 		if !status.DCD && m.Connected() {
-			infoLog.Println("lost connection")
+			infoLog.Println("modem lost V.23 connection")
 			m.SetConnected(false)
 			m.Init()
 		}
 
 		// Call recieved
 		if status.RI || forceRing {
-			infoLog.Println("RING=1, phone rings")
+			infoLog.Println("we got a call, modem bit RING=1")
 			forceRing = false
 			m.Connect()
-
-			// Unable to connect, phone call?
-			if !m.Connected() {
-				m.Init()
-			}
 		}
 
 		time.Sleep(time.Second)
@@ -204,29 +199,36 @@ func (m *Modem) Connect() {
 	if err != nil {
 		warnLog.Printf("unable to get modem status: %s\n", err.Error())
 	}
+
 	if status.DCD {
 		m.SetConnected(true)
 		infoLog.Println("connection V.23 established")
+		go m.ringHandler(m)
+
 	} else {
 		errorLog.Println("unable establish connection")
-		return
+		infoLog.Println("relaunch modem init sequence")
+		m.Init()
 	}
-
-	go m.ringHandler(m)
 }
 
 func (m *Modem) Disconnect() {
-	infoLog.Println("switch connected to false")
+	if !m.connected {
+		infoLog.Panicln("asked for modem disconnect, but already disconnected")
+		return
+	}
+
+	infoLog.Println("switch modem connected status to false")
 	m.SetConnected(false)
 
 	m.port.SetDTR(false)
-	infoLog.Println("set DTR=false, waiting 5s")
-	time.Sleep(5 * time.Second)
+	infoLog.Println("set modem bit DTR=0, waiting 2s")
+	time.Sleep(2 * time.Second)
 
 	m.port.SetDTR(true)
-	infoLog.Println("set DTR=true, waiting 5s")
-	time.Sleep(5 * time.Second)
+	infoLog.Println("set modem bit DTR=1, waiting 2s")
+	time.Sleep(2 * time.Second)
 
-	infoLog.Println("relaunch init")
+	infoLog.Println("relaunch modem init sequence")
 	m.Init()
 }

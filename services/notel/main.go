@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -22,6 +23,8 @@ var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lsho
 
 var CommuneDb *CommuneDatabase
 var MessageDb *MessageDatabase
+
+var NbConnectedUsers atomic.Int32
 
 var (
 	promConnNb = promauto.NewCounter(prometheus.CounterOpts{
@@ -178,6 +181,8 @@ func ServiceHandler(m *minigo.Minitel) {
 	infoLog.Println("enters service handler")
 
 	promConnNb.Inc()
+	NbConnectedUsers.Add(1)
+
 	startConn := time.Now()
 
 	var id int
@@ -197,5 +202,7 @@ func ServiceHandler(m *minigo.Minitel) {
 	}
 
 	promConnDur.Add(time.Since(startConn).Seconds())
+	NbConnectedUsers.Add(-1)
+
 	infoLog.Println("quits service handler")
 }

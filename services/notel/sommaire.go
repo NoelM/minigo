@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/NoelM/minigo"
@@ -28,7 +29,9 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.CleanScreen()
 	mntl.SendVDT("static/notel.vdt")
 
+	mntl.WriteStringLeft(7, fmt.Sprintf("> Connectés: %d", NbConnectedUsers.Load()))
 	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO", "SERVEUR"})
+	list.SetXY(1, 9)
 	list.Display()
 
 	mntl.WriteStringCenter(18, "Le serveur est bi-voies !")

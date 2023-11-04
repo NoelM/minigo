@@ -32,6 +32,11 @@ var (
 		Help: "The total number connection to NOTEL",
 	})
 
+	promConnActive = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "notel_connection_active",
+		Help: "The number of currently active connections to NOTEL",
+	})
+
 	promConnDur = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "notel_connection_duration",
 		Help: "The total connection duration to NOTEL",
@@ -181,7 +186,7 @@ func ServiceHandler(m *minigo.Minitel) {
 	infoLog.Println("enters service handler")
 
 	promConnNb.Inc()
-	NbConnectedUsers.Add(1)
+	promConnActive.Set(float64(NbConnectedUsers.Add(1)))
 
 	startConn := time.Now()
 
@@ -202,7 +207,7 @@ func ServiceHandler(m *minigo.Minitel) {
 	}
 
 	promConnDur.Add(time.Since(startConn).Seconds())
-	NbConnectedUsers.Add(-1)
+	promConnActive.Set(float64(NbConnectedUsers.Add(-1)))
 
 	infoLog.Println("quits service handler")
 }

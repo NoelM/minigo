@@ -25,7 +25,7 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
 	mntl.WriteHelperAt(10, 13, "PSEUDO : ......... +", "ENVOI")
 
-	mntl.WriteStringCenter(16, "En simultané sur libera.chat#minitel")
+	//mntl.WriteStringCenter(16, "En simultané sur libera.chat#minitel")
 
 	form.AppendInput("nick", minigo.NewInput(mntl, 19, 13, 10, 1, "", true))
 	form.ActivateFirst()
@@ -53,6 +53,6 @@ func correctionLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, 
 	return nil, minigo.NoOp
 }
 
-func keyLog(mntl *minigo.Minitel, form *minigo.Form, key uint) {
-	form.AppendKeyActive(byte(key))
+func keyLog(mntl *minigo.Minitel, form *minigo.Form, key rune) {
+	form.AppendKeyActive(key)
 }

@@ -281,7 +281,3 @@ func GetVideotextCharByte(c byte) byte {
 func IsByteAValidChar(c byte) bool {
 	return c >= Sp && c <= Del
 }
-
-func IsUintAValidChar(u uint) bool {
-	return u >= Sp && u <= Del
-}

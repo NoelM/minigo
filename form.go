@@ -21,11 +21,11 @@ func (f *Form) ToMap() map[string]string {
 	return out
 }
 
-func (f *Form) ValueActive() []byte {
-	return f.inputs[f.active].Value
+func (f *Form) ValueActive() string {
+	return string(f.inputs[f.active].Value)
 }
 
-func (f *Form) AppendKeyActive(key byte) {
+func (f *Form) AppendKeyActive(key rune) {
 	f.inputs[f.active].AppendKey(key)
 }
 

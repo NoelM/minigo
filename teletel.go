@@ -132,12 +132,12 @@ func GetCleanLineToCursor() (buf []byte) {
 	return
 }
 
-func EncodeChar(c int32) []byte {
-	if specialChar := EncodeSpecial(c); specialChar != nil {
-		return specialChar
+func EncodeRune(r rune) []byte {
+	if specialRune := EncodeSpecial(r); specialRune != nil {
+		return specialRune
 	}
 
-	vdtByte := GetVideotextCharByte(byte(c))
+	vdtByte := GetVideotextCharByte(byte(r))
 	if IsByteAValidChar(vdtByte) {
 		return []byte{vdtByte}
 	}
@@ -145,8 +145,8 @@ func EncodeChar(c int32) []byte {
 	return nil
 }
 
-func EncodeSpecial(c int32) []byte {
-	switch c {
+func EncodeSpecial(r rune) []byte {
+	switch r {
 	case 'à':
 		return []byte{Ss2, AccentGrave, 'a'}
 	case 'À':
@@ -224,9 +224,81 @@ func EncodeSpecial(c int32) []byte {
 	return nil
 }
 
+func IsAccent(b byte) bool {
+	return b == AccentAigu ||
+		b == AccentGrave ||
+		b == AccentCirconflexe ||
+		b == Trema ||
+		b == Cedille
+}
+
+func DecodeAccent(keyBuffer []byte) rune {
+	accent := keyBuffer[0]
+	letter := keyBuffer[1]
+
+	if accent == AccentAigu {
+		if letter == 'e' {
+			return 'é'
+		} else if letter == 'E' {
+			return 'É'
+		}
+
+	} else if accent == AccentGrave {
+		if letter == 'a' {
+			return 'à'
+		} else if letter == 'A' {
+			return 'À'
+		} else if letter == 'e' {
+			return 'è'
+		} else if letter == 'E' {
+			return 'È'
+		} else if letter == 'u' {
+			return 'ù'
+		} else if letter == 'U' {
+			return 'Ù'
+		}
+
+	} else if accent == AccentCirconflexe {
+		if letter == 'a' {
+			return 'â'
+		} else if letter == 'e' {
+			return 'ê'
+		} else if letter == 'i' {
+			return 'î'
+		} else if letter == 'o' {
+			return 'ô'
+		} else if letter == 'u' {
+			return 'û'
+		}
+
+	} else if accent == Trema {
+		if letter == 'a' {
+			return 'ä'
+		} else if letter == 'e' {
+			return 'ë'
+		} else if letter == 'i' {
+			return 'ï'
+		} else if letter == 'o' {
+			return 'ö'
+		} else if letter == 'u' {
+			return 'ü'
+		}
+
+	} else if accent == Cedille {
+		if letter == 'c' {
+			return 'ç'
+		} else if letter == 'C' {
+			return 'Ç'
+		}
+
+	}
+
+	return 0
+}
+
 func EncodeMessage(msg string) (buf []byte) {
 	for _, c := range msg {
-		if b := EncodeChar(c); b != nil {
+		if b := EncodeRune(c); b != nil {
 			buf = append(buf, b...)
 		}
 	}
@@ -283,27 +355,43 @@ func GetCursorOff() byte {
 	return CursorOff
 }
 
-func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
-	if keyBuffer[0] == 0x19 {
-		if len(keyBuffer) == 1 {
+func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
+	// Special characters, switch G2 mode
+	if keyBuffer[0] == Ss2 {
+		if len(keyBuffer) <= 1 {
 			return
 		}
 
 		switch keyBuffer[1] {
-		case 0x23:
-			keyBuffer = []byte{0xA3}
-		case 0x27:
-			keyBuffer = []byte{0xA7}
-		case 0x30:
-			keyBuffer = []byte{0xB0}
-		case 0x31:
-			keyBuffer = []byte{0xB1}
-		case 0x38:
-			keyBuffer = []byte{0xF7}
-		case 0x7B:
-			keyBuffer = []byte{0xDF}
+		case Livre:
+			value = '£'
+		case Paragraphe:
+			value = '§'
+		case Degre:
+			value = '°'
+		case PlusOuMoins:
+			value = '±'
+		case Division:
+			value = '÷'
+		case Beta:
+			value = 'ß'
+		default:
+			if IsAccent(keyBuffer[1]) {
+				if len(keyBuffer) <= 2 {
+					return
+				}
+
+				// Ignore the SS2 header
+				value = DecodeAccent(keyBuffer[1:])
+			}
 		}
-	} else if keyBuffer[0] == 0x13 {
+
+		if value != 0 {
+			done = true
+			return
+		}
+
+	} else if keyBuffer[0] == Special {
 		if len(keyBuffer) == 1 {
 			return
 		}
@@ -312,7 +400,7 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
 			return
 		}
 
-		if keyBuffer[1] == 0x5B {
+		if keyBuffer[1] == CodeReceptionPrise {
 			if len(keyBuffer) == 2 {
 				return
 			}
@@ -334,13 +422,11 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value uint, err error) {
 
 	switch len(keyBuffer) {
 	case 1:
-		value = uint(keyBuffer[0])
+		value = int32(keyBuffer[0])
 	case 2:
-		value = uint(binary.BigEndian.Uint16(keyBuffer))
+		value = int32(binary.BigEndian.Uint16(keyBuffer))
 	case 4:
-		value = uint(binary.BigEndian.Uint32(keyBuffer))
-	case 8:
-		value = uint(binary.BigEndian.Uint64(keyBuffer))
+		value = int32(binary.BigEndian.Uint32(keyBuffer))
 	default:
 		err = errors.New("unable to cast readbuffer")
 	}

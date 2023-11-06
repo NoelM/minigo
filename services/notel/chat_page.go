@@ -54,7 +54,7 @@ func NewChatPage(m *minigo.Minitel, nickname string) *minigo.Page {
 
 		msg := Message{
 			Nick: nickname,
-			Text: string(inputs.ValueActive()),
+			Text: inputs.ValueActive(),
 			Time: time.Now(),
 		}
 		MessageDb.PushMessage(msg, false)
@@ -91,8 +91,8 @@ func NewChatPage(m *minigo.Minitel, nickname string) *minigo.Page {
 		return nil, sommaireId
 	})
 
-	chatPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
-		inputs.AppendKeyActive(byte(key))
+	chatPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
+		inputs.AppendKeyActive(key)
 	})
 
 	return chatPage

@@ -1,5 +1,7 @@
 package minigo
 
+import "unicode/utf8"
+
 type Input struct {
 	Value []byte
 
@@ -23,31 +25,35 @@ func NewInput(m *Minitel, refX, refY int, width, height int, prefix string, curs
 	}
 }
 
-// getAbsoluteXY, return where the cursor should be for a certain lenght of message
+// getAbsoluteXY, return where the cursor should be for a certain length of message
 func (i *Input) getAbsoluteXY() (x, y int) {
-	totalLen := len(i.Value)
+	totalLen := utf8.RuneCount(i.Value)
 	if len(i.prefix) > 0 {
-		totalLen += len(i.prefix) + 1
+		totalLen += utf8.RuneCountInString(i.prefix) + 1
 	}
 	y = totalLen/i.width + i.refY
 	x = totalLen%i.width + i.refX
 	return
 }
 
-func (i *Input) AppendKey(key byte) {
+func (i *Input) AppendKey(r rune) {
 	command := GetMoveCursorAt(i.getAbsoluteXY())
-	command = append(command, key)
+	command = append(command, EncodeRune(r)...)
 	i.m.Send(command)
 
-	i.Value = append(i.Value, key)
+	i.Value = utf8.AppendRune(i.Value, r)
 }
 
 func (i *Input) Correction() {
-	if len(i.Value) == 0 {
+	if utf8.RuneCount(i.Value) == 0 {
 		return
 	}
 
-	i.Value = i.Value[:len(i.Value)-1]
+	r, shift := utf8.DecodeLastRune(i.Value)
+	if r == utf8.RuneError {
+		return
+	}
+	i.Value = i.Value[:len(i.Value)-shift]
 
 	command := GetMoveCursorAt(i.getAbsoluteXY())
 	command = append(command, GetCleanLineFromCursor()...)

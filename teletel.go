@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"unicode/utf8"
 )
 
 func GetProCode(pro byte) ([]byte, error) {
@@ -236,64 +237,67 @@ func DecodeAccent(keyBuffer []byte) []byte {
 	accent := keyBuffer[0]
 	letter := keyBuffer[1]
 
+	rByte := make([]byte, 4)
+	rBytelen := 0
+
 	if accent == AccentAigu {
 		if letter == 'e' {
-			return []byte{'é'}
+			rBytelen = utf8.EncodeRune(rByte, 'é')
 		} else if letter == 'E' {
-			return []byte{'É'}
+			rBytelen = utf8.EncodeRune(rByte, 'É')
 		}
 
 	} else if accent == AccentGrave {
 		if letter == 'a' {
-			return []byte{'à'}
+			rBytelen = utf8.EncodeRune(rByte, 'à')
 		} else if letter == 'A' {
-			return []byte{'À'}
+			rBytelen = utf8.EncodeRune(rByte, 'À')
 		} else if letter == 'e' {
-			return []byte{'è'}
+			rBytelen = utf8.EncodeRune(rByte, 'è')
 		} else if letter == 'E' {
-			return []byte{'È'}
+			rBytelen = utf8.EncodeRune(rByte, 'È')
 		} else if letter == 'u' {
-			return []byte{'ù'}
+			rBytelen = utf8.EncodeRune(rByte, 'ù')
 		} else if letter == 'U' {
-			return []byte{'Ù'}
+			rBytelen = utf8.EncodeRune(rByte, 'Ù')
 		}
 
 	} else if accent == AccentCirconflexe {
 		if letter == 'a' {
-			return []byte{'â'}
+			rBytelen = utf8.EncodeRune(rByte, 'â')
 		} else if letter == 'e' {
-			return []byte{'ê'}
+			rBytelen = utf8.EncodeRune(rByte, 'ê')
 		} else if letter == 'i' {
-			return []byte{'î'}
+			rBytelen = utf8.EncodeRune(rByte, 'î')
 		} else if letter == 'o' {
-			return []byte{'ô'}
+			rBytelen = utf8.EncodeRune(rByte, 'ô')
 		} else if letter == 'u' {
-			return []byte{'û'}
+			rBytelen = utf8.EncodeRune(rByte, 'û')
 		}
 
 	} else if accent == Trema {
 		if letter == 'a' {
-			return []byte{'ä'}
+			rBytelen = utf8.EncodeRune(rByte, 'ä')
 		} else if letter == 'e' {
-			return []byte{'ë'}
+			rBytelen = utf8.EncodeRune(rByte, 'ë')
 		} else if letter == 'i' {
-			return []byte{'ï'}
+			rBytelen = utf8.EncodeRune(rByte, 'ï')
 		} else if letter == 'o' {
-			return []byte{'ö'}
+			rBytelen = utf8.EncodeRune(rByte, 'ö')
 		} else if letter == 'u' {
-			return []byte{'ü'}
+			rBytelen = utf8.EncodeRune(rByte, 'ü')
 		}
 
 	} else if accent == Cedille {
 		if letter == 'c' {
-			return []byte{'ç'}
+			rBytelen = utf8.EncodeRune(rByte, 'ç')
 		} else if letter == 'C' {
-			return []byte{'Ç'}
+			rBytelen = utf8.EncodeRune(rByte, 'Ç')
 		}
 
 	}
 
-	return nil
+	return rByte[:rBytelen]
 }
 
 func EncodeMessage(msg string) (buf []byte) {

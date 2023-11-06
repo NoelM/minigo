@@ -49,7 +49,11 @@ func (i *Input) Correction() {
 		return
 	}
 
-	i.Value = i.Value[:utf8.RuneCount(i.Value)-1]
+	r, shift := utf8.DecodeLastRune(i.Value)
+	if r == utf8.RuneError {
+		return
+	}
+	i.Value = i.Value[:len(i.Value)-shift]
 
 	command := GetMoveCursorAt(i.getAbsoluteXY())
 	command = append(command, GetCleanLineFromCursor()...)

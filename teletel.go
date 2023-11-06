@@ -381,7 +381,7 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 					return
 				}
 
-				// Truncs the SS2 header
+				// Ignore the SS2 header
 				value = DecodeAccent(keyBuffer[1:])
 			}
 		}

@@ -375,16 +375,17 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 			keyBuffer = []byte{'÷'}
 		case Beta:
 			keyBuffer = []byte{'ß'}
-		}
+		default:
+			if IsAccent(keyBuffer[1]) {
+				if len(keyBuffer) <= 2 {
+					return
+				}
 
-		if IsAccent(keyBuffer[1]) {
-			if len(keyBuffer) <= 2 {
-				return
+				// Truncs the SS2 header
+				keyBuffer = DecodeAccent(keyBuffer[1:])
 			}
-
-			// Truncs the SS2 header
-			keyBuffer = DecodeAccent(keyBuffer[1:])
 		}
+
 	} else if keyBuffer[0] == Special {
 		if len(keyBuffer) == 1 {
 			return

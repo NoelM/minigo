@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"unicode/utf8"
 )
 
 func GetProCode(pro byte) ([]byte, error) {
@@ -233,71 +232,68 @@ func IsAccent(b byte) bool {
 		b == Cedille
 }
 
-func DecodeAccent(keyBuffer []byte) []byte {
+func DecodeAccent(keyBuffer []byte) rune {
 	accent := keyBuffer[0]
 	letter := keyBuffer[1]
 
-	rByte := make([]byte, 4)
-	rBytelen := 0
-
 	if accent == AccentAigu {
 		if letter == 'e' {
-			rBytelen = utf8.EncodeRune(rByte, 'é')
+			return 'é'
 		} else if letter == 'E' {
-			rBytelen = utf8.EncodeRune(rByte, 'É')
+			return 'É'
 		}
 
 	} else if accent == AccentGrave {
 		if letter == 'a' {
-			rBytelen = utf8.EncodeRune(rByte, 'à')
+			return 'à'
 		} else if letter == 'A' {
-			rBytelen = utf8.EncodeRune(rByte, 'À')
+			return 'À'
 		} else if letter == 'e' {
-			rBytelen = utf8.EncodeRune(rByte, 'è')
+			return 'è'
 		} else if letter == 'E' {
-			rBytelen = utf8.EncodeRune(rByte, 'È')
+			return 'È'
 		} else if letter == 'u' {
-			rBytelen = utf8.EncodeRune(rByte, 'ù')
+			return 'ù'
 		} else if letter == 'U' {
-			rBytelen = utf8.EncodeRune(rByte, 'Ù')
+			return 'Ù'
 		}
 
 	} else if accent == AccentCirconflexe {
 		if letter == 'a' {
-			rBytelen = utf8.EncodeRune(rByte, 'â')
+			return 'â'
 		} else if letter == 'e' {
-			rBytelen = utf8.EncodeRune(rByte, 'ê')
+			return 'ê'
 		} else if letter == 'i' {
-			rBytelen = utf8.EncodeRune(rByte, 'î')
+			return 'î'
 		} else if letter == 'o' {
-			rBytelen = utf8.EncodeRune(rByte, 'ô')
+			return 'ô'
 		} else if letter == 'u' {
-			rBytelen = utf8.EncodeRune(rByte, 'û')
+			return 'û'
 		}
 
 	} else if accent == Trema {
 		if letter == 'a' {
-			rBytelen = utf8.EncodeRune(rByte, 'ä')
+			return 'ä'
 		} else if letter == 'e' {
-			rBytelen = utf8.EncodeRune(rByte, 'ë')
+			return 'ë'
 		} else if letter == 'i' {
-			rBytelen = utf8.EncodeRune(rByte, 'ï')
+			return 'ï'
 		} else if letter == 'o' {
-			rBytelen = utf8.EncodeRune(rByte, 'ö')
+			return 'ö'
 		} else if letter == 'u' {
-			rBytelen = utf8.EncodeRune(rByte, 'ü')
+			return 'ü'
 		}
 
 	} else if accent == Cedille {
 		if letter == 'c' {
-			rBytelen = utf8.EncodeRune(rByte, 'ç')
+			return 'ç'
 		} else if letter == 'C' {
-			rBytelen = utf8.EncodeRune(rByte, 'Ç')
+			return 'Ç'
 		}
 
 	}
 
-	return rByte[:rBytelen]
+	return 0
 }
 
 func EncodeMessage(msg string) (buf []byte) {
@@ -368,17 +364,17 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 
 		switch keyBuffer[1] {
 		case Livre:
-			keyBuffer = []byte{'£'}
+			value = '£'
 		case Paragraphe:
-			keyBuffer = []byte{'§'}
+			value = '§'
 		case Degre:
-			keyBuffer = []byte{'°'}
+			value = '°'
 		case PlusOuMoins:
-			keyBuffer = []byte{'±'}
+			value = '±'
 		case Division:
-			keyBuffer = []byte{'÷'}
+			value = '÷'
 		case Beta:
-			keyBuffer = []byte{'ß'}
+			value = 'ß'
 		default:
 			if IsAccent(keyBuffer[1]) {
 				if len(keyBuffer) <= 2 {
@@ -386,8 +382,13 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 				}
 
 				// Truncs the SS2 header
-				keyBuffer = DecodeAccent(keyBuffer[1:])
+				value = DecodeAccent(keyBuffer[1:])
 			}
+		}
+
+		if value != 0 {
+			done = true
+			return
 		}
 
 	} else if keyBuffer[0] == Special {

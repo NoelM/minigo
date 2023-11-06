@@ -358,7 +358,7 @@ func GetCursorOff() byte {
 func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 	// Special characters, switch G2 mode
 	if keyBuffer[0] == Ss2 {
-		if len(keyBuffer) == 1 {
+		if len(keyBuffer) <= 1 {
 			return
 		}
 
@@ -378,7 +378,7 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 		}
 
 		if IsAccent(keyBuffer[1]) {
-			if len(keyBuffer) == 2 {
+			if len(keyBuffer) <= 2 {
 				return
 			}
 

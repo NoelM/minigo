@@ -26,8 +26,8 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		return minigo.NoOp
 	})
 
-	signInPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
-		inputs.AppendKeyActive(byte(key))
+	signInPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
+		inputs.AppendKeyActive(key)
 	})
 
 	signInPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

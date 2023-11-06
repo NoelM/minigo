@@ -13,6 +13,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ModeG0()
 
 		mntl.WriteStringAtWithAttributes(10, 1, "Inscrivez vous !", minigo.FondNormal, minigo.DoubleHauteur)
+		mntl.WriteStringLeft(11, "Compte supprimé si 30j sans connexion")
 
 		mntl.WriteStringLeft(13, "PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 13, 15, 10, 1, true))
@@ -27,8 +28,8 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		return minigo.NoOp
 	})
 
-	signUpPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
-		inputs.AppendKeyActive(byte(key))
+	signUpPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
+		inputs.AppendKeyActive(key)
 	})
 
 	signUpPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

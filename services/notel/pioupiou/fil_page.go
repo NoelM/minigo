@@ -2,6 +2,7 @@ package pioupiou
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"github.com/NoelM/minigo"
 )
@@ -52,8 +53,8 @@ func NewPageFil(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 		return nil, minigo.NoOp
 	})
 
-	filPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
-		inputs.AppendKeyActive(byte(key))
+	filPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
+		inputs.AppendKeyActive(key)
 	})
 
 	filPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
@@ -61,7 +62,7 @@ func NewPageFil(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 	})
 
 	filPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		if pageStart[pageId+1] == len(posts)-1 {
+		if pageStart[pageId+1] >= len(posts)-1 {
 			tmp, err := PiouPiou.GetFeed(pseudo)
 			if err != nil {
 				return nil, minigo.NoOp
@@ -73,12 +74,14 @@ func NewPageFil(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 			posts = append(posts, tmp...)
 		}
 
-		if pageId > len(pageStart) {
-			printPosts(mntl, posts[pageStart[pageId+1]:])
-		} else {
-			pageStart = append(pageStart, printPosts(mntl, posts[pageStart[pageId+1]:]))
-		}
 		pageId += 1
+		deltaId := printPosts(mntl, posts[pageStart[pageId]:])
+
+		if pageId+1 == len(pageStart) {
+			pageStart = append(pageStart, pageStart[pageId]+deltaId)
+		} else {
+			pageStart[pageId+1] = pageStart[pageId] + deltaId
+		}
 
 		return nil, minigo.NoOp
 	})
@@ -108,8 +111,8 @@ func printPosts(mntl *minigo.Minitel, posts []*PPPost) int {
 		mntl.WriteStringRight(line, p.Date.Format("02/01/06 15:04"))
 		mntl.WriteAttributes(minigo.FondNormal)
 
-		line += 2
-		if line >= 22 {
+		line += 1
+		if line == 22 {
 			trunc = true
 			break
 		}
@@ -117,30 +120,35 @@ func printPosts(mntl *minigo.Minitel, posts []*PPPost) int {
 		length := 0
 		words := []string{}
 		for _, s := range strings.Split(p.Content, " ") {
-			if length+len(s)+1 >= 40 {
+			if length+utf8.RuneCountInString(s)+1 >= 40 {
 				mntl.WriteStringLeft(line, strings.Join(words, " "))
 
 				length = 0
 				words = []string{}
 
 				line += 1
-				if line >= 22 {
+				if line == 22 {
 					trunc = true
 					break
 				}
 			}
 
-			length += len(s) + 1 // the size of the space
+			length += utf8.RuneCountInString(s) + 1 // the size of the space
 			words = append(words, s)
 		}
 
-		if line >= 22 {
+		// Yes, a message is at least 2 lines
+		// - Status Line
+		// - Message Line
+		//
+		// So at line=20, it would automatically break
+		if line >= 20 {
 			break
 		}
 	}
 
-	if trunc {
-		pId -= 1
+	if !trunc {
+		pId += 1
 	}
 	return pId
 

@@ -49,8 +49,8 @@ func NewPageHome(mntl *minigo.Minitel) *minigo.Page {
 		return nil, minigo.NoOp
 	})
 
-	homePage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
-		inputs.AppendKeyActive(byte(key))
+	homePage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
+		inputs.AppendKeyActive(key)
 	})
 
 	homePage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

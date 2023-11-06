@@ -224,7 +224,7 @@ func (m *Minitel) CleanScreenFromCursor() error {
 	return m.Send(GetCleanLineFromCursor())
 }
 
-func (m *Minitel) CleanScreenFromXY(col, row int) error {
+func (m *Minitel) CleanScreenFrom(row, col int) error {
 	buf := GetMoveCursorAt(row, col)
 	buf = append(buf, GetCleanScreenFromCursor()...)
 	return m.Send(buf)

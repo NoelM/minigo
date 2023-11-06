@@ -9,8 +9,8 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo.Page {
-	communesPage := minigo.NewPage("communes", mntl, codePostal)
+func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo.Page {
+	communesPage := minigo.NewPage("communes", mntl, selectedCP)
 
 	var communes []Commune
 
@@ -60,7 +60,7 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 			return nil, minigo.NoOp
 		}
 
-		communeId, err := strconv.ParseInt(string(inputs.ValueActive()), 10, 32)
+		communeId, err := strconv.ParseInt(inputs.ValueActive(), 10, 32)
 		if err != nil {
 			errorLog.Printf("unable to parse code choice: %s\n", err.Error())
 			return nil, sommaireId
@@ -81,8 +81,8 @@ func NewCommunesPage(mntl *minigo.Minitel, codePostal map[string]string) *minigo
 		return map[string]string{"commune": string(data)}, minigo.QuitPageOp
 	})
 
-	communesPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
-		inputs.AppendKeyActive(byte(key))
+	communesPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key rune) {
+		inputs.AppendKeyActive(key)
 	})
 
 	communesPage.SetCorrectionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

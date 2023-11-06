@@ -66,6 +66,6 @@ func correctionSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]str
 	return nil, minigo.NoOp
 }
 
-func keySommaire(mntl *minigo.Minitel, form *minigo.Form, key uint) {
-	form.AppendKeyActive(byte(key))
+func keySommaire(mntl *minigo.Minitel, form *minigo.Form, key rune) {
+	form.AppendKeyActive(key)
 }

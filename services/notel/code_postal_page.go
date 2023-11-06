@@ -48,8 +48,8 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		return nil, minigo.NoOp
 	})
 
-	codePostalPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key uint) {
-		inputs.AppendKeyActive(byte(key))
+	codePostalPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key rune) {
+		inputs.AppendKeyActive(key)
 	})
 
 	codePostalPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

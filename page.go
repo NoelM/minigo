@@ -1,5 +1,7 @@
 package minigo
 
+import "unicode/utf8"
+
 const (
 	NoOp = iota - 10
 	DisconnectOp
@@ -8,7 +10,7 @@ const (
 )
 
 type InitFunc func(mntl *Minitel, inputs *Form, initData map[string]string) int
-type KeyboardFunc func(mntl *Minitel, inputs *Form, key uint)
+type KeyboardFunc func(mntl *Minitel, inputs *Form, key rune)
 type InChanFunc func(mntl *Minitel, inputs *Form, message string)
 type NavigationFunc func(mntl *Minitel, inputs *Form) (map[string]string, int)
 type ConnexionFinFunc func(mntl *Minitel) int
@@ -42,7 +44,7 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		name:             name,
 		initData:         initData,
 		initFunc:         func(mntl *Minitel, inputs *Form, initData map[string]string) int { return NoOp },
-		charFunc:         func(mntl *Minitel, inputs *Form, key uint) {},
+		charFunc:         func(mntl *Minitel, inputs *Form, key rune) {},
 		inChanFunc:       func(mntl *Minitel, inputs *Form, message string) {},
 		connexionFinFunc: func(mntl *Minitel) int { mntl.Disconnect(); return DisconnectOp },
 		envoiFunc:        defaultNavigationHandlerFunc,
@@ -177,11 +179,10 @@ func (p *Page) Run() (map[string]string, int) {
 				}
 
 			default:
-				if IsUintAValidChar(key) {
+				if utf8.ValidRune(key) {
 					p.charFunc(p.mntl, p.form, key)
-
 				} else {
-					errorLog.Printf("not supported key: %d\n", key)
+					errorLog.Printf("invalid rune=%d\n", key)
 				}
 			}
 		}

@@ -20,15 +20,15 @@ const (
 )
 
 type Minitel struct {
-	RecvKey chan uint
+	RecvKey chan int32
 
 	conn   Connector
 	parity bool
 
-	defaultCouleur  uint
-	defaultGrandeur uint
-	currentGrandeur uint
-	defaultFond     uint
+	defaultCouleur  int32
+	defaultGrandeur int32
+	currentGrandeur int32
+	defaultFond     int32
 
 	ackType            AckType
 	terminalByte       byte
@@ -45,7 +45,7 @@ func NewMinitel(conn Connector, parity bool) *Minitel {
 		defaultGrandeur: GrandeurNormale,
 		currentGrandeur: GrandeurNormale,
 		defaultFond:     FondNormal,
-		RecvKey:         make(chan uint),
+		RecvKey:         make(chan int32),
 	}
 }
 
@@ -56,10 +56,10 @@ func (m *Minitel) charWidth() int {
 	return 1
 }
 
-func (m *Minitel) updateGrandeur(attrbutes ...byte) {
-	for _, attr := range attrbutes {
+func (m *Minitel) updateGrandeur(attributes ...byte) {
+	for _, attr := range attributes {
 		if attr >= GrandeurNormale && attr <= DoubleGrandeur {
-			m.currentGrandeur = uint(attr)
+			m.currentGrandeur = int32(attr)
 		}
 	}
 }
@@ -104,7 +104,7 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 func (m *Minitel) Listen() {
 	fullRead := true
 	var keyBuffer []byte
-	var keyValue uint
+	var keyValue int32
 
 	var done bool
 	var pro bool
@@ -122,7 +122,6 @@ func (m *Minitel) Listen() {
 			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
-				m.RecvKey <- ConnexionFin
 				break
 			}
 
@@ -169,7 +168,7 @@ func (m *Minitel) Listen() {
 	}
 
 	if !connexionFinRcvd {
-		infoLog.Println("sent ConnexionFin to the application loop")
+		warnLog.Println("lost connection: sent ConnexionFin to the application loop")
 		m.RecvKey <- ConnexionFin
 	}
 	infoLog.Println("stop minitel listen: closed connection")

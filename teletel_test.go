@@ -91,7 +91,7 @@ func TestCheckByteParity(t *testing.T) {
 }
 
 func TestCharMapping(t *testing.T) {
-	c := EncodeChar('A')
+	c := EncodeRune('A')
 	if len(c) != 1 || c[0] != 0x41 {
 		t.Fatalf("recieved %x instead of %x", c, 0x41)
 	}

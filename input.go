@@ -24,7 +24,7 @@ func NewInput(m *Minitel, refRow, refCol int, width, height int, dots bool) *Inp
 	}
 }
 
-// getCursorPos, return where the cursor should be for a certain lenght of message
+// getCursorPos returns the absolute position of the cursor
 func (i *Input) getCursorPos() (row, col int) {
 	totalLen := utf8.RuneCount(i.Value)
 
@@ -33,11 +33,12 @@ func (i *Input) getCursorPos() (row, col int) {
 	return
 }
 
-// Init, setups the input
+// Init displays the input empty
 func (i *Input) Init() {
 	i.UnHide()
 }
 
+// AppendKey appends a new Rune to the Value array
 func (i *Input) AppendKey(r rune) {
 	command := GetMoveCursorAt(i.getCursorPos())
 	command = append(command, EncodeRune(r)...)
@@ -46,6 +47,7 @@ func (i *Input) AppendKey(r rune) {
 	i.Value = utf8.AppendRune(i.Value, r)
 }
 
+// Correction removes the last key, on screen and within Value
 func (i *Input) Correction() {
 	if utf8.RuneCount(i.Value) == 0 {
 		return
@@ -67,7 +69,7 @@ func (i *Input) Correction() {
 	i.m.Send(command)
 }
 
-// UnHide, reveals the input on screen
+// UnHide reveals the input on screen
 func (i *Input) UnHide() {
 	command := GetMoveCursorAt(i.refRow, i.refCol)
 
@@ -94,7 +96,7 @@ func (i *Input) UnHide() {
 	i.m.Send(command)
 }
 
-// Hide, clears the input on the minitel screen
+// Hide clears the input on the Minitel screen,
 // but it keeps the Value member complete
 func (i *Input) Hide() {
 	i.m.CursorOff()
@@ -107,7 +109,7 @@ func (i *Input) Hide() {
 	i.m.Send(command)
 }
 
-// Reset, clears both the screen and the member Value
+// Reset clears both the input on screen and Value
 func (i *Input) Reset() {
 	i.Value = []byte{}
 	i.UnHide()

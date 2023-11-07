@@ -62,12 +62,15 @@ func NewPageFil(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 	})
 
 	filPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+
+		// We verify that the postId on the next page exists
 		if pageStart[pageId+1] >= len(posts)-1 {
 			tmp, err := PiouPiou.GetFeed(pseudo)
 			if err != nil {
 				return nil, minigo.NoOp
 			}
 			if len(tmp) == 0 {
+				// No more messages, we leave!
 				return nil, minigo.NoOp
 			}
 
@@ -78,8 +81,11 @@ func NewPageFil(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 		deltaId := printPosts(mntl, posts[pageStart[pageId]:])
 
 		if pageId+1 == len(pageStart) {
+			// If the pageId+1 has never been loaded, increase the pageStart array
 			pageStart = append(pageStart, pageStart[pageId]+deltaId)
 		} else {
+			// The page already been loaded, but the data may have changed.
+			// So we update the pageStart
 			pageStart[pageId+1] = pageStart[pageId] + deltaId
 		}
 
@@ -87,11 +93,12 @@ func NewPageFil(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 	})
 
 	filPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		if pageId-1 < 0 {
+		if pageId == 0 {
 			return nil, minigo.NoOp
 		}
-		printPosts(mntl, posts[pageStart[pageId-1]:])
+
 		pageId -= 1
+		printPosts(mntl, posts[pageStart[pageId]:])
 
 		return nil, minigo.NoOp
 	})
@@ -148,6 +155,7 @@ func printPosts(mntl *minigo.Minitel, posts []*PPPost) int {
 	}
 
 	if !trunc {
+		// The last post has not been truncated, we'll load the next one
 		pId += 1
 	}
 	return pId

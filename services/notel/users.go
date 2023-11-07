@@ -89,8 +89,8 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 		return false
 	}
 
-	var user *User
-	if err = json.Unmarshal(val, user); err != nil {
+	var user User
+	if err = json.Unmarshal(val, &user); err != nil {
 		errorLog.Printf("login error: nick=%s: %s\n", nick, err.Error())
 		return false
 	}

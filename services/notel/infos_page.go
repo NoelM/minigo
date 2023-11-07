@@ -89,7 +89,7 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 	var trunc bool
 
 	// Clean lines from startLine to 23
-	mntl.CleanNRowsFrom(3, 1, maxLine-startLine+1)
+	mntl.CleanNRowsFrom(startLine, 1, maxLine-startLine+1)
 
 	var dId int
 	var d Depeche
@@ -102,7 +102,7 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 		line += 1
 
 		// Display Title
-		title := minigo.WrapperLargeurNormale(d.Title)
+		title := minigo.WrapperGenerique(d.Title, 38)
 		if line+len(title) > maxLine {
 			trunc = true
 			break
@@ -110,8 +110,7 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 
 		for _, l := range title {
 			mntl.WriteAttributes(minigo.DebutLignage)
-			mntl.WriteStringLeft(line, " ")
-			mntl.WriteStringLeft(line, l)
+			mntl.WriteStringLeft(line, " "+l)
 			line += 1
 		}
 

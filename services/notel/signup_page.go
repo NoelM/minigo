@@ -13,7 +13,6 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ModeG0()
 
 		mntl.WriteStringAtWithAttributes(10, 1, "Inscrivez vous !", minigo.FondNormal, minigo.DoubleHauteur)
-		mntl.WriteStringLeft(11, "Compte supprimé si 30j sans connexion")
 
 		mntl.WriteStringLeft(13, "PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 13, 15, 10, 1, true))

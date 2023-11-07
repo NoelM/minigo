@@ -18,9 +18,11 @@ const (
 func SommaireHandler(m *minigo.Minitel, login string) {
 	infoLog.Println("enters sommaire handler")
 	var id int
-	for id >= sommaireId {
+	for id >= sommaireId || id == minigo.SommaireOp {
 		switch id {
 		case sommaireId:
+			_, id = NewPageSommaire(m).Run()
+		case minigo.SommaireOp:
 			_, id = NewPageSommaire(m).Run()
 		case chatId:
 			id = ServiceMiniChat(m, login)

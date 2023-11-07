@@ -14,16 +14,25 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteAttributes(minigo.DoubleHauteur)
 		mntl.WriteStringLeft(2, "Infos de")
 		mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-		mntl.WriteStringAt(2, 10, "NOTEL")
+		mntl.WriteStringAt(10, 2, "NOTEL")
 		mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-		mntl.WriteStringLeft(3, "Lundi 23 Octobre 2023")
+		mntl.WriteStringLeft(3, "Mardi 7 Novembre 2023")
 
-		mntl.WriteStringLeft(5, "- Arrivée du multivoies le 28/10")
-		mntl.WriteStringLeft(6, "  2 modems US Robotics arrivés")
-		mntl.WriteStringLeft(7, "- Lancement samedi de statistiques")
-		mntl.WriteStringLeft(8, "  de connexion sur le serveur")
-		mntl.WriteStringLeft(9, "- Service d'actualités basées")
-		mntl.WriteStringLeft(10, "  sur des flux RSS.")
+		messages := []string{
+			"* Désormais une page de connexion sur NOTEL !",
+			"* Arrivée des actualités comme nouveau service, basé sur les flux RSS de France Info",
+			"* De nouveaux services à venir : un service de micro-blog, la gestion de son compte et les statistiques du serveur",
+			"* Beaucoup de travail sur 'minigo' avec une page TODO des sujets à traiter",
+		}
+
+		line := 5
+		for _, msg := range messages {
+			for _, l := range minigo.WrapperLargeurNormale(msg) {
+				mntl.WriteStringLeft(line, l)
+				line += 1
+			}
+			line += 1
+		}
 
 		mntl.WriteHelperLeft(24, "Menu NOTEL", "SOMMAIRE")
 		return minigo.NoOp

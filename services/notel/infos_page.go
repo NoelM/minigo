@@ -16,11 +16,9 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 
 		items = LoadFeed(FranceInfoFeedURL)
 
-		printHeader(mntl)
+		printInfoHeader(mntl)
 		pageStartItem = append(pageStartItem, printDepeche(mntl, items[pageStartItem[pageId]:], 4))
-
-		mntl.WriteHelperLeft(24, "Menu", "SOMMAIRE")
-		mntl.WriteHelperRight(24, "Naviguez", "SUITE/RETOUR")
+		printInfoHelpers(mntl)
 
 		return minigo.NoOp
 	})
@@ -59,6 +57,7 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 			// So we update the pageStart
 			pageStartItem[pageId+1] = pageStartItem[pageId] + deltaId
 		}
+		printInfoHelpers(mntl)
 
 		return nil, minigo.NoOp
 	})
@@ -70,12 +69,12 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 
 		pageId -= 1
 		if pageId == 0 {
-			mntl.CleanNRowsFrom(1, 1, 23)
-			printHeader(mntl)
+			printInfoHeader(mntl)
 			printDepeche(mntl, items[pageStartItem[pageId]:], 4)
 		} else {
 			printDepeche(mntl, items[pageStartItem[pageId]:], 1)
 		}
+		printInfoHelpers(mntl)
 
 		return nil, minigo.NoOp
 	})
@@ -149,8 +148,13 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 
 }
 
-func printHeader(mntl *minigo.Minitel) {
+func printInfoHeader(mntl *minigo.Minitel) {
 	mntl.WriteAttributes(minigo.DoubleHauteur)
 	mntl.WriteStringLeft(2, "Dépèches franceinfo:")
 	mntl.WriteAttributes(minigo.GrandeurNormale)
+}
+
+func printInfoHelpers(mntl *minigo.Minitel) {
+	mntl.WriteHelperLeft(24, "Menu", "SOMMAIRE")
+	mntl.WriteHelperRight(24, "Naviguez", "SUITE/RETOUR")
 }

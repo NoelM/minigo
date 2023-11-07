@@ -63,57 +63,55 @@ func main() {
 
 	wg.Add(4)
 
-	go serveWS(&wg, "192.168.1.34:3611")
+	go serveWS(&wg, "192.168.1.34:3615")
 
-	/*
-		USR56KPro := []minigo.ATCommand{
-			{
-				Command: "ATZ",
-				Reply:   "OK",
-			},
-			{
-				Command: "AT&F1+MCA=0",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATL0M0",
-				Reply:   "OK",
-			},
-			{
-				Command: "AT&N2",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATS27=16",
-				Reply:   "OK",
-			},
-		}
-		go serveModem(&wg, USR56KPro, "/dev/ttyUSB0")
+	USR56KPro := []minigo.ATCommand{
+		{
+			Command: "ATZ",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&F1+MCA=0",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATL0M0",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&N2",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATS27=16",
+			Reply:   "OK",
+		},
+	}
+	go serveModem(&wg, USR56KPro, "/dev/ttyUSB0")
 
-		USRSportster := []minigo.ATCommand{
-			{
-				Command: "ATZ",
-				Reply:   "OK",
-			},
-			{
-				Command: "AT&F1",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATL0M0",
-				Reply:   "OK",
-			},
-			{
-				Command: "AT&N2",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATS27=16",
-				Reply:   "OK",
-			},
-		}
-		go serveModem(&wg, USRSportster, "/dev/ttyUSB1")
-	*/
+	USRSportster := []minigo.ATCommand{
+		{
+			Command: "ATZ",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&F1",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATL0M0",
+			Reply:   "OK",
+		},
+		{
+			Command: "AT&N2",
+			Reply:   "OK",
+		},
+		{
+			Command: "ATS27=16",
+			Reply:   "OK",
+		},
+	}
+	go serveModem(&wg, USRSportster, "/dev/ttyUSB1")
 
 	go serverMetrics(&wg)
 

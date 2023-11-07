@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/mmcdole/gofeed"
 	"time"
+
+	"github.com/mmcdole/gofeed"
 )
 
 const France24FeedURL = "https://www.france24.com/fr/rss"
@@ -19,9 +20,14 @@ func LoadFeed(url string) (dep []Depeche) {
 	feed, _ := fp.ParseURL(url)
 
 	for _, i := range feed.Items {
+		category := ""
+		if len(i.Categories) > 0 {
+			category = i.Categories[0]
+		}
+
 		dep = append(dep, Depeche{
 			Title:    i.Title,
-			Category: i.Categories[0],
+			Category: category,
 			Date:     i.PublishedParsed,
 			Content:  i.Description,
 		})

@@ -1,112 +1,55 @@
 package main
 
 import (
-	"bufio"
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 	"time"
+
+	"github.com/cockroachdb/pebble"
 )
 
 type User struct {
-	Nick      string            `json:"nick"`
-	PwdHash   [sha512.Size]byte `json:"pwd_hash"`
-	LastLogin time.Time         `json:"last_login"`
+	Nick        string    `json:"nick"`
+	PwdHash     string    `json:"pwd_hash"`
+	Bio         string    `json:"bio"`
+	Tel         string    `json:"tel"`
+	Location    string    `json:"location"`
+	LastConnect time.Time `json:"last_connect"`
 }
 
 type UsersDatabase struct {
-	filePath string
-	file     *os.File
-	users    map[string]User
-	mutex    sync.RWMutex
+	DB    *pebble.DB
+	mutex sync.RWMutex
 }
 
 func NewUsersDatabase() *UsersDatabase {
 	return &UsersDatabase{}
 }
 
-func (u *UsersDatabase) LoadDatabase(filePath string) error {
-	u.filePath = filePath
-	u.users = make(map[string]User)
-
-	if err := u.readDatabase(); err != nil {
-		errorLog.Printf("unable to load users database: %s\n", err.Error())
-		return err
-	}
-
-	minLastLogin := time.Now().Add(-30 * 24 * time.Hour)
-	for nick, usr := range u.users {
-		if usr.LastLogin.Before(minLastLogin) {
-			warnLog.Printf("removed user=%s, last login=%s\n", nick, usr.LastLogin.Format(time.RFC3339))
-			delete(u.users, nick)
-		}
-	}
-	return nil
-}
-
-func (u *UsersDatabase) readDatabase() error {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
-
-	filedb, err := os.OpenFile(u.filePath, os.O_RDONLY|os.O_CREATE, 0755)
+func (u *UsersDatabase) LoadDatabase(dir string) error {
+	db, err := pebble.Open(dir, &pebble.Options{})
 	if err != nil {
-		errorLog.Printf("unable to get database: %s\n", err.Error())
 		return err
 	}
-	infoLog.Printf("opened database: %s\n", u.filePath)
-
-	scanner := bufio.NewScanner(filedb)
-	scanner.Split(bufio.ScanLines)
-
-	line := 0
-	for scanner.Scan() {
-		var usr User
-		if err := json.Unmarshal([]byte(scanner.Text()), &usr); err != nil {
-			errorLog.Printf("unable to marshal line %d: %s\n", line, err.Error())
-			continue
-		}
-
-		u.users[usr.Nick] = usr
-	}
-	filedb.Close()
-
-	infoLog.Printf("loaded %d users from database\n", len(u.users))
+	u.DB = db
 
 	return nil
-}
-
-func (u *UsersDatabase) updateDatabase() error {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
-
-	filedb, err := os.OpenFile(u.filePath, os.O_WRONLY|os.O_CREATE, 0755)
-	if err != nil {
-		errorLog.Printf("unable to get database: %s\n", err.Error())
-		return err
-	}
-	infoLog.Printf("opened database: %s\n", u.filePath)
-
-	for nick, usr := range u.users {
-		if b, err := json.Marshal(usr); err != nil {
-			errorLog.Printf("unable to marshal user=%s: %s\n", nick, err.Error())
-		} else {
-			b = append(b, '\n')
-			if _, err := filedb.Write(b); err != nil {
-				errorLog.Printf("unable to write user=%s: %s\n", nick, err.Error())
-			}
-		}
-	}
-	return filedb.Close()
 }
 
 func (u *UsersDatabase) UserExists(nick string) bool {
 	u.mutex.RLock()
 	defer u.mutex.RUnlock()
 
-	_, ok := u.users[nick]
-	return ok
+	_, closer, err := u.DB.Get([]byte(nick))
+	defer closer.Close()
+	if err != nil || err == pebble.ErrNotFound {
+		return false
+	}
+
+	return true
 }
 
 func (u *UsersDatabase) AddUser(nick, pwd string) error {
@@ -114,18 +57,25 @@ func (u *UsersDatabase) AddUser(nick, pwd string) error {
 		return fmt.Errorf("user already exists")
 	}
 
+	hash := sha512.Sum512([]byte(pwd))
+	hashB64 := base64.StdEncoding.EncodeToString(hash[:])
+
+	usr := &User{
+		Nick:        nick,
+		PwdHash:     hashB64,
+		LastConnect: time.Now(),
+	}
+
+	val, err := json.Marshal(usr)
+	if err != nil {
+		return fmt.Errorf("unable to marshall user nick=%s: %s", nick, err.Error())
+	}
+
 	u.mutex.Lock()
-	u.users[nick] = User{
-		Nick:      nick,
-		PwdHash:   sha512.Sum512([]byte(pwd)),
-		LastLogin: time.Now(),
+	if err = u.DB.Set([]byte(nick), val, pebble.Sync); err != nil {
+		return fmt.Errorf("unable to add user nick=%s: %s", nick, err.Error())
 	}
 	u.mutex.Unlock()
-
-	if err := u.updateDatabase(); err != nil {
-		errorLog.Printf("unable to update the database on disk: %s\n", err.Error())
-		return err
-	}
 
 	return nil
 }
@@ -134,18 +84,25 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 	u.mutex.RLock()
 	defer u.mutex.RUnlock()
 
-	usr, ok := u.users[nick]
-	if !ok {
+	val, closer, err := u.DB.Get([]byte(nick))
+	if err != nil {
+		errorLog.Printf("login error: nick=%s: %s\n", nick, err.Error())
 		return false
 	}
 
-	if usr.PwdHash != sha512.Sum512([]byte(pwd)) {
+	var user *User
+	if err = json.Unmarshal(val, user); err != nil {
+		errorLog.Printf("login error: nick=%s: %s\n", nick, err.Error())
 		return false
 	}
+	closer.Close()
 
-	return true
+	hash := sha512.Sum512([]byte(pwd))
+	hashB64 := base64.StdEncoding.EncodeToString(hash[:])
+
+	return user.PwdHash == hashB64
 }
 
 func (u *UsersDatabase) Quit() {
-	u.file.Close()
+	u.DB.Close()
 }

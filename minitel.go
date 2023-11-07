@@ -230,6 +230,12 @@ func (m *Minitel) CleanScreenFrom(row, col int) error {
 	return m.Send(buf)
 }
 
+func (m *Minitel) CleanNRowsFrom(row, col, n int) error {
+	buf := GetMoveCursorAt(row, col)
+	buf = append(buf, GetCleanNRowsFromCursor(n)...)
+	return m.Send(buf)
+}
+
 //
 // WRITES
 //

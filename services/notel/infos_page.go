@@ -2,22 +2,25 @@ package main
 
 import (
 	"github.com/NoelM/minigo"
-	"strings"
-	"unicode/utf8"
 )
 
-func NewPageInfo(mntl *minigo.Minitel, pseudo string) *minigo.Page {
+func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 	infoPage := minigo.NewPage("notel:info", mntl, nil)
 
-	var depeches []Depeche
-	var pageStart = []int{0}
+	var items []Depeche
+	var pageStartItem = []int{0}
 	var pageId int
 
 	infoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
-		depeches = LoadFeed(France24FeedURL)
-		pageStart = append(pageStart, printDepeche(mntl, depeches[pageStart[pageId]:]))
+		items = LoadFeed(France24FeedURL)
+
+		mntl.WriteAttributes(minigo.DoubleGrandeur)
+		mntl.WriteStringLeft(2, "Dernières infos de FRANCE24")
+		mntl.WriteAttributes(minigo.GrandeurNormale)
+
+		pageStartItem = append(pageStartItem, printDepeche(mntl, items[pageStartItem[pageId]:], 4))
 
 		mntl.WriteHelperLeft(24, "Menu NOTEL", "SOMMAIRE")
 		mntl.WriteHelperLeft(24, "Naviguez", "SUITE/RETOUR")
@@ -39,22 +42,21 @@ func NewPageInfo(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 	})
 
 	infoPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-
 		// We verify that the postId on the next page exists
-		if pageStart[pageId+1] >= len(depeches)-1 {
+		if pageStartItem[pageId+1] >= len(items)-1 {
 			return nil, minigo.NoOp
 		}
 
 		pageId += 1
-		deltaId := printDepeche(mntl, depeches[pageStart[pageId]:])
+		deltaId := printDepeche(mntl, items[pageStartItem[pageId]:], 1)
 
-		if pageId+1 == len(pageStart) {
+		if pageId+1 == len(pageStartItem) {
 			// If the pageId+1 has never been loaded, increase the pageStart array
-			pageStart = append(pageStart, pageStart[pageId]+deltaId)
+			pageStartItem = append(pageStartItem, pageStartItem[pageId]+deltaId)
 		} else {
 			// The page already been loaded, but the data may have changed.
 			// So we update the pageStart
-			pageStart[pageId+1] = pageStart[pageId] + deltaId
+			pageStartItem[pageId+1] = pageStartItem[pageId] + deltaId
 		}
 
 		return nil, minigo.NoOp
@@ -66,7 +68,11 @@ func NewPageInfo(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 		}
 
 		pageId -= 1
-		printDepeche(mntl, depeches[pageStart[pageId]:])
+		if pageId == 0 {
+			printDepeche(mntl, items[pageStartItem[pageId]:], 4)
+		} else {
+			printDepeche(mntl, items[pageStartItem[pageId]:], 1)
+		}
 
 		return nil, minigo.NoOp
 	})
@@ -74,58 +80,66 @@ func NewPageInfo(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 	return infoPage
 }
 
-func printDepeche(mntl *minigo.Minitel, posts []Depeche) int {
-	line := 1
+func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
+	const maxLine = 23
+
+	line := startLine
 	var trunc bool
 
-	var pId int
-	var p Depeche
-	for pId, p = range posts {
-		mntl.WriteAttributes(minigo.InversionFond)
-		mntl.WriteStringLeft(line, p.Pseudo)
-		mntl.WriteStringRight(line, p.Date.Format("02/01/06 15:04"))
-		mntl.WriteAttributes(minigo.FondNormal)
+	// Clean lines from startLine to 23
+	mntl.CleanNRowsFrom(3, 1, maxLine-startLine+1)
 
+	var dId int
+	var d Depeche
+	for dId, d = range depeches {
+		// Display Date
+		if line+1 > maxLine {
+			break
+		}
+		mntl.WriteStringRight(line, d.Date.Format("02/01/2006 15:04"))
 		line += 1
-		if line == 22 {
+
+		// Display Title
+		title := minigo.WrapperLargeurNormale(d.Title)
+		if line+len(title) > maxLine {
 			trunc = true
 			break
 		}
 
-		length := 0
-		words := []string{}
-		for _, s := range strings.Split(p.Content, " ") {
-			if length+utf8.RuneCountInString(s)+1 >= 40 {
-				mntl.WriteStringLeft(line, strings.Join(words, " "))
+		mntl.WriteAttributes(minigo.DebutLignage)
+		for _, l := range title {
+			mntl.WriteStringLeft(line, l)
+			line += 1
+		}
+		mntl.WriteAttributes(minigo.FinLignage)
 
-				length = 0
-				words = []string{}
+		// Display Content
+		content := minigo.WrapperLargeurNormale(d.Content)
 
-				line += 1
-				if line == 22 {
-					trunc = true
-					break
-				}
+		for _, l := range content {
+			mntl.WriteStringLeft(line, l)
+			line += 1
+			if line > maxLine {
+				trunc = true
+				break
 			}
-
-			length += utf8.RuneCountInString(s) + 1 // the size of the space
-			words = append(words, s)
 		}
 
-		// Yes, a message is at least 2 lines
-		// - Status Line
-		// - Message Line
+		// Yes, a message is at least 3 lines
+		// - Date Line
+		// - Title Line
+		// - Content Line
 		//
-		// So at line=20, it would automatically break
-		if line >= 20 {
+		// So at maxLine-3, it would automatically break
+		if line >= maxLine-3 {
 			break
 		}
 	}
 
 	if !trunc {
 		// The last post has not been truncated, we'll load the next one
-		pId += 1
+		dId += 1
 	}
-	return pId
+	return dId
 
 }

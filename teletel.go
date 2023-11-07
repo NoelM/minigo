@@ -139,6 +139,13 @@ func GetCleanNItemsFromCursor(n int) (buf []byte) {
 	return
 }
 
+func GetCleanNRowsFromCursor(n int) (buf []byte) {
+	buf = GetWord(Csi)
+	buf = append(buf, GetPCode(n)...)
+	buf = append(buf, 0x4D)
+	return
+}
+
 func EncodeRune(r rune) []byte {
 	if specialRune := EncodeSpecial(r); specialRune != nil {
 		return specialRune

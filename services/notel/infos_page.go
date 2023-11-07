@@ -14,12 +14,12 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 	infoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
-		items = LoadFeed(France24FeedURL)
+		items = LoadFeed(FranceInfoFeedURL)
 
 		printHeader(mntl)
 		pageStartItem = append(pageStartItem, printDepeche(mntl, items[pageStartItem[pageId]:], 4))
 
-		mntl.WriteHelperLeft(24, "Menu NOTEL", "SOMMAIRE")
+		mntl.WriteHelperLeft(24, "Menu", "SOMMAIRE")
 		mntl.WriteHelperRight(24, "Naviguez", "SUITE/RETOUR")
 
 		return minigo.NoOp
@@ -70,6 +70,7 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 
 		pageId -= 1
 		if pageId == 0 {
+			mntl.CleanNRowsFrom(1, 1, 23)
 			printHeader(mntl)
 			printDepeche(mntl, items[pageStartItem[pageId]:], 4)
 		} else {
@@ -150,6 +151,6 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 
 func printHeader(mntl *minigo.Minitel) {
 	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteStringLeft(2, "Infos de FRANCE24")
+	mntl.WriteStringLeft(2, "Dépèches franceinfo:")
 	mntl.WriteAttributes(minigo.GrandeurNormale)
 }

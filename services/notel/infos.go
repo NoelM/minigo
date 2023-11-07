@@ -7,6 +7,7 @@ import (
 )
 
 const France24FeedURL = "https://www.france24.com/fr/rss"
+const FranceInfoFeedURL = "https://www.francetvinfo.fr/titres.rss"
 
 type Depeche struct {
 	Title    string

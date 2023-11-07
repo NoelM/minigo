@@ -27,6 +27,7 @@
 
 ## Actualités
 
+* [ ] Trouver une solution à l'espace nécessaire pour le souslignage
 * [x] Format basique avec la pagination
 
 ## PiouPiou

@@ -41,10 +41,7 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 		if pageStartItem[pageId+1] >= len(items)-1 {
 			return nil, minigo.NoOp
 		}
-
-		if pageId == 0 {
-			mntl.CleanNRowsFrom(1, 1, 23)
-		}
+		mntl.CleanScreen()
 
 		pageId += 1
 		deltaId := printDepeche(mntl, items[pageStartItem[pageId]:], 1)
@@ -66,6 +63,7 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 		if pageId == 0 {
 			return nil, minigo.NoOp
 		}
+		mntl.CleanScreen()
 
 		pageId -= 1
 		if pageId == 0 {
@@ -89,7 +87,8 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 	var trunc bool
 
 	// Clean lines from startLine to 23
-	mntl.CleanNRowsFrom(startLine, 1, maxLine-startLine+1)
+	// TODO: debug this buggy command
+	//mntl.CleanNRowsFrom(startLine, 1, maxLine-startLine+1)
 
 	var dId int
 	var d Depeche

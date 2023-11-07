@@ -161,6 +161,8 @@ func EncodeRune(r rune) []byte {
 
 func EncodeSpecial(r rune) []byte {
 	switch r {
+	case '’':
+		return []byte{'\''}
 	case 'à':
 		return []byte{Ss2, AccentGrave, 'a'}
 	case 'À':

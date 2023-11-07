@@ -96,6 +96,14 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 	}
 	closer.Close()
 
+	lastAllowedConnection := time.Now().Add(-30 * 24 * time.Hour)
+	if user.LastConnect.Before(lastAllowedConnection) {
+		if err = u.DB.Delete([]byte(nick), pebble.Sync); err != nil {
+			errorLog.Printf("login error: nick=%s: %s\n", nick, err.Error())
+		}
+		return false
+	}
+
 	hash := sha512.Sum512([]byte(pwd))
 	hashB64 := base64.StdEncoding.EncodeToString(hash[:])
 

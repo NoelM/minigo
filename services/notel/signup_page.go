@@ -13,13 +13,15 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ModeG0()
 
 		mntl.WriteStringAtWithAttributes(10, 1, "Inscrivez vous !", minigo.FondNormal, minigo.DoubleHauteur)
+		mntl.WriteStringLeft(11, "Compte supprimé si")
+		mntl.WriteStringLeft(12, "30j sans connexion")
 
-		mntl.WriteStringLeft(13, "PSEUDO:")
-		inputs.AppendInput("login", minigo.NewInput(mntl, 13, 15, 10, 1, true))
-		mntl.WriteStringLeft(14, "MOT DE PASSE:")
-		inputs.AppendInput("pwd", minigo.NewInput(mntl, 14, 15, 10, 1, true))
-		mntl.WriteStringLeft(15, "MOT DE PASSE:")
-		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 15, 15, 10, 1, true))
+		mntl.WriteStringLeft(15, "PSEUDO:")
+		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
+		mntl.WriteStringLeft(16, "MOT DE PASSE:")
+		inputs.AppendInput("pwd", minigo.NewInput(mntl, 16, 15, 10, 1, true))
+		mntl.WriteStringLeft(16, "MOT DE PASSE:")
+		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 16, 15, 10, 1, true))
 
 		mntl.WriteHelperLeft(17, "Validez avec", "ENVOI")
 

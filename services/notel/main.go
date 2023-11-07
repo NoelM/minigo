@@ -197,10 +197,14 @@ func NotelHandler(mntl *minigo.Minitel) {
 	infoLog.Printf("enters service handler, connected=%d\n", active)
 	startConn := time.Now()
 
+SIGNIN:
 	creds, op := NewPageSignIn(mntl).Run()
 
 	if op == minigo.GuideOp {
 		creds, op = NewSignUpPage(mntl).Run()
+		if op == minigo.SommaireOp {
+			goto SIGNIN
+		}
 	}
 
 	if op == minigo.EnvoiOp {

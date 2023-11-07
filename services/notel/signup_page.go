@@ -29,6 +29,10 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		return minigo.NoOp
 	})
 
+	signUpPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, minigo.SommaireOp
+	})
+
 	signUpPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
 		inputs.AppendKeyActive(key)
 	})

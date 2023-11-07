@@ -37,11 +37,11 @@ func IsPosInBounds(x, y int, resolution uint) (bool, error) {
 	}
 }
 
-func GetMoveCursorAt(x, y int) (buf []byte) {
+func GetMoveCursorAt(row, col int) (buf []byte) {
 	buf = GetWord(Csi)
-	buf = append(buf, GetPCode(y)...)
+	buf = append(buf, GetPCode(row)...)
 	buf = append(buf, 0x3B)
-	buf = append(buf, GetPCode(x)...)
+	buf = append(buf, GetPCode(col)...)
 	buf = append(buf, 0x48)
 	return
 }
@@ -132,6 +132,20 @@ func GetCleanLineToCursor() (buf []byte) {
 	return
 }
 
+func GetCleanNItemsFromCursor(n int) (buf []byte) {
+	buf = GetWord(Csi)
+	buf = append(buf, GetPCode(n)...)
+	buf = append(buf, 0x50)
+	return
+}
+
+func GetCleanNRowsFromCursor(n int) (buf []byte) {
+	buf = GetWord(Csi)
+	buf = append(buf, GetPCode(n)...)
+	buf = append(buf, 0x4D)
+	return
+}
+
 func EncodeRune(r rune) []byte {
 	if specialRune := EncodeSpecial(r); specialRune != nil {
 		return specialRune
@@ -147,6 +161,8 @@ func EncodeRune(r rune) []byte {
 
 func EncodeSpecial(r rune) []byte {
 	switch r {
+	case '’':
+		return []byte{'\''}
 	case 'à':
 		return []byte{Ss2, AccentGrave, 'a'}
 	case 'À':
@@ -294,6 +310,17 @@ func DecodeAccent(keyBuffer []byte) rune {
 	}
 
 	return 0
+}
+
+func GetRepeatRune(r rune, n int) (buf []byte) {
+	if n > 40 {
+		return
+	}
+
+	buf = EncodeRune(r)
+	buf = append(buf, Rep)
+	buf = append(buf, 0x40+byte(n))
+	return
 }
 
 func EncodeMessage(msg string) (buf []byte) {

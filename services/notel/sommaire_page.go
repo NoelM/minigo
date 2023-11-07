@@ -9,10 +9,35 @@ import (
 
 const (
 	sommaireId = iota
-	ircId
+	chatId
 	meteoId
+	infoId
 	serveurId
 )
+
+func SommaireHandler(m *minigo.Minitel, login string) {
+	infoLog.Println("enters sommaire handler")
+	var id int
+	for id >= sommaireId || id == minigo.SommaireOp {
+		switch id {
+		case sommaireId:
+			_, id = NewPageSommaire(m).Run()
+		case minigo.SommaireOp:
+			_, id = NewPageSommaire(m).Run()
+		case chatId:
+			id = ServiceMiniChat(m, login)
+		case meteoId:
+			id = ServiceMeteo(m)
+		case infoId:
+			_, id = NewPageInfo(m).Run()
+		case serveurId:
+			_, id = NewServeurPage(m).Run()
+		default:
+			id = sommaireId
+		}
+	}
+	infoLog.Println("quits sommaire handler")
+}
 
 func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 	sommairePage := minigo.NewPage("sommaire", mntl, nil)
@@ -30,16 +55,15 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.SendVDT("static/notel.vdt")
 	mntl.WriteAttributes(minigo.FondNormal, minigo.GrandeurNormale)
 
-	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO", "SERVEUR"})
+	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO", "INFOS", "SERVEUR"})
 	list.Display()
 
-	mntl.WriteStringCenter(18, "Le serveur est bi-voies !")
-	mntl.WriteStringCenter(19, "RDV Dim. 5 à 20h sur le chat")
+	mntl.WriteStringCenter(18, "Le serveur est multivoies !")
+	mntl.WriteStringCenter(19, "RDV Dim. 12 Nov. à 20h sur le chat")
 
 	mntl.WriteStringLeft(24, fmt.Sprintf("> Connectés: %d", NbConnectedUsers.Load()))
-
-	form.AppendInput("choice", minigo.NewInput(mntl, 32, 24, 2, 1, "", true))
-	form.ActivateFirst()
+	form.AppendInput("choice", minigo.NewInput(mntl, 24, 32, 2, 1, true))
+	form.InitAll()
 
 	return minigo.NoOp
 }

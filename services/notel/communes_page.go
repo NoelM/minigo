@@ -48,7 +48,7 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 
 		mntl.WriteHelperLeft(24, "CHOIX CODE POSTAL", "SOMMAIRE")
 
-		inputs.AppendInput("commune_id", minigo.NewInput(mntl, 8, len(communes)+5, 2, 1, "", true))
+		inputs.AppendInput("commune_id", minigo.NewInput(mntl, len(communes)+5, 8, 2, 1, true))
 		inputs.ActivateFirst()
 
 		return minigo.NoOp
@@ -78,7 +78,7 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 			return nil, sommaireId
 		}
 
-		return map[string]string{"commune": string(data)}, minigo.QuitPageOp
+		return map[string]string{"commune": string(data)}, minigo.QuitOp
 	})
 
 	communesPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key rune) {

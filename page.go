@@ -3,10 +3,17 @@ package minigo
 import "unicode/utf8"
 
 const (
-	NoOp = iota - 10
+	NoOp = iota - 50
 	DisconnectOp
-	QuitPageOp
+	QuitOp
+	EnvoiOp
+	SommaireOp
+	AnnulationOp
+	RetourOp
 	SuiteOp
+	RepetitionOp
+	GuideOp
+	CorrectionOp
 )
 
 type InitFunc func(mntl *Minitel, inputs *Form, initData map[string]string) int

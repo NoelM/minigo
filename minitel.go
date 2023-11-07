@@ -13,10 +13,15 @@ var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lsh
 
 type AckType uint
 
+// TODO: Tout passer en string/rune plutôt que byte
+// TODO: Faire une pile d'Ack, il peut y en avoir plusieurs
+
 const (
 	NoAck = iota
 	AckRouleau
 	AckPage
+	AckMinuscule
+	AckMajuscule
 )
 
 type Minitel struct {
@@ -85,6 +90,10 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 		ok = BitReadAt(m.fonctionnementByte, 1)
 	case AckPage:
 		ok = !BitReadAt(m.fonctionnementByte, 1)
+	case AckMinuscule:
+		ok = BitReadAt(m.fonctionnementByte, 3)
+	case AckMajuscule:
+		ok = !BitReadAt(m.fonctionnementByte, 3)
 	default:
 		fmt.Printf("not handled AckType: %d\n", m.ackType)
 		return
@@ -122,6 +131,7 @@ func (m *Minitel) Listen() {
 			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
+				m.RecvKey <- ConnexionFin
 				break
 			}
 
@@ -168,7 +178,7 @@ func (m *Minitel) Listen() {
 	}
 
 	if !connexionFinRcvd {
-		warnLog.Println("lost connection: sent ConnexionFin to the application loop")
+		infoLog.Println("sent ConnexionFin to the application loop")
 		m.RecvKey <- ConnexionFin
 	}
 	infoLog.Println("stop minitel listen: closed connection")
@@ -194,7 +204,7 @@ func (m *Minitel) Send(buf []byte) error {
 func (m *Minitel) Reset() error {
 	buf := GetCleanScreen()
 	buf = append(buf, EncodeAttributes(GrandeurNormale, FondNormal, CursorOff)...)
-	buf = append(buf, GetMoveCursorAt(1, 2)...)
+	buf = append(buf, GetMoveCursorAt(1, 1)...)
 	return m.Send(buf)
 }
 
@@ -214,9 +224,15 @@ func (m *Minitel) CleanScreenFromCursor() error {
 	return m.Send(GetCleanLineFromCursor())
 }
 
-func (m *Minitel) CleanScreenFromXY(x, y int) error {
-	buf := GetMoveCursorAt(x, y)
+func (m *Minitel) CleanScreenFrom(row, col int) error {
+	buf := GetMoveCursorAt(row, col)
 	buf = append(buf, GetCleanScreenFromCursor()...)
+	return m.Send(buf)
+}
+
+func (m *Minitel) CleanNRowsFrom(row, col, n int) error {
+	buf := GetMoveCursorAt(row, col)
+	buf = append(buf, GetCleanNRowsFromCursor(n)...)
 	return m.Send(buf)
 }
 
@@ -224,40 +240,40 @@ func (m *Minitel) CleanScreenFromXY(x, y int) error {
 // WRITES
 //
 
-func (m *Minitel) WriteBytesAt(colId, lineId int, inBuf []byte) error {
-	buf := GetMoveCursorAt(colId, lineId)
+func (m *Minitel) WriteBytesAt(lineId, colId int, inBuf []byte) error {
+	buf := GetMoveCursorAt(lineId, colId)
 	buf = append(buf, inBuf...)
 	return m.Send(buf)
 }
 
 func (m *Minitel) WriteStringLeft(lineId int, s string) error {
-	return m.WriteStringAt(1, lineId, s)
+	return m.WriteStringAt(lineId, 1, s)
 }
 
 func (m *Minitel) WriteStringRight(lineId int, s string) error {
 	msgLen := len(s) * m.charWidth()
 	colId := maxInt(ColonnesSimple-msgLen, 0)
 
-	return m.WriteStringAt(colId, lineId, s)
+	return m.WriteStringAt(lineId, colId, s)
 }
 
 func (m *Minitel) WriteStringCenter(lineId int, s string) error {
 	msgLen := len(s) * m.charWidth()
 	colId := maxInt((ColonnesSimple-msgLen)/2+1, 0)
 
-	return m.WriteStringAt(colId, lineId, s)
+	return m.WriteStringAt(lineId, colId, s)
 }
 
-func (m *Minitel) WriteStringAt(colId, lineId int, s string) error {
-	buf := GetMoveCursorAt(colId, lineId)
+func (m *Minitel) WriteStringAt(lineId, colId int, s string) error {
+	buf := GetMoveCursorAt(lineId, colId)
 	buf = append(buf, EncodeMessage(s)...)
 	return m.Send(buf)
 }
 
-func (m *Minitel) WriteStringAtWithAttributes(colId, lineId int, s string, attributes ...byte) error {
+func (m *Minitel) WriteStringAtWithAttributes(lineId, colId int, s string, attributes ...byte) error {
 	m.WriteAttributes(attributes...)
 
-	buf := GetMoveCursorAt(colId, lineId)
+	buf := GetMoveCursorAt(lineId, colId)
 	buf = append(buf, EncodeMessage(s)...)
 	m.Send(buf)
 
@@ -270,12 +286,12 @@ func (m *Minitel) WriteAttributes(attributes ...byte) error {
 	return m.Send(EncodeAttributes(attributes...))
 }
 
-func (m *Minitel) WriteHelperAt(colId, lineId int, helpText, button string) error {
-	m.WriteStringAt(colId, lineId, helpText)
+func (m *Minitel) WriteHelperAt(lineId, colId int, helpText, button string) error {
+	m.WriteStringAt(lineId, colId, helpText)
 
 	helpMsgLen := (len(helpText) + 1) * m.charWidth()
 	buttonCol := minInt(colId+helpMsgLen, ColonnesSimple)
-	return m.WriteStringAtWithAttributes(buttonCol, lineId, button, InversionFond)
+	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
 }
 
 func (m *Minitel) WriteHelperLeft(lineId int, helpText, button string) error {
@@ -283,25 +299,25 @@ func (m *Minitel) WriteHelperLeft(lineId int, helpText, button string) error {
 
 	helpMsgLen := (len(helpText) + 2) * m.charWidth()
 	buttonCol := minInt(helpMsgLen, ColonnesSimple)
-	return m.WriteStringAtWithAttributes(buttonCol, lineId, button, InversionFond)
+	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
 }
 
 func (m *Minitel) WriteHelperRight(lineId int, helpText, button string) error {
 	startCol := ColonnesSimple - m.charWidth()*(len(helpText)+len(button)+1) // free space
 	startCol = maxInt(startCol, 0)
 
-	m.WriteStringAt(startCol, lineId, helpText)
+	m.WriteStringAt(lineId, startCol, helpText)
 
 	buttonCol := minInt(startCol+(1+len(helpText))*m.charWidth(), ColonnesSimple)
-	return m.WriteStringAtWithAttributes(buttonCol, lineId, button, InversionFond)
+	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
 }
 
 //
 // MOVES
 //
 
-func (m *Minitel) MoveCursorAt(colId, lineId int) error {
-	return m.Send(GetMoveCursorAt(colId, lineId))
+func (m *Minitel) MoveCursorAt(lineId, colId int) error {
+	return m.Send(GetMoveCursorAt(lineId, colId))
 }
 
 func (m *Minitel) Return(n int) error {
@@ -332,8 +348,8 @@ func (m *Minitel) CursorOn() error {
 	return m.Send(EncodeAttribute(CursorOn))
 }
 
-func (m *Minitel) CursorOnXY(x, y int) error {
-	buf := GetMoveCursorAt(x, y)
+func (m *Minitel) CursorOnXY(col, row int) error {
+	buf := GetMoveCursorAt(row, col)
 	buf = append(buf, EncodeAttribute(CursorOn)...)
 	return m.Send(buf)
 }
@@ -363,6 +379,26 @@ func (m *Minitel) RouleauOff() error {
 }
 
 //
+// MINUSCULES
+//
+
+func (m *Minitel) MinusculeOn() error {
+	m.ackType = AckMinuscule
+
+	buf, _ := GetProCode(Pro2)
+	buf = append(buf, Start, Minuscules)
+	return m.Send(buf)
+}
+
+func (m *Minitel) MinusculeOff() error {
+	m.ackType = AckMajuscule
+
+	buf, _ := GetProCode(Pro2)
+	buf = append(buf, Stop, Minuscules)
+	return m.Send(buf)
+}
+
+//
 // VDT FORMAT
 //
 
@@ -378,4 +414,20 @@ func (m *Minitel) SendVDT(filename string) error {
 	}
 
 	return m.Send(vdt)
+}
+
+//
+// G0, G1, G2
+//
+
+func (m *Minitel) ModeG0() error {
+	return m.Send([]byte{Si})
+}
+
+func (m *Minitel) ModeG1() error {
+	return m.Send([]byte{So})
+}
+
+func (m *Minitel) ModeG2() error {
+	return m.Send([]byte{Ss2})
 }

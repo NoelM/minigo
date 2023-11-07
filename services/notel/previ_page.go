@@ -181,21 +181,21 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 		}
 	}
 
-	mntl.WriteStringAtWithAttributes(25, 5, fmt.Sprintf("Températures"), minigo.InversionFond)
-	mntl.WriteStringAt(25, 6, fmt.Sprintf("Min: %2.f°C", minTemp))
-	mntl.WriteStringAt(25, 7, fmt.Sprintf("Max: %2.f°C", maxTemp))
+	mntl.WriteStringAtWithAttributes(5, 25, "Températures", minigo.InversionFond)
+	mntl.WriteStringAt(6, 25, fmt.Sprintf("Min: %2.f°C", minTemp))
+	mntl.WriteStringAt(7, 25, fmt.Sprintf("Max: %2.f°C", maxTemp))
 
-	mntl.WriteStringAtWithAttributes(25, 9, fmt.Sprintf("Vent"), minigo.InversionFond)
-	mntl.WriteStringAt(25, 10, fmt.Sprintf("Min: %2.f km/h", 3.6*minWind))
-	mntl.WriteStringAt(25, 11, fmt.Sprintf("Max: %2.f km/h", 3.6*maxWind))
+	mntl.WriteStringAtWithAttributes(9, 25, fmt.Sprintf("Vent"), minigo.InversionFond)
+	mntl.WriteStringAt(10, 25, fmt.Sprintf("Min: %2.f km/h", 3.6*minWind))
+	mntl.WriteStringAt(11, 25, fmt.Sprintf("Max: %2.f km/h", 3.6*maxWind))
 
-	mntl.WriteStringAtWithAttributes(25, 13, fmt.Sprintf("Pression"), minigo.InversionFond)
-	mntl.WriteStringAt(25, 14, fmt.Sprintf("Min: %d hPa", minPress))
-	mntl.WriteStringAt(25, 15, fmt.Sprintf("Max: %d hPa", maxPress))
+	mntl.WriteStringAtWithAttributes(13, 25, "Pression", minigo.InversionFond)
+	mntl.WriteStringAt(14, 25, fmt.Sprintf("Min: %d hPa", minPress))
+	mntl.WriteStringAt(15, 25, fmt.Sprintf("Max: %d hPa", maxPress))
 
-	mntl.WriteStringAtWithAttributes(25, 17, fmt.Sprintf("Ephéméride"), minigo.InversionFond)
-	mntl.WriteStringAt(25, 18, fmt.Sprintf("Lev.: %s",
+	mntl.WriteStringAtWithAttributes(17, 25, "Ephéméride", minigo.InversionFond)
+	mntl.WriteStringAt(18, 25, fmt.Sprintf("Lev.: %s",
 		time.Unix(forecast.City.Sunrise, 0).In(location).Format("15:04")))
-	mntl.WriteStringAt(25, 19, fmt.Sprintf("Cou.: %s",
+	mntl.WriteStringAt(19, 25, fmt.Sprintf("Cou.: %s",
 		time.Unix(forecast.City.Sunset, 0).In(location).Format("15:04")))
 }

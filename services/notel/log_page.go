@@ -23,11 +23,11 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 	mntl.WriteStringAt(10, 10, "MINI-CHAT")
 
 	mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-	mntl.WriteHelperAt(10, 13, "PSEUDO : ......... +", "ENVOI")
+	mntl.WriteHelperAt(13, 10, "PSEUDO : ......... +", "ENVOI")
 
 	//mntl.WriteStringCenter(16, "En simultané sur libera.chat#minitel")
 
-	form.AppendInput("nick", minigo.NewInput(mntl, 19, 13, 10, 1, "", true))
+	form.AppendInput("nick", minigo.NewInput(mntl, 19, 13, 10, 1, true))
 	form.ActivateFirst()
 
 	return minigo.NoOp
@@ -36,12 +36,12 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 func envoiLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	if len(form.ValueActive()) == 0 {
 		warnLog.Println("empty nick input")
-		return nil, minigo.QuitPageOp
+		return nil, minigo.QuitOp
 	}
 	mntl.Reset()
 
 	infoLog.Printf("logged as: %s\n", form.ValueActive())
-	return form.ToMap(), minigo.QuitPageOp
+	return form.ToMap(), minigo.QuitOp
 }
 
 func sommaireLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {

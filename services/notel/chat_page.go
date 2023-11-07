@@ -7,23 +7,12 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func ServiceMiniChat(m *minigo.Minitel) int {
-	out, serviceId := NewLogPage(m).Run()
-	nick, ok := out["nick"]
-
-	if len(nick) == 0 || !ok {
-		return sommaireId
-	} else if serviceId != minigo.NoOp && serviceId != minigo.QuitPageOp {
+func ServiceMiniChat(m *minigo.Minitel, login string) int {
+	if _, serviceId := NewChatPage(m, login).Run(); serviceId != minigo.NoOp {
 		return serviceId
 	}
 
-	_, serviceId = NewChatPage(m, nick).Run()
-
-	if serviceId != minigo.NoOp {
-		return serviceId
-	}
-
-	infoLog.Printf("minichat session closed for nick=%s\n", out)
+	infoLog.Printf("minichat session closed for nick=%s\n", login)
 
 	return sommaireId
 }
@@ -36,13 +25,13 @@ func NewChatPage(m *minigo.Minitel, nickname string) *minigo.Page {
 		infoLog.Printf("opening chat page for nick=%s\n", nickname)
 
 		MessageDb.Subscribe(nickname)
-		inputs.AppendInput("messages", minigo.NewInput(m, 1, InputLine, 40, 5, ">", true))
+		inputs.AppendInput("messages", minigo.NewInput(m, InputLine, 1, 40, 2, false))
 
 		m.RouleauOn()
+		m.MinusculeOn()
 		updateScreen(m, nickname, &lastMessageDate)
 
-		inputs.RepetitionActive()
-
+		inputs.InitAll()
 		return minigo.NoOp
 	})
 
@@ -62,20 +51,23 @@ func NewChatPage(m *minigo.Minitel, nickname string) *minigo.Page {
 
 		infoLog.Printf("send new message to IRC from nick=%s len=%d\n", nickname, len(msg.Text))
 
-		inputs.ClearActive()
+		inputs.HideAll()
 		updateScreen(m, nickname, &lastMessageDate)
 
-		inputs.RepetitionActive()
+		inputs.ResetAll()
 
 		return nil, minigo.NoOp
 	})
 
 	chatPage.SetRepetitionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		infoLog.Printf("user nick=%s asked for a refresh\n", nickname)
+		if !MessageDb.HasNewMessage(nickname) {
+			return nil, minigo.NoOp
+		}
 
-		inputs.ClearScreenAll()
+		inputs.HideAll()
 		updateScreen(m, nickname, &lastMessageDate)
-		inputs.RepetitionAll()
+		inputs.UnHideAll()
 
 		return nil, minigo.NoOp
 	})
@@ -88,6 +80,7 @@ func NewChatPage(m *minigo.Minitel, nickname string) *minigo.Page {
 	chatPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		MessageDb.Resign(nickname)
 		m.RouleauOff()
+		m.MinusculeOff()
 		return nil, sommaireId
 	})
 
@@ -102,6 +95,10 @@ const InputLine = 22
 
 func updateScreen(m *minigo.Minitel, nick string, lastMessageDate *time.Time) {
 	m.CursorOff()
+
+	// Clean helpers
+	m.MoveCursorAt(24, 1)
+	m.CleanLine()
 
 	// Get all the messages from the DB
 	lastMessages := MessageDb.GetMessages(nick)
@@ -147,7 +144,7 @@ func printDate(m *minigo.Minitel, lastDate time.Time, date time.Time) {
 		return
 	}
 
-	buf := minigo.GetMoveCursorAt(1, 24)
+	buf := minigo.GetMoveCursorAt(24, 1)
 	// this is not a repetition
 	// needed in rouleau mode
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
@@ -192,11 +189,11 @@ func printOneMsg(m *minigo.Minitel, msg Message) {
 	msgLines := msgLen/40 + 1
 
 	// Rouleau mode, push to the top the messages
-	buf := minigo.GetMoveCursorAt(1, 24)
+	buf := minigo.GetMoveCursorAt(24, 1)
 	for k := 0; k < msgLines; k += 1 {
 		buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 	}
-	buf = append(buf, minigo.GetMoveCursorAt(1, InputLine-msgLines-1)...)
+	buf = append(buf, minigo.GetMoveCursorAt(InputLine-msgLines-1, 1)...)
 
 	// Print nickname
 	buf = append(buf, minigo.EncodeSprintf("%s> ", msg.Nick)...)

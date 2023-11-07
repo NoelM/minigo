@@ -43,8 +43,7 @@ func (u *UsersDatabase) UserExists(nick string) bool {
 	u.mutex.RLock()
 	defer u.mutex.RUnlock()
 
-	_, closer, err := u.DB.Get([]byte(nick))
-	defer closer.Close()
+	_, _, err := u.DB.Get([]byte(nick))
 	if err != nil || err == pebble.ErrNotFound {
 		return false
 	}

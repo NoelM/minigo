@@ -42,5 +42,10 @@ func wrapperGenerique(text string, size int) (wrapped []string) {
 		length += utf8.RuneCountInString(s) + 1 // the size of the space
 		words = append(words, s)
 	}
+
+	if len(words) > 0 {
+		wrapped = append(wrapped, strings.Join(words, " "))
+	}
+
 	return
 }

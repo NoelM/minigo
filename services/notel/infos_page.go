@@ -16,14 +16,11 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 
 		items = LoadFeed(France24FeedURL)
 
-		mntl.WriteAttributes(minigo.DoubleGrandeur)
-		mntl.WriteStringLeft(2, "Dernières infos de FRANCE24")
-		mntl.WriteAttributes(minigo.GrandeurNormale)
-
+		printHeader(mntl)
 		pageStartItem = append(pageStartItem, printDepeche(mntl, items[pageStartItem[pageId]:], 4))
 
 		mntl.WriteHelperLeft(24, "Menu NOTEL", "SOMMAIRE")
-		mntl.WriteHelperLeft(24, "Naviguez", "SUITE/RETOUR")
+		mntl.WriteHelperRight(24, "Naviguez", "SUITE/RETOUR")
 
 		return minigo.NoOp
 	})
@@ -45,6 +42,10 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 		// We verify that the postId on the next page exists
 		if pageStartItem[pageId+1] >= len(items)-1 {
 			return nil, minigo.NoOp
+		}
+
+		if pageId == 0 {
+			mntl.CleanNRowsFrom(1, 1, 23)
 		}
 
 		pageId += 1
@@ -69,6 +70,7 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 
 		pageId -= 1
 		if pageId == 0 {
+			printHeader(mntl)
 			printDepeche(mntl, items[pageStartItem[pageId]:], 4)
 		} else {
 			printDepeche(mntl, items[pageStartItem[pageId]:], 1)
@@ -106,12 +108,12 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 			break
 		}
 
-		mntl.WriteAttributes(minigo.DebutLignage)
 		for _, l := range title {
+			mntl.WriteAttributes(minigo.DebutLignage)
+			mntl.WriteStringLeft(line, " ")
 			mntl.WriteStringLeft(line, l)
 			line += 1
 		}
-		mntl.WriteAttributes(minigo.FinLignage)
 
 		// Display Content
 		content := minigo.WrapperLargeurNormale(d.Content)
@@ -125,13 +127,16 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 			}
 		}
 
+		line += 1
+
 		// Yes, a message is at least 3 lines
 		// - Date Line
 		// - Title Line
 		// - Content Line
+		// - Blank Line
 		//
-		// So at maxLine-3, it would automatically break
-		if line >= maxLine-3 {
+		// So at maxLine-4, it would automatically break
+		if line >= maxLine-4 {
 			break
 		}
 	}
@@ -142,4 +147,10 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 	}
 	return dId
 
+}
+
+func printHeader(mntl *minigo.Minitel) {
+	mntl.WriteAttributes(minigo.DoubleHauteur)
+	mntl.WriteStringLeft(2, "Infos de FRANCE24")
+	mntl.WriteAttributes(minigo.GrandeurNormale)
 }

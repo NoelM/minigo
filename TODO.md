@@ -10,6 +10,8 @@
 * [ ] Implémenter Hline et Vline
 * [ ] Formattage plus intelligent, un objet Zone ? avec les attributs ?
 * [ ] Page suite/retour en mode rouleau
+* [ ] Page de tests du formattage
+* [ ] Simplifier le fonctionnement de la boucle modem, trop de choses, trop de go-routines
 
 ## Grafana
 
@@ -23,6 +25,8 @@
 * [x] Une seule base de données utilisateurs
 * [ ] Un fichier pour changer le message d'accueil, plutôt qu'en dur
 * [ ] Refaire la page serveur avec des stats issues de prometheus
+* [ ] Ban bad logins, when too many unsucessful
+* [ ] Account management page
 
 ## Chat
 

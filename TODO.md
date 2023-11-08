@@ -7,6 +7,9 @@
 * [ ] Faire une pile d'Ack, il peut y en avoir plusieurs
 * [ ] Améliorer la gestion des attributs par zone `0x20`
 * [x] Wrapping automatique 40 chars
+* [ ] Implémenter Hline et Vline
+* [ ] Formattage plus intelligent, un objet Zone ? avec les attributs ?
+* [ ] Page suite/retour en mode rouleau
 
 ## Grafana
 

@@ -14,7 +14,7 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteAttributes(minigo.DoubleHauteur)
 		mntl.WriteStringLeft(2, "Infos de")
 		mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-		mntl.WriteStringAt(10, 2, "NOTEL")
+		mntl.WriteStringAt(2, 10, "NOTEL")
 		mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
 		mntl.WriteStringLeft(3, "Mardi 7 Novembre 2023")
 

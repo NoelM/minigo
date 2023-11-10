@@ -23,15 +23,6 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 		return minigo.NoOp
 	})
 
-	infoPage.SetCorrectionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		inputs.CorrectionActive()
-		return nil, minigo.NoOp
-	})
-
-	infoPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
-		inputs.AppendKeyActive(key)
-	})
-
 	infoPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		return nil, minigo.SommaireOp
 	})

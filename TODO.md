@@ -10,8 +10,12 @@
 * [ ] Implémenter Hline et Vline
 * [ ] Formattage plus intelligent, un objet Zone ? avec les attributs ?
 * [ ] Page suite/retour en mode rouleau
+* [ ] Toujours plus de loggggs !
 * [ ] Page de tests du formattage
 * [ ] Simplifier le fonctionnement de la boucle modem, trop de choses, trop de go-routines
+* [ ] Réduire le nombre de goroutines dans la gestion d'une connexion modem
+  * Il faut que la boucle listen soit synchrone avec le handler modem
+  * De fait, on a une boucle applicative uniquement en goroutine
 
 ## Grafana
 

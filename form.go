@@ -22,6 +22,9 @@ func (f *Form) ToMap() map[string]string {
 }
 
 func (f *Form) ValueActive() string {
+	if len(f.inputs) == 0 {
+		return ""
+	}
 	return string(f.inputs[f.active].Value)
 }
 
@@ -33,14 +36,23 @@ func (f *Form) InitAll() {
 }
 
 func (f *Form) AppendKeyActive(key rune) {
+	if len(f.inputs) == 0 {
+		return
+	}
 	f.inputs[f.active].AppendKey(key)
 }
 
 func (f *Form) CorrectionActive() {
+	if len(f.inputs) == 0 {
+		return
+	}
 	f.inputs[f.active].Correction()
 }
 
 func (f *Form) UnHideActive() {
+	if len(f.inputs) == 0 {
+		return
+	}
 	f.inputs[f.active].UnHide()
 }
 
@@ -52,6 +64,9 @@ func (f *Form) UnHideAll() {
 }
 
 func (f *Form) HideActive() {
+	if len(f.inputs) == 0 {
+		return
+	}
 	f.inputs[f.active].Hide()
 }
 
@@ -62,6 +77,9 @@ func (f *Form) HideAll() {
 }
 
 func (f *Form) ResetActive() {
+	if len(f.inputs) == 0 {
+		return
+	}
 	f.inputs[f.active].Reset()
 }
 
@@ -73,6 +91,9 @@ func (f *Form) ResetAll() {
 }
 
 func (f *Form) activateInput() {
+	if len(f.inputs) == 0 {
+		return
+	}
 	f.inputs[f.active].Activate()
 }
 

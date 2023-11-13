@@ -191,6 +191,11 @@ func (m *Minitel) Listen() {
 				fullRead = true
 			}
 		}
+
+		// The CnxFin only breaks the previous loop
+		if cnxFinRcvd {
+			break
+		}
 	}
 	infoLog.Println("quits listen loop")
 

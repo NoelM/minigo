@@ -47,6 +47,7 @@ func NewModem(portName string, baud int, init []ATCommand, tag string, connAttem
 func (m *Modem) Init() error {
 	rep := strings.NewReplacer("\n", " ", "\r", " ")
 
+	m.port.SetReadTimeout(serial.NoTimeout)
 	for _, at := range m.init {
 		isAck, result, err := m.sendCommandAndWait(at)
 		if err != nil {
@@ -230,6 +231,7 @@ func (m *Modem) Connect() {
 	}
 
 	// start to serve the teletel content
+	m.port.SetReadTimeout(5 * time.Second)
 	go m.ringHandler(m)
 }
 

@@ -140,6 +140,11 @@ func (m *Minitel) Listen() {
 				break
 			}
 
+			if len(inBytes) == 0 {
+				fullRead = true
+				continue
+			}
+
 			fullRead = false
 		}
 

@@ -19,8 +19,8 @@
 
 ## Grafana
 
-* [ ] Labels: source=ws/modem1/modem2, etc...
-* [ ] Erreurs de connexion, attempts, lost
+* [x] Labels: source=ws/modem1/modem2, etc...
+* [x] Erreurs de connexion, attempts, lost
 
 ## Notel
 

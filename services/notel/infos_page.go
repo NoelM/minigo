@@ -14,7 +14,7 @@ func NewPageInfo(mntl *minigo.Minitel) *minigo.Page {
 	infoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
-		items = LoadFeed(FranceInfoFeedURL)
+		items = LoadFeed(France24FeedURL)
 
 		printInfoHeader(mntl)
 		pageStartItem = append(pageStartItem, printDepeche(mntl, items[pageStartItem[pageId]:], 4))
@@ -84,19 +84,20 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 		if line+1 > maxLine {
 			break
 		}
+		mntl.WriteAttributes(minigo.CaractereBleu)
+		mntl.R
 		mntl.WriteStringRight(line, d.Date.Format("02/01/2006 15:04"))
 		line += 1
 
 		// Display Title
-		title := minigo.WrapperGenerique(d.Title, 38)
+		title := minigo.WrapperLargeurNormale(d.Title)
 		if line+len(title) > maxLine {
 			trunc = true
 			break
 		}
 
 		for _, l := range title {
-			mntl.WriteAttributes(minigo.DebutLignage)
-			mntl.WriteStringLeft(line, " "+l)
+			mntl.WriteStringLeft(line, l)
 			line += 1
 		}
 
@@ -136,7 +137,7 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 
 func printInfoHeader(mntl *minigo.Minitel) {
 	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteStringLeft(2, "Dépèches franceinfo:")
+	mntl.WriteStringLeft(2, "Dépèches France 24")
 	mntl.WriteAttributes(minigo.GrandeurNormale)
 }
 

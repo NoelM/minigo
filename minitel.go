@@ -175,7 +175,7 @@ func (m *Minitel) Listen() {
 					m.RecvKey <- keyValue
 
 					if keyValue == ConnexionFin {
-						infoLog.Println("[%s] listen: caught ConnexionFin: quit loop\n", m.tag)
+						infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.tag)
 						cnxFinRcvd = true
 						break
 					}
@@ -197,12 +197,12 @@ func (m *Minitel) Listen() {
 	infoLog.Printf("[%s] listen: loop exited\n", m.tag)
 
 	if !cnxFinRcvd {
-		infoLog.Println("[%s] listen: connection lost: sending ConnexionFin to Page\n", m.tag)
+		infoLog.Printf("[%s] listen: connection lost: sending ConnexionFin to Page\n", m.tag)
 		m.connLost.With(prometheus.Labels{"source": m.tag}).Inc()
 
 		m.RecvKey <- ConnexionFin
 	}
-	infoLog.Println("[%s] listen: disconnect connector")
+	infoLog.Printf("[%s] listen: disconnect connector\n", m.tag)
 	m.disconnect()
 
 	infoLog.Println("[%s] listen: end of listen")
@@ -273,6 +273,12 @@ func (m *Minitel) WriteBytesAt(lineId, colId int, inBuf []byte) error {
 
 func (m *Minitel) WriteStringLeft(lineId int, s string) error {
 	return m.WriteStringAt(lineId, 1, s)
+}
+
+func (m *Minitel) WriteNRunesAt(r rune, n int, row, col int) error {
+	buf := GetMoveCursorAt(row, col)
+	buf = append(buf, GetRepeatRune(r, n)...)
+	return m.Send(buf)
 }
 
 func (m *Minitel) WriteStringRight(lineId int, s string) error {

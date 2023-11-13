@@ -130,9 +130,6 @@ func (m *Minitel) Listen() {
 	var connexionFinRcvd bool
 
 	for m.Connected() {
-		if !m.Connected() {
-			infoLog.Println("new loop with closed connection")
-		}
 		var err error
 		var inBytes []byte
 
@@ -144,6 +141,7 @@ func (m *Minitel) Listen() {
 			}
 
 			if len(inBytes) == 0 {
+				infoLog.Println("empty read buffer: let's continue")
 				fullRead = true
 				continue
 			}
@@ -189,6 +187,7 @@ func (m *Minitel) Listen() {
 			}
 		}
 	}
+	infoLog.Println("quits listen loop")
 
 	if !connexionFinRcvd {
 		infoLog.Println("connection lost: sent ConnexionFin to the application loop")

@@ -134,6 +134,7 @@ func (m *Minitel) Listen() {
 		var inBytes []byte
 
 		if fullRead {
+			fmt.Println("enters full read")
 			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
@@ -151,6 +152,8 @@ func (m *Minitel) Listen() {
 
 		var parityErr error
 		for id, b := range inBytes {
+			fmt.Println("reading inBytes")
+
 			if m.parity {
 				b, parityErr = CheckByteParity(b)
 				if parityErr != nil {
@@ -162,19 +165,23 @@ func (m *Minitel) Listen() {
 			keyBuffer = append(keyBuffer, b)
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
+			fmt.Printf("done=%t pro=%t value=%d\n", done, pro, keyValue)
 			if err != nil {
 				errorLog.Printf("unable to read key=%x: %s\n", keyBuffer, err.Error())
 				keyBuffer = []byte{}
 			}
 
 			if done {
+				fmt.Println("done")
 				if pro {
+					fmt.Println("protocole")
 					infoLog.Printf("recieved procode=%x\n", keyBuffer)
 					err = m.ackChecker(keyBuffer)
 					if err != nil {
 						errorLog.Printf("unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
 					}
 				} else {
+					fmt.Println("regular")
 					connexionFinRcvd = connexionFinRcvd || (keyValue == ConnexionFin)
 					if keyValue == ConnexionFin {
 						fmt.Println("on a recu CnxFin!")
@@ -187,6 +194,7 @@ func (m *Minitel) Listen() {
 			}
 
 			if id == len(inBytes)-1 {
+				fmt.Println("end of inBytes, fullread=true")
 				fullRead = true
 			}
 		}

@@ -64,6 +64,12 @@ var (
 	})
 )
 
+const (
+	ServeWS             = false
+	ServeUSR56KPro      = false
+	ServeUSR56KFaxModem = true
+)
+
 func main() {
 	var wg sync.WaitGroup
 
@@ -76,63 +82,72 @@ func main() {
 	UsersDb = NewUsersDatabase()
 	UsersDb.LoadDatabase("/media/core/users.db")
 
-	wg.Add(4)
-
-	go serveWS(&wg, "192.168.1.34:3615")
-
-	USR56KPro := []minigo.ATCommand{
-		{
-			Command: "ATZ",
-			Reply:   "OK",
-		},
-		{
-			Command: "AT&F1+MCA=0",
-			Reply:   "OK",
-		},
-		{
-			Command: "ATL0M0",
-			Reply:   "OK",
-		},
-		{
-			Command: "AT&N2",
-			Reply:   "OK",
-		},
-		{
-			Command: "ATS27=16",
-			Reply:   "OK",
-		},
+	if ServeWS {
+		wg.Add(1)
+		go serveWS(&wg, "192.168.1.34:3615")
 	}
-	go serveModem(&wg, USR56KPro, "/dev/ttyUSB0", "usr-56k-pro")
 
-	USR56KFaxModem := []minigo.ATCommand{
-		{
-			Command: "ATZ",
-			Reply:   "OK",
-		},
-		{
-			Command: "AT&F1",
-			Reply:   "OK",
-		},
-		{
-			Command: "ATL0M0",
-			Reply:   "OK",
-		},
-		{
-			Command: "AT&N2",
-			Reply:   "OK",
-		},
-		{
-			Command: "ATS27=16",
-			Reply:   "OK",
-		},
+	if ServeUSR56KPro {
+		USR56KPro := []minigo.ATCommand{
+			{
+				Command: "ATZ",
+				Reply:   "OK",
+			},
+			{
+				Command: "AT&F1+MCA=0",
+				Reply:   "OK",
+			},
+			{
+				Command: "ATL0M0",
+				Reply:   "OK",
+			},
+			{
+				Command: "AT&N2",
+				Reply:   "OK",
+			},
+			{
+				Command: "ATS27=16",
+				Reply:   "OK",
+			},
+		}
+		wg.Add(1)
+		go serveModem(&wg, USR56KPro, "/dev/ttyUSB0", "usr-56k-pro")
 	}
-	go serveModem(&wg, USR56KFaxModem, "/dev/ttyUSB1", "usr-56k-faxmodem")
 
+	if ServeUSR56KPro {
+		USR56KFaxModem := []minigo.ATCommand{
+			{
+				Command: "ATZ",
+				Reply:   "OK",
+			},
+			{
+				Command: "AT&F1",
+				Reply:   "OK",
+			},
+			{
+				Command: "ATL0M0",
+				Reply:   "OK",
+			},
+			{
+				Command: "AT&N2",
+				Reply:   "OK",
+			},
+			{
+				Command: "ATS27=16",
+				Reply:   "OK",
+			},
+		}
+		wg.Add(1)
+		go serveModem(&wg, USR56KFaxModem, "/dev/ttyUSB1", "usr-56k-faxmodem")
+	}
+
+	wg.Add(1)
 	go serverMetrics(&wg)
 
 	wg.Wait()
 
 	MessageDb.Quit()
+	UsersDb.Quit()
 }
 
 func serveWS(wg *sync.WaitGroup, url string) {

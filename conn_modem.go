@@ -2,15 +2,16 @@ package minigo
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"go.bug.st/serial"
 )
 
-const ModemReadTimeout = 20 * time.Second
+const ModemReadTimeout = 30 * time.Second
 
 type Modem struct {
 	port        serial.Port

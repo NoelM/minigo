@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"unicode/utf8"
 )
 
 var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
@@ -280,8 +281,8 @@ func (m *Minitel) WriteNRunes(r rune, n int) error {
 }
 
 func (m *Minitel) WriteStringRight(lineId int, s string) error {
-	msgLen := len(s) * m.charWidth()
-	colId := maxInt(ColonnesSimple-msgLen, 0)
+	msgLen := utf8.RuneCountInString(s) * m.charWidth()
+	colId := maxInt(ColonnesSimple-msgLen+1, 0)
 
 	return m.WriteStringAt(lineId, colId, s)
 }

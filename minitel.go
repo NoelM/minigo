@@ -176,13 +176,16 @@ func (m *Minitel) Listen() {
 					}
 				} else {
 					connexionFinRcvd = keyValue == ConnexionFin
+					infoLog.Println("on envoie de la data")
 					m.RecvKey <- keyValue
+					infoLog.Println("fini d'envoyer de la data")
 				}
 
 				keyBuffer = []byte{}
 			}
 
 			if id == len(inBytes)-1 {
+				infoLog.Println("full read OK")
 				fullRead = true
 			}
 		}

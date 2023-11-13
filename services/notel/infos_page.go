@@ -108,8 +108,8 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 			mntl.WriteNRunes(minigo.Sp, 40)
 
 			mntl.ModeG0()
-			mntl.WriteAttributes(minigo.CaractereNoir)
-			mntl.WriteStringLeft(line, l)
+			mntl.WriteStringRight(line, l)
+
 			line += 1
 		}
 

@@ -206,7 +206,7 @@ func (m *Minitel) Listen() {
 	infoLog.Printf("[%s] listen: disconnect connector\n", m.tag)
 	m.disconnect()
 
-	infoLog.Println("[%s] listen: end of listen")
+	infoLog.Printf("[%s] listen: end of listen\n", m.tag)
 	m.wg.Done()
 }
 

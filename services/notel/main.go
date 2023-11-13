@@ -164,7 +164,6 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		go m.Listen()
 
 		NotelHandler(m, "websocket", &innerWg)
-
 		innerWg.Wait()
 
 		infoLog.Printf("Minitel session closed for IP=%s\n", r.RemoteAddr)
@@ -202,9 +201,9 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 		go m.Listen()
 
 		NotelHandler(m, modemTag, &innerWg)
-		wg.Wait()
+		innerWg.Wait()
 
-		infoLog.Printf("Minitel session closed for Modem\n")
+		infoLog.Printf("Minitel session closed for modem=%s\n", modemTag)
 	})
 
 	modem.Serve(false)

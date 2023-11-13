@@ -175,17 +175,14 @@ func (m *Minitel) Listen() {
 						errorLog.Printf("unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
 					}
 				} else {
-					connexionFinRcvd = keyValue == ConnexionFin
-					infoLog.Println("on envoie de la data")
+					connexionFinRcvd = connexionFinRcvd || (keyValue == ConnexionFin)
 					m.RecvKey <- keyValue
-					infoLog.Println("fini d'envoyer de la data")
 				}
 
 				keyBuffer = []byte{}
 			}
 
 			if id == len(inBytes)-1 {
-				infoLog.Println("full read OK")
 				fullRead = true
 			}
 		}

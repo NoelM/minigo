@@ -114,7 +114,7 @@ func main() {
 		go serveModem(&wg, USR56KPro, "/dev/ttyUSB0", "usr-56k-pro")
 	}
 
-	if ServeUSR56KPro {
+	if ServeUSR56KFaxModem {
 		USR56KFaxModem := []minigo.ATCommand{
 			{
 				Command: "ATZ",

@@ -127,14 +127,13 @@ func (m *Minitel) Listen() {
 	var done bool
 	var pro bool
 
-	var connexionFinRcvd bool
+	var cnxFinRcvd bool
 
-	for m.Connected() {
+	for m.IsConnected() {
 		var err error
 		var inBytes []byte
 
 		if fullRead {
-			fmt.Println("enters full read")
 			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
@@ -152,7 +151,6 @@ func (m *Minitel) Listen() {
 
 		var parityErr error
 		for id, b := range inBytes {
-			fmt.Println("reading inBytes")
 
 			if m.parity {
 				b, parityErr = CheckByteParity(b)
@@ -165,58 +163,55 @@ func (m *Minitel) Listen() {
 			keyBuffer = append(keyBuffer, b)
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
-			fmt.Printf("done=%t pro=%t value=%d\n", done, pro, keyValue)
 			if err != nil {
 				errorLog.Printf("unable to read key=%x: %s\n", keyBuffer, err.Error())
 				keyBuffer = []byte{}
 			}
 
 			if done {
-				fmt.Println("done")
 				if pro {
-					fmt.Println("protocole")
 					infoLog.Printf("recieved procode=%x\n", keyBuffer)
 					err = m.ackChecker(keyBuffer)
 					if err != nil {
 						errorLog.Printf("unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
 					}
 				} else {
-					fmt.Println("regular")
-					connexionFinRcvd = connexionFinRcvd || (keyValue == ConnexionFin)
-					if keyValue == ConnexionFin {
-						fmt.Println("on a recu CnxFin!")
-					}
 					m.RecvKey <- keyValue
-					fmt.Println("et voila c'est envoye")
+
+					if keyValue == ConnexionFin {
+						cnxFinRcvd = true
+						break
+					}
 				}
 
 				keyBuffer = []byte{}
 			}
 
 			if id == len(inBytes)-1 {
-				fmt.Println("end of inBytes, fullread=true")
 				fullRead = true
 			}
 		}
 	}
 	infoLog.Println("quits listen loop")
 
-	if !connexionFinRcvd {
+	if !cnxFinRcvd {
 		infoLog.Println("connection lost: sent ConnexionFin to the application loop")
 		m.connLost.With(prometheus.Labels{"source": m.tag}).Inc()
 
 		m.RecvKey <- ConnexionFin
 	}
-	infoLog.Println("stop minitel listen: closed connection")
+	infoLog.Println("disconnect minitel connector")
+	m.disconnect()
 
+	infoLog.Println("stop minitel listen: closed connection")
 	m.wg.Done()
 }
 
-func (m *Minitel) Disconnect() {
+func (m *Minitel) disconnect() {
 	m.conn.Disconnect()
 }
 
-func (m *Minitel) Connected() bool {
+func (m *Minitel) IsConnected() bool {
 	return m.conn.Connected()
 }
 

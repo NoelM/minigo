@@ -53,7 +53,7 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		initFunc:         func(mntl *Minitel, inputs *Form, initData map[string]string) int { return NoOp },
 		charFunc:         func(mntl *Minitel, inputs *Form, key rune) {},
 		inChanFunc:       func(mntl *Minitel, inputs *Form, message string) {},
-		connexionFinFunc: func(mntl *Minitel) int { mntl.Disconnect(); return DisconnectOp },
+		connexionFinFunc: func(mntl *Minitel) int { return DisconnectOp },
 		envoiFunc:        defaultNavigationHandlerFunc,
 		sommaireFunc:     defaultNavigationHandlerFunc,
 		annulationFunc:   defaultNavigationHandlerFunc,

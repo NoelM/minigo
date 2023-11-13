@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -65,8 +66,8 @@ var (
 )
 
 const (
-	ServeWS             = false
-	ServeUSR56KPro      = false
+	ServeWS             = true
+	ServeUSR56KPro      = true
 	ServeUSR56KFaxModem = true
 )
 
@@ -155,14 +156,16 @@ func serveWS(wg *sync.WaitGroup, url string) {
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		tag := fmt.Sprintf("ws:%s", r.RemoteAddr)
+
 		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 		if err != nil {
-			errorLog.Printf("unable to open websocket connection: %s\n", err.Error())
+			errorLog.Printf("[%s] serve-ws: unable to open websocket connection: %s\n", tag, err.Error())
 			return
 		}
 
 		defer conn.Close(websocket.StatusInternalError, "websocket internal error, quitting")
-		infoLog.Printf("new connection from IP=%s\n", r.RemoteAddr)
+		infoLog.Printf("[%s] serve-ws: new connection\n", tag)
 
 		conn.SetReadLimit(1024)
 
@@ -175,13 +178,13 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		var innerWg sync.WaitGroup
 		innerWg.Add(2)
 
-		m := minigo.NewMinitel(ws, false, "websocket", promConnLostNb, &innerWg)
+		m := minigo.NewMinitel(ws, false, tag, promConnLostNb, &innerWg)
 		go m.Listen()
 
-		NotelHandler(m, "websocket", &innerWg)
+		NotelHandler(m, tag, &innerWg)
 		innerWg.Wait()
 
-		infoLog.Printf("Minitel session closed for IP=%s\n", r.RemoteAddr)
+		infoLog.Printf("[%s] serve-ws: session closed\n", tag)
 	})
 
 	err := http.ListenAndServe(url, fn)
@@ -218,7 +221,7 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 		NotelHandler(m, modemTag, &innerWg)
 		innerWg.Wait()
 
-		infoLog.Printf("Minitel session closed for modem=%s\n", modemTag)
+		infoLog.Printf("[%s] minitel session closed\n", modemTag)
 	})
 
 	modem.Serve(false)
@@ -230,7 +233,7 @@ func NotelHandler(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup) {
 	active := NbConnectedUsers.Add(1)
 	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
 
-	infoLog.Printf("enters service handler, connected=%d\n", active)
+	infoLog.Printf("[%s] notel-handler: start handler, connected=%d\n", sourceTag, active)
 	startConn := time.Now()
 
 SIGNIN:
@@ -252,7 +255,7 @@ SIGNIN:
 	active = NbConnectedUsers.Add(-1)
 	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
 
-	infoLog.Printf("quits NOTEL service handler, connected=%d\n", active)
+	infoLog.Printf("[%s] notel-handler: quit handler, connected=%d\n", sourceTag, active)
 
 	wg.Done()
 }

@@ -108,7 +108,7 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 
 	if !ok {
 		err = fmt.Errorf("not verified for acknowledgment ackType=%d\n", m.ackType)
-		errorLog.Println("[%s] ack-checker: %s\n", m.tag, err.Error())
+		errorLog.Printf("[%s] ack-checker: %s\n", m.tag, err.Error())
 	} else {
 		infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.tag, m.ackType)
 	}

@@ -82,6 +82,7 @@ func (u *UsersDatabase) AddUser(nick, pwd string) error {
 func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 	u.mutex.RLock()
 	defer u.mutex.RUnlock()
+	infoLog.Printf("attempt to log=%s\n", nick)
 
 	val, closer, err := u.DB.Get([]byte(nick))
 	if err != nil {

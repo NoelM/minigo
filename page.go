@@ -53,7 +53,7 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		initFunc:         func(mntl *Minitel, inputs *Form, initData map[string]string) int { return NoOp },
 		charFunc:         func(mntl *Minitel, inputs *Form, key rune) {},
 		inChanFunc:       func(mntl *Minitel, inputs *Form, message string) {},
-		connexionFinFunc: func(mntl *Minitel) int { mntl.Disconnect(); return DisconnectOp },
+		connexionFinFunc: defaultConnexionFinHandlerFunc,
 		envoiFunc:        defaultNavigationHandlerFunc,
 		sommaireFunc:     defaultNavigationHandlerFunc,
 		annulationFunc:   defaultNavigationHandlerFunc,
@@ -63,6 +63,12 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		correctionFunc:   defaultNavigationHandlerFunc,
 		suiteFunc:        defaultNavigationHandlerFunc,
 	}
+}
+
+func defaultConnexionFinHandlerFunc(mntl *Minitel) int {
+	mntl.CleanScreen()
+	mntl.WriteStringLeft(1, "→ Fin de connexion. À bientôt!")
+	return DisconnectOp
 }
 
 func defaultNavigationHandlerFunc(mntl *Minitel, input *Form) (map[string]string, int) {
@@ -133,55 +139,55 @@ func (p *Page) Run() (map[string]string, int) {
 			switch key {
 			case Envoi:
 				if out, op := p.envoiFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("key Envoi: quit page %s page, with op=%d\n", p.name, op)
+					infoLog.Printf("page: key Envoi: quit %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Sommaire:
 				if out, op := p.sommaireFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("key Sommaire: quit page %s page, with op=%d\n", p.name, op)
+					infoLog.Printf("page: key Sommaire: quit %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Annulation:
 				if out, op := p.annulationFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("key Annulation: quit page %s page, with op=%d\n", p.name, op)
+					infoLog.Printf("page: key Annulation: quit %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Retour:
 				if out, op := p.retourFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("key Retour: quit page %s page, with op=%d\n", p.name, op)
+					infoLog.Printf("page: key Retour: quit %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Repetition:
 				if out, op := p.repetitionFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("key Repetition: quit page %s page, with op=%d\n", p.name, op)
+					infoLog.Printf("page: key Repetition: quit %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Guide:
 				if out, op := p.guideFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("key Guide: quit page %s page, with op=%d\n", p.name, op)
+					infoLog.Printf("page: key Guide: quit %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Correction:
 				if out, op := p.correctionFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("key Correction: quit page %s page, with op=%d\n", p.name, op)
+					infoLog.Printf("page: key Correction: quit %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case Suite:
 				if out, op := p.suiteFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("key Suite: quit page %s page, with op=%d\n", p.name, op)
+					infoLog.Printf("page: key Suite: quit %s page, with op=%d\n", p.name, op)
 					return out, op
 				}
 
 			case ConnexionFin:
 				if op := p.connexionFinFunc(p.mntl); op != NoOp {
-					infoLog.Printf("key ConnexionFin: disconnect %s page\n", p.name)
+					infoLog.Printf("page: key ConnexionFin: quit page %s, with op=%d\n", p.name, op)
 					return nil, op
 				}
 
@@ -189,7 +195,7 @@ func (p *Page) Run() (map[string]string, int) {
 				if utf8.ValidRune(key) {
 					p.charFunc(p.mntl, p.form, key)
 				} else {
-					errorLog.Printf("invalid rune=%d\n", key)
+					errorLog.Printf("page: invalid rune=%d\n", key)
 				}
 			}
 		}

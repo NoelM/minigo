@@ -84,8 +84,12 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 		if line+1 > maxLine {
 			break
 		}
-		mntl.WriteAttributes(minigo.CaractereBleu)
-		mntl.WriteNRunesAt(minigo.Del, 40, line, 1)
+		mntl.ModeG2()
+		mntl.MoveCursorAt(line, 1)
+		mntl.WriteAttributes(minigo.FondBleu)
+		mntl.WriteNRunes(minigo.Sp, 40)
+
+		mntl.ModeG0()
 		mntl.WriteAttributes(minigo.CaractereBlanc)
 		mntl.WriteStringRight(line, d.Date.Format("02/01/2006 15:04"))
 		line += 1

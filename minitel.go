@@ -275,10 +275,8 @@ func (m *Minitel) WriteStringLeft(lineId int, s string) error {
 	return m.WriteStringAt(lineId, 1, s)
 }
 
-func (m *Minitel) WriteNRunesAt(r rune, n int, row, col int) error {
-	buf := GetMoveCursorAt(row, col)
-	buf = append(buf, GetRepeatRune(r, n)...)
-	return m.Send(buf)
+func (m *Minitel) WriteNRunes(r rune, n int) error {
+	return m.Send(GetRepeatRune(r, n))
 }
 
 func (m *Minitel) WriteStringRight(lineId int, s string) error {

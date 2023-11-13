@@ -28,20 +28,35 @@ var UsersDb *UsersDatabase
 var NbConnectedUsers atomic.Int32
 
 var (
-	promConnNb = promauto.NewCounter(prometheus.CounterOpts{
+	promConnNb = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "notel_connection_number",
 		Help: "The total number connection to NOTEL",
-	})
+	},
+		[]string{"source"})
 
-	promConnActive = promauto.NewGauge(prometheus.GaugeOpts{
+	promConnAttemptNb = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "notel_connection_attempt_number",
+		Help: "The total number of connection attempts to NOTEL",
+	},
+		[]string{"source"})
+
+	promConnLostNb = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "notel_connection_lost_number",
+		Help: "The total number of lost connections on NOTEL",
+	},
+		[]string{"source"})
+
+	promConnActive = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "notel_connection_active",
 		Help: "The number of currently active connections to NOTEL",
-	})
+	},
+		[]string{"source"})
 
-	promConnDur = promauto.NewCounter(prometheus.CounterOpts{
+	promConnDur = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "notel_connection_duration",
 		Help: "The total connection duration to NOTEL",
-	})
+	},
+		[]string{"source"})
 
 	promMsgNb = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "notel_messages_number",
@@ -87,9 +102,9 @@ func main() {
 			Reply:   "OK",
 		},
 	}
-	go serveModem(&wg, USR56KPro, "/dev/ttyUSB0")
+	go serveModem(&wg, USR56KPro, "/dev/ttyUSB0", "usr-56k-pro")
 
-	USRSportster := []minigo.ATCommand{
+	USR56KFaxModem := []minigo.ATCommand{
 		{
 			Command: "ATZ",
 			Reply:   "OK",
@@ -111,7 +126,7 @@ func main() {
 			Reply:   "OK",
 		},
 	}
-	go serveModem(&wg, USRSportster, "/dev/ttyUSB1")
+	go serveModem(&wg, USR56KFaxModem, "/dev/ttyUSB1", "usr-56k-faxmodem")
 
 	go serverMetrics(&wg)
 
@@ -142,10 +157,10 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		ws, _ := minigo.NewWebsocket(conn, ctx)
 		_ = ws.Init()
 
-		m := minigo.NewMinitel(ws, false)
+		m := minigo.NewMinitel(ws, false, "websocket", promConnLostNb)
 		go m.Listen()
 
-		NotelHandler(m)
+		NotelHandler(m, "websocket")
 
 		infoLog.Printf("Minitel session closed for IP=%s\n", r.RemoteAddr)
 	})
@@ -161,10 +176,10 @@ func serverMetrics(wg *sync.WaitGroup) {
 	http.ListenAndServe(":2112", nil)
 }
 
-func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string) {
+func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTag string) {
 	defer wg.Done()
 
-	modem, err := minigo.NewModem(tty, 115200, init)
+	modem, err := minigo.NewModem(tty, 115200, init, modemTag, promConnAttemptNb)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -175,10 +190,10 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string) {
 	}
 
 	modem.RingHandler(func(mdm *minigo.Modem) {
-		m := minigo.NewMinitel(mdm, true)
+		m := minigo.NewMinitel(mdm, true, modemTag, promConnLostNb)
 		go m.Listen()
 
-		NotelHandler(m)
+		NotelHandler(m, modemTag)
 
 		infoLog.Printf("Minitel session closed for Modem\n")
 	})
@@ -186,11 +201,11 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string) {
 	modem.Serve(false)
 }
 
-func NotelHandler(mntl *minigo.Minitel) {
+func NotelHandler(mntl *minigo.Minitel, sourceTag string) {
 
-	promConnNb.Inc()
+	promConnNb.With(prometheus.Labels{"source": sourceTag}).Inc()
 	active := NbConnectedUsers.Add(1)
-	promConnActive.Set(float64(active))
+	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
 
 	infoLog.Printf("enters service handler, connected=%d\n", active)
 	startConn := time.Now()
@@ -209,10 +224,10 @@ SIGNIN:
 		SommaireHandler(mntl, creds["login"])
 	}
 
-	promConnDur.Add(time.Since(startConn).Seconds())
+	promConnDur.With(prometheus.Labels{"source": sourceTag}).Add(time.Since(startConn).Seconds())
 
 	active = NbConnectedUsers.Add(-1)
-	promConnActive.Set(float64(active))
+	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
 
 	infoLog.Printf("quits NOTEL service handler, connected=%d\n", active)
 }

@@ -2,6 +2,7 @@ package minigo
 
 import (
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"log"
 	"os"
@@ -40,9 +41,12 @@ type Minitel struct {
 	vitesseByte        byte
 	fonctionnementByte byte
 	protocoleByte      byte
+
+	tag      string
+	connLost *prometheus.CounterVec
 }
 
-func NewMinitel(conn Connector, parity bool) *Minitel {
+func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec) *Minitel {
 	return &Minitel{
 		conn:            conn,
 		parity:          parity,
@@ -51,6 +55,8 @@ func NewMinitel(conn Connector, parity bool) *Minitel {
 		currentGrandeur: GrandeurNormale,
 		defaultFond:     FondNormal,
 		RecvKey:         make(chan int32),
+		tag:             tag,
+		connLost:        connLost,
 	}
 }
 
@@ -131,7 +137,6 @@ func (m *Minitel) Listen() {
 			inBytes, err = m.conn.Read()
 			if err != nil {
 				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
-				m.RecvKey <- ConnexionFin
 				break
 			}
 
@@ -178,7 +183,9 @@ func (m *Minitel) Listen() {
 	}
 
 	if !connexionFinRcvd {
-		infoLog.Println("sent ConnexionFin to the application loop")
+		infoLog.Println("connection lost: sent ConnexionFin to the application loop")
+		m.connLost.With(prometheus.Labels{"source": m.tag}).Inc()
+
 		m.RecvKey <- ConnexionFin
 	}
 	infoLog.Println("stop minitel listen: closed connection")

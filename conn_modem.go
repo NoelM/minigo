@@ -2,6 +2,7 @@ package minigo
 
 import (
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"strings"
 	"sync"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"go.bug.st/serial"
 )
 
-const ModemReadTimeout = 30 * time.Second
+const ModemReadTimeout = 20 * time.Second
 
 type Modem struct {
 	port        serial.Port
@@ -17,6 +18,9 @@ type Modem struct {
 	ringHandler func(modem *Modem)
 	connected   bool
 	mutex       sync.RWMutex
+
+	tag         string
+	connAttempt *prometheus.CounterVec
 }
 
 type ATCommand struct {
@@ -24,7 +28,7 @@ type ATCommand struct {
 	Reply   string
 }
 
-func NewModem(portName string, baud int, init []ATCommand) (*Modem, error) {
+func NewModem(portName string, baud int, init []ATCommand, tag string, connAttempt *prometheus.CounterVec) (*Modem, error) {
 	port, err := serial.Open(portName, &serial.Mode{BaudRate: baud})
 	if err != nil {
 		errorLog.Printf("unable to start modem port=%s baud=%d: %s\n", port, baud, err.Error())
@@ -32,9 +36,11 @@ func NewModem(portName string, baud int, init []ATCommand) (*Modem, error) {
 	}
 
 	return &Modem{
-		port:      port,
-		init:      init,
-		connected: false,
+		port:        port,
+		init:        init,
+		connected:   false,
+		tag:         tag,
+		connAttempt: connAttempt,
 	}, nil
 }
 
@@ -169,6 +175,8 @@ func (m *Modem) Serve(forceRing bool) {
 		if status.RI || forceRing {
 			infoLog.Println("we got a call, modem bit RING=1")
 			forceRing = false
+
+			m.connAttempt.With(prometheus.Labels{"source": m.tag}).Inc()
 			m.Connect()
 
 			// Fail to establish connection, reset the bouzin
@@ -198,7 +206,7 @@ func (m *Modem) Connect() {
 		infoLog.Printf("acknowledged command='ATA' with reply='%s'", rep.Replace(result))
 	}
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	status, err := m.port.GetModemStatusBits()
 	if err != nil {

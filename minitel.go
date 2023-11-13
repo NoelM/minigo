@@ -2,12 +2,13 @@ package minigo
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"log"
 	"os"
 	"sync"
 	"unicode/utf8"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
@@ -147,8 +148,7 @@ func (m *Minitel) Listen() {
 		}
 
 		var parityErr error
-		for id, b := range inBytes {
-
+		for _, b := range inBytes {
 			if m.parity {
 				b, parityErr = CheckByteParity(b)
 				if parityErr != nil {
@@ -184,11 +184,8 @@ func (m *Minitel) Listen() {
 
 				keyBuffer = []byte{}
 			}
-
-			if id == len(inBytes)-1 {
-				fullRead = true
-			}
 		}
+		fullRead = true
 
 		// The CnxFin only breaks the previous loop
 		if cnxFinRcvd {

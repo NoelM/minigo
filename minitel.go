@@ -15,9 +15,6 @@ var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lsh
 
 type AckType uint
 
-// TODO: Tout passer en string/rune plutôt que byte
-// TODO: Faire une pile d'Ack, il peut y en avoir plusieurs
-
 const (
 	NoAck = iota
 	AckRouleau
@@ -89,7 +86,7 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 	case Protocole:
 		m.protocoleByte = keyBuffer[3]
 	default:
-		fmt.Printf("not handled response byte: %x\n", keyBuffer[3])
+		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.tag, keyBuffer[3])
 		return
 	}
 
@@ -104,15 +101,15 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 	case AckMajuscule:
 		ok = !BitReadAt(m.fonctionnementByte, 3)
 	default:
-		fmt.Printf("not handled AckType: %d\n", m.ackType)
+		warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.tag, m.ackType)
 		return
 	}
 
 	if !ok {
-		err = fmt.Errorf("not verified for acknowledgment ackType=%d", m.ackType)
-		errorLog.Println(err.Error())
+		err = fmt.Errorf("not verified for acknowledgment ackType=%d\n", m.ackType)
+		errorLog.Println("[%s] ack-checker: %s\n", m.tag, err.Error())
 	} else {
-		infoLog.Printf("verified acknowledgement ackType=%d\n", m.ackType)
+		infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.tag, m.ackType)
 	}
 
 	m.ackType = NoAck
@@ -136,12 +133,11 @@ func (m *Minitel) Listen() {
 		if fullRead {
 			inBytes, err = m.conn.Read()
 			if err != nil {
-				warnLog.Printf("stop minitel listen: lost connection: %s\n", err.Error())
+				warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", m.tag, err.Error())
 				break
 			}
 
 			if len(inBytes) == 0 {
-				infoLog.Println("empty read buffer: let's continue")
 				fullRead = true
 				continue
 			}
@@ -155,7 +151,7 @@ func (m *Minitel) Listen() {
 			if m.parity {
 				b, parityErr = CheckByteParity(b)
 				if parityErr != nil {
-					warnLog.Printf("key=%x ignored: wrong parity\n", b)
+					warnLog.Printf("[%s] listen: ignored key=%x: wrong parity\n", m.tag, b)
 					continue
 				}
 			}
@@ -164,21 +160,22 @@ func (m *Minitel) Listen() {
 
 			done, pro, keyValue, err = ReadKey(keyBuffer)
 			if err != nil {
-				errorLog.Printf("unable to read key=%x: %s\n", keyBuffer, err.Error())
+				errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.tag, keyBuffer, err.Error())
 				keyBuffer = []byte{}
 			}
 
 			if done {
 				if pro {
-					infoLog.Printf("recieved procode=%x\n", keyBuffer)
+					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.tag, keyBuffer)
 					err = m.ackChecker(keyBuffer)
 					if err != nil {
-						errorLog.Printf("unable to acknowledge procode=%x: %s\n", keyBuffer, err.Error())
+						errorLog.Printf("[%s] listen: unable to acknowledge protocol code=%x: %s\n", m.tag, keyBuffer, err.Error())
 					}
 				} else {
 					m.RecvKey <- keyValue
 
 					if keyValue == ConnexionFin {
+						infoLog.Println("[%s] listen: caught ConnexionFin: quit loop\n", m.tag)
 						cnxFinRcvd = true
 						break
 					}
@@ -197,18 +194,18 @@ func (m *Minitel) Listen() {
 			break
 		}
 	}
-	infoLog.Println("quits listen loop")
+	infoLog.Printf("[%s] listen: loop exited\n", m.tag)
 
 	if !cnxFinRcvd {
-		infoLog.Println("connection lost: sent ConnexionFin to the application loop")
+		infoLog.Println("[%s] listen: connection lost: sending ConnexionFin to Page\n", m.tag)
 		m.connLost.With(prometheus.Labels{"source": m.tag}).Inc()
 
 		m.RecvKey <- ConnexionFin
 	}
-	infoLog.Println("disconnect minitel connector")
+	infoLog.Println("[%s] listen: disconnect connector")
 	m.disconnect()
 
-	infoLog.Println("stop minitel listen: closed connection")
+	infoLog.Println("[%s] listen: end of listen")
 	m.wg.Done()
 }
 

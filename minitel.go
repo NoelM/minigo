@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 )
 
 var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
@@ -44,9 +45,10 @@ type Minitel struct {
 
 	tag      string
 	connLost *prometheus.CounterVec
+	wg       *sync.WaitGroup
 }
 
-func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec) *Minitel {
+func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec, wg *sync.WaitGroup) *Minitel {
 	return &Minitel{
 		conn:            conn,
 		parity:          parity,
@@ -57,6 +59,7 @@ func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.Co
 		RecvKey:         make(chan int32),
 		tag:             tag,
 		connLost:        connLost,
+		wg:              wg,
 	}
 }
 
@@ -194,6 +197,8 @@ func (m *Minitel) Listen() {
 		m.RecvKey <- ConnexionFin
 	}
 	infoLog.Println("stop minitel listen: closed connection")
+
+	m.wg.Done()
 }
 
 func (m *Minitel) Disconnect() {

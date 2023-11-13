@@ -157,10 +157,15 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		ws, _ := minigo.NewWebsocket(conn, ctx)
 		_ = ws.Init()
 
-		m := minigo.NewMinitel(ws, false, "websocket", promConnLostNb)
+		var innerWg sync.WaitGroup
+		innerWg.Add(2)
+
+		m := minigo.NewMinitel(ws, false, "websocket", promConnLostNb, &innerWg)
 		go m.Listen()
 
-		NotelHandler(m, "websocket")
+		NotelHandler(m, "websocket", &innerWg)
+
+		innerWg.Wait()
 
 		infoLog.Printf("Minitel session closed for IP=%s\n", r.RemoteAddr)
 	})
@@ -190,10 +195,14 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 	}
 
 	modem.RingHandler(func(mdm *minigo.Modem) {
-		m := minigo.NewMinitel(mdm, true, modemTag, promConnLostNb)
+		var innerWg sync.WaitGroup
+		innerWg.Add(2)
+
+		m := minigo.NewMinitel(mdm, true, modemTag, promConnLostNb, &innerWg)
 		go m.Listen()
 
-		NotelHandler(m, modemTag)
+		NotelHandler(m, modemTag, &innerWg)
+		wg.Wait()
 
 		infoLog.Printf("Minitel session closed for Modem\n")
 	})
@@ -201,7 +210,7 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 	modem.Serve(false)
 }
 
-func NotelHandler(mntl *minigo.Minitel, sourceTag string) {
+func NotelHandler(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup) {
 
 	promConnNb.With(prometheus.Labels{"source": sourceTag}).Inc()
 	active := NbConnectedUsers.Add(1)
@@ -230,4 +239,6 @@ SIGNIN:
 	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
 
 	infoLog.Printf("quits NOTEL service handler, connected=%d\n", active)
+
+	wg.Done()
 }

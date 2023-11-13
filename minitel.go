@@ -176,7 +176,11 @@ func (m *Minitel) Listen() {
 					}
 				} else {
 					connexionFinRcvd = connexionFinRcvd || (keyValue == ConnexionFin)
+					if keyValue == ConnexionFin {
+						fmt.Println("on a recu CnxFin!")
+					}
 					m.RecvKey <- keyValue
+					fmt.Println("et voila c'est envoye")
 				}
 
 				keyBuffer = []byte{}

@@ -184,6 +184,9 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		NotelHandler(m, tag, &innerWg)
 		innerWg.Wait()
 
+		infoLog.Printf("[%s] serve-ws: disconnect\n", tag)
+		ws.Disconnect()
+
 		infoLog.Printf("[%s] serve-ws: session closed\n", tag)
 	})
 
@@ -212,16 +215,19 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 	}
 
 	modem.RingHandler(func(mdm *minigo.Modem) {
-		var innerWg sync.WaitGroup
-		innerWg.Add(2)
+		var connectionWg sync.WaitGroup
+		connectionWg.Add(2)
 
-		m := minigo.NewMinitel(mdm, true, modemTag, promConnLostNb, &innerWg)
+		m := minigo.NewMinitel(mdm, true, modemTag, promConnLostNb, &connectionWg)
 		go m.Listen()
 
-		NotelHandler(m, modemTag, &innerWg)
-		innerWg.Wait()
+		NotelHandler(m, modemTag, &connectionWg)
+		connectionWg.Wait()
 
-		infoLog.Printf("[%s] minitel session closed\n", modemTag)
+		infoLog.Printf("[%s] ring-handler: disconnect\n", modemTag)
+		mdm.Disconnect()
+
+		infoLog.Printf("[%s] ring-handler: minitel session closed\n", modemTag)
 	})
 
 	modem.Serve(false)
@@ -241,6 +247,7 @@ SIGNIN:
 
 	if op == minigo.GuideOp {
 		creds, op = NewSignUpPage(mntl).Run()
+
 		if op == minigo.SommaireOp {
 			goto SIGNIN
 		}

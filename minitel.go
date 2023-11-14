@@ -108,7 +108,7 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 	}
 
 	if !ok {
-		err = fmt.Errorf("not verified for acknowledgment ackType=%d\n", m.ackType)
+		err = fmt.Errorf("not verified for acknowledgment ackType=%d", m.ackType)
 		errorLog.Printf("[%s] ack-checker: %s\n", m.tag, err.Error())
 	} else {
 		infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.tag, m.ackType)
@@ -119,7 +119,6 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 }
 
 func (m *Minitel) Listen() {
-	fullRead := true
 	var keyBuffer []byte
 	var keyValue int32
 
@@ -132,27 +131,23 @@ func (m *Minitel) Listen() {
 		var err error
 		var inBytes []byte
 
-		if fullRead {
-			inBytes, err = m.conn.Read()
-			if err != nil {
-				warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", m.tag, err.Error())
-				break
-			}
-
-			if len(inBytes) == 0 {
-				fullRead = true
-				continue
-			}
-
-			fullRead = false
+		inBytes, err = m.conn.Read()
+		if err != nil {
+			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", m.tag, err.Error())
+			break
+		}
+		if len(inBytes) == 0 {
+			continue
 		}
 
 		var parityErr error
 		for _, b := range inBytes {
+
 			if m.parity {
-				b, parityErr = CheckByteParity(b)
-				if parityErr != nil {
-					warnLog.Printf("[%s] listen: ignored key=%x: wrong parity\n", m.tag, b)
+				if b, parityErr = CheckByteParity(b); parityErr != nil {
+					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", m.tag, b)
+
+					keyBuffer = []byte{}
 					continue
 				}
 			}
@@ -162,7 +157,9 @@ func (m *Minitel) Listen() {
 			done, pro, keyValue, err = ReadKey(keyBuffer)
 			if err != nil {
 				errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.tag, keyBuffer, err.Error())
+
 				keyBuffer = []byte{}
+				continue
 			}
 
 			if done {
@@ -172,11 +169,13 @@ func (m *Minitel) Listen() {
 					if err != nil {
 						errorLog.Printf("[%s] listen: unable to acknowledge protocol code=%x: %s\n", m.tag, keyBuffer, err.Error())
 					}
+
 				} else {
 					m.RecvKey <- keyValue
 
 					if keyValue == ConnexionFin {
 						infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.tag)
+
 						cnxFinRcvd = true
 						break
 					}
@@ -185,7 +184,6 @@ func (m *Minitel) Listen() {
 				keyBuffer = []byte{}
 			}
 		}
-		fullRead = true
 
 		// The CnxFin only breaks the previous loop
 		if cnxFinRcvd {
@@ -200,8 +198,6 @@ func (m *Minitel) Listen() {
 
 		m.RecvKey <- ConnexionFin
 	}
-	infoLog.Printf("[%s] listen: disconnect connector\n", m.tag)
-	m.disconnect()
 
 	infoLog.Printf("[%s] listen: end of listen\n", m.tag)
 	m.wg.Done()

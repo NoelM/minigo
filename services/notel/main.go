@@ -71,6 +71,12 @@ const (
 	ServeUSR56KFaxModem = true
 )
 
+const (
+	WSTag             = "ws"
+	USR56KProTag      = "usr-56k-pro"
+	USR56KFaxModemTag = "usr-56k-faxmodem"
+)
+
 func main() {
 	var wg sync.WaitGroup
 
@@ -112,7 +118,7 @@ func main() {
 			},
 		}
 		wg.Add(1)
-		go serveModem(&wg, USR56KPro, "/dev/ttyUSB0", "usr-56k-pro")
+		go serveModem(&wg, USR56KPro, "/dev/ttyUSB0", USR56KProTag)
 	}
 
 	if ServeUSR56KFaxModem {
@@ -139,7 +145,7 @@ func main() {
 			},
 		}
 		wg.Add(1)
-		go serveModem(&wg, USR56KFaxModem, "/dev/ttyUSB1", "usr-56k-faxmodem")
+		go serveModem(&wg, USR56KFaxModem, "/dev/ttyUSB1", USR56KFaxModemTag)
 	}
 
 	wg.Add(1)
@@ -156,16 +162,16 @@ func serveWS(wg *sync.WaitGroup, url string) {
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		tag := fmt.Sprintf("ws:%s", r.RemoteAddr)
+		tagFull := fmt.Sprintf("%s:%s", WSTag, r.RemoteAddr)
 
 		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 		if err != nil {
-			errorLog.Printf("[%s] serve-ws: unable to open websocket connection: %s\n", tag, err.Error())
+			errorLog.Printf("[%s] serve-ws: unable to open websocket connection: %s\n", tagFull, err.Error())
 			return
 		}
 
 		defer conn.Close(websocket.StatusInternalError, "websocket internal error, quitting")
-		infoLog.Printf("[%s] serve-ws: new connection\n", tag)
+		infoLog.Printf("[%s] serve-ws: new connection\n", tagFull)
 
 		conn.SetReadLimit(1024)
 
@@ -178,16 +184,16 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		var innerWg sync.WaitGroup
 		innerWg.Add(2)
 
-		m := minigo.NewMinitel(ws, false, tag, promConnLostNb, &innerWg)
+		m := minigo.NewMinitel(ws, false, WSTag, promConnLostNb, &innerWg)
 		go m.Listen()
 
-		NotelHandler(m, tag, &innerWg)
+		NotelHandler(m, WSTag, &innerWg)
 		innerWg.Wait()
 
-		infoLog.Printf("[%s] serve-ws: disconnect\n", tag)
+		infoLog.Printf("[%s] serve-ws: disconnect\n", tagFull)
 		ws.Disconnect()
 
-		infoLog.Printf("[%s] serve-ws: session closed\n", tag)
+		infoLog.Printf("[%s] serve-ws: session closed\n", tagFull)
 	})
 
 	err := http.ListenAndServe(url, fn)
@@ -196,6 +202,15 @@ func serveWS(wg *sync.WaitGroup, url string) {
 
 func serverMetrics(wg *sync.WaitGroup) {
 	defer wg.Done()
+
+	for _, cv := range []*prometheus.CounterVec{promConnNb, promConnLostNb, promConnDur, promConnAttemptNb} {
+		cv.With(prometheus.Labels{"source": WSTag}).Inc()
+		cv.With(prometheus.Labels{"source": USR56KProTag}).Inc()
+		cv.With(prometheus.Labels{"source": USR56KFaxModemTag}).Inc()
+	}
+	promConnActive.With(prometheus.Labels{"source": WSTag}).Set(0)
+	promConnActive.With(prometheus.Labels{"source": USR56KProTag}).Set(0)
+	promConnActive.With(prometheus.Labels{"source": USR56KFaxModemTag}).Set(0)
 
 	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":2112", nil)

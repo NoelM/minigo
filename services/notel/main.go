@@ -97,7 +97,7 @@ func main() {
 	if ServeUSR56KPro {
 		USR56KPro := []minigo.ATCommand{
 			{
-				Command: "ATZ",
+				Command: "ATZ0",
 				Reply:   "OK",
 			},
 			{
@@ -124,7 +124,7 @@ func main() {
 	if ServeUSR56KFaxModem {
 		USR56KFaxModem := []minigo.ATCommand{
 			{
-				Command: "ATZ",
+				Command: "ATZ0",
 				Reply:   "OK",
 			},
 			{

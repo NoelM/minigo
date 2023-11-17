@@ -226,6 +226,12 @@ const Eten = 0x41 // Clavier en mode étendu
 // 10 Commandes relatives à l'écran (voir p.142)
 const Rouleau = 0x43 // Ecran en mode rouleau
 
+// Procédure de correction d'erreur
+const PCE = 0x56
+
+// Renvoyé par le Minitel pour informer d'erreurs de parité
+const Sub = 0x1A
+
 // 11 Commandes relatives à plusieurs modules (voir p.143)
 const (
 	Start      = 0x69

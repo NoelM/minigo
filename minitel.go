@@ -15,28 +15,19 @@ var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshor
 var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
-type AckType uint
-
-const (
-	NoAck = iota
-	AckRouleau
-	AckPage
-	AckMinuscule
-	AckMajuscule
-)
-
 type Minitel struct {
 	RecvKey chan int32
 
 	conn   Connector
 	parity bool
+	pce    bool
 
 	defaultCouleur  int32
 	defaultGrandeur int32
 	currentGrandeur int32
 	defaultFond     int32
 
-	ackType            AckType
+	ackStack           *AckStack
 	terminalByte       byte
 	vitesseByte        byte
 	fonctionnementByte byte
@@ -55,6 +46,7 @@ func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.Co
 		defaultGrandeur: GrandeurNormale,
 		currentGrandeur: GrandeurNormale,
 		defaultFond:     FondNormal,
+		ackStack:        NewAckStack(),
 		RecvKey:         make(chan int32),
 		tag:             tag,
 		connLost:        connLost,
@@ -77,7 +69,23 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 	}
 }
 
-func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
+func (m *Minitel) startPCE() (err error) {
+	m.ackStack.Add(AckPCEStart)
+
+	buf, _ := GetProCode(Pro2)
+	buf = append(buf, Start, Special, PCE)
+	return m.conn.Write(buf)
+}
+
+func (m *Minitel) stopPCE() (err error) {
+	m.ackStack.Add(AckPCEStop)
+
+	buf, _ := GetProCode(Pro2)
+	buf = append(buf, Stop, Special, PCE)
+	return m.conn.Write(buf)
+}
+
+func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 	switch keyBuffer[2] {
 	case Terminal:
 		m.terminalByte = keyBuffer[3]
@@ -92,8 +100,15 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 		return
 	}
 
-	ok := false
-	switch m.ackType {
+	var ok bool
+
+	ack, ok = m.ackStack.Pop()
+	if !ok {
+		warnLog.Printf("[%s] ack-checker: no remaining ack to check\n", m.tag)
+		return
+	}
+
+	switch ack {
 	case AckRouleau:
 		ok = BitReadAt(m.fonctionnementByte, 1)
 	case AckPage:
@@ -102,19 +117,22 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (err error) {
 		ok = BitReadAt(m.fonctionnementByte, 3)
 	case AckMajuscule:
 		ok = !BitReadAt(m.fonctionnementByte, 3)
+	case AckPCEStart:
+		ok = BitReadAt(m.fonctionnementByte, 2)
+	case AckPCEStop:
+		ok = !BitReadAt(m.fonctionnementByte, 2)
 	default:
-		warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.tag, m.ackType)
+		warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.tag, ack)
 		return
 	}
 
 	if !ok {
-		err = fmt.Errorf("not verified for acknowledgment ackType=%d", m.ackType)
+		err = fmt.Errorf("not verified for acknowledgment ackType=%d", ack)
 		errorLog.Printf("[%s] ack-checker: %s\n", m.tag, err.Error())
 	} else {
-		infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.tag, m.ackType)
+		infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.tag, ack)
 	}
 
-	m.ackType = NoAck
 	return
 }
 
@@ -126,6 +144,9 @@ func (m *Minitel) Listen() {
 	var pro bool
 
 	var cnxFinRcvd bool
+
+	// Sub is a message for bad lines transmissions
+	var cntSub int
 
 	for m.IsConnected() {
 		var err error
@@ -162,10 +183,19 @@ func (m *Minitel) Listen() {
 				continue
 			}
 
+			if keyValue == Sub {
+				cntSub += 1
+
+				if cntSub > 3 {
+					m.startPCE()
+				}
+			}
+
 			if done {
 				if pro {
 					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.tag, keyBuffer)
-					err = m.ackChecker(keyBuffer)
+
+					_, err = m.ackChecker(keyBuffer)
 					if err != nil {
 						errorLog.Printf("[%s] listen: unable to acknowledge protocol code=%x: %s\n", m.tag, keyBuffer, err.Error())
 					}
@@ -217,7 +247,18 @@ func (m *Minitel) Send(buf []byte) error {
 			buf[id] = GetByteWithParity(b)
 		}
 	}
-	return m.conn.Write(buf)
+
+	if m.pce {
+		for pos := 0; pos < len(buf); pos += 15 {
+			pceBlock := ComputePCEBlock(buf[pos:])
+			return m.conn.Write(pceBlock)
+		}
+
+	} else {
+		return m.conn.Write(buf)
+	}
+
+	return nil
 }
 
 func (m *Minitel) Reset() error {
@@ -386,7 +427,7 @@ func (m *Minitel) CursorOff() error {
 //
 
 func (m *Minitel) RouleauOn() error {
-	m.ackType = AckRouleau
+	m.ackStack.Add(AckRouleau)
 
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Start, Rouleau)
@@ -394,7 +435,7 @@ func (m *Minitel) RouleauOn() error {
 }
 
 func (m *Minitel) RouleauOff() error {
-	m.ackType = AckPage
+	m.ackStack.Add(AckPage)
 
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Stop, Rouleau)
@@ -406,7 +447,7 @@ func (m *Minitel) RouleauOff() error {
 //
 
 func (m *Minitel) MinusculeOn() error {
-	m.ackType = AckMinuscule
+	m.ackStack.Add(AckMinuscule)
 
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Start, Minuscules)
@@ -414,7 +455,7 @@ func (m *Minitel) MinusculeOn() error {
 }
 
 func (m *Minitel) MinusculeOff() error {
-	m.ackType = AckMajuscule
+	m.ackStack.Add(AckMajuscule)
 
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Stop, Minuscules)

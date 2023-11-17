@@ -1,7 +1,5 @@
 package minigo
 
-import "unicode/utf8"
-
 const (
 	NoOp = iota - 50
 	DisconnectOp
@@ -186,7 +184,7 @@ func (p *Page) Run() (map[string]string, int) {
 				}
 
 			default:
-				if utf8.ValidRune(key) {
+				if ValidRune(key) {
 					p.charFunc(p.mntl, p.form, key)
 				} else {
 					errorLog.Printf("page: invalid rune=%d\n", key)

@@ -146,6 +146,8 @@ func (m *Minitel) Listen() {
 			if m.parity {
 				if b, parityErr = CheckByteParity(b); parityErr != nil {
 					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", m.tag, b)
+
+					keyBuffer = []byte{}
 					continue
 				}
 			}

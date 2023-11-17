@@ -1,7 +1,5 @@
 package minigo
 
-import "strings"
-
 const ParityBitPosition = 7
 
 const (
@@ -273,11 +271,3 @@ const (
 
 // Correspondance ASCII / Videotex
 const CharTable = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_xabcdefghijklmnopqrstuvwxyz"
-
-func GetVideotextCharByte(c byte) byte {
-	return byte(strings.LastIndexByte(CharTable, c))
-}
-
-func IsByteAValidChar(c byte) bool {
-	return c >= Sp && c <= Del
-}

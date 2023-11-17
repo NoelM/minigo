@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 )
 
 func GetProCode(pro byte) ([]byte, error) {
@@ -146,17 +147,42 @@ func GetCleanNRowsFromCursor(n int) (buf []byte) {
 	return
 }
 
-func EncodeRune(r rune) []byte {
-	if specialRune := EncodeSpecial(r); specialRune != nil {
-		return specialRune
+func GetTextZone(text string, attributes ...byte) (buf []byte) {
+	buf = append(buf, Sp)
+
+	for _, atb := range attributes {
+		buf = append(buf, EncodeAttribute(atb)...)
+	}
+	buf = append(buf, EncodeMessage(text)...)
+	buf = append(buf, Sp)
+
+	return
+}
+
+func GetSubArticle(content []byte, x, y int, res uint) (buf []byte) {
+	inBound, err := IsPosInBounds(x, y, res)
+	if err != nil {
+		log.Printf("unable to create sub-article: %s", err.Error())
+	}
+	if !inBound {
+		log.Printf("positon (x=%d ; y=%d) out-of-bounds", x, y)
 	}
 
-	vdtByte := GetVideotextCharByte(byte(r))
-	if IsByteAValidChar(vdtByte) {
-		return []byte{vdtByte}
-	}
+	buf = append(buf, Us, byte(0x40+x), byte(0x40+y))
+	buf = append(buf, content...)
+	return
+}
 
-	return nil
+func GetCursorOn() byte {
+	return CursorOn
+}
+
+func GetCursorOff() byte {
+	return CursorOff
+}
+
+func EncodeCharToVideotex(c byte) byte {
+	return byte(strings.LastIndexByte(CharTable, c))
 }
 
 func EncodeSpecial(r rune) []byte {
@@ -312,6 +338,27 @@ func DecodeAccent(keyBuffer []byte) rune {
 	return 0
 }
 
+func ValidChar(c byte) bool {
+	return c >= Sp && c <= Del
+}
+
+func EncodeRune(r rune) []byte {
+	if specialRune := EncodeSpecial(r); specialRune != nil {
+		return specialRune
+	}
+
+	vdtByte := EncodeCharToVideotex(byte(r))
+	if ValidChar(vdtByte) {
+		return []byte{vdtByte}
+	}
+
+	return nil
+}
+
+func ValidRune(r rune) bool {
+	return EncodeRune(r) != nil
+}
+
 func GetRepeatRune(r rune, n int) (buf []byte) {
 	if n > 40 {
 		return
@@ -346,40 +393,6 @@ func EncodeAttributes(attributes ...byte) (buf []byte) {
 		buf = append(buf, EncodeAttribute(atb)...)
 	}
 	return
-}
-
-func GetTextZone(text string, attributes ...byte) (buf []byte) {
-	buf = append(buf, Sp)
-
-	for _, atb := range attributes {
-		buf = append(buf, EncodeAttribute(atb)...)
-	}
-	buf = append(buf, EncodeMessage(text)...)
-	buf = append(buf, Sp)
-
-	return
-}
-
-func GetSubArticle(content []byte, x, y int, res uint) (buf []byte) {
-	inBound, err := IsPosInBounds(x, y, res)
-	if err != nil {
-		log.Printf("unable to create sub-article: %s", err.Error())
-	}
-	if !inBound {
-		log.Printf("positon (x=%d ; y=%d) out-of-bounds", x, y)
-	}
-
-	buf = append(buf, Us, byte(0x40+x), byte(0x40+y))
-	buf = append(buf, content...)
-	return
-}
-
-func GetCursorOn() byte {
-	return CursorOn
-}
-
-func GetCursorOff() byte {
-	return CursorOff
 }
 
 func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {

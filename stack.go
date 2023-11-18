@@ -10,6 +10,7 @@ func NewStack(maxSize int) *Stack {
 	return &Stack{
 		maxSize:   maxSize,
 		container: make([][]byte, 0),
+		lastId:    -1,
 	}
 }
 
@@ -42,10 +43,10 @@ func (s *Stack) Get(id int) []byte {
 		return nil
 	}
 
-	if id < s.lastId-s.maxSize {
+	if id <= s.lastId-s.maxSize {
 		return nil
 	}
 
-	relPos := (len(s.container) - 1) - (s.lastId - id)
+	relPos := id - (s.lastId - len(s.container) - 1)
 	return s.container[relPos]
 }

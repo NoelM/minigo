@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -85,6 +86,13 @@ func (m *Minitel) stopPCE() (err error) {
 	return m.conn.Write(buf)
 }
 
+func (m *Minitel) PCEMessage() {
+	m.WriteStatusLine("Mauvaise connexion")
+	time.Sleep(2 * time.Second)
+	m.WriteStatusLine("Mode lent actif")
+	time.Sleep(2 * time.Second)
+}
+
 func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 	switch keyBuffer[2] {
 	case Terminal:
@@ -118,9 +126,14 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 	case AckMajuscule:
 		ok = !BitReadAt(m.fonctionnementByte, 3)
 	case AckPCEStart:
-		ok = BitReadAt(m.fonctionnementByte, 2)
+		if ok = BitReadAt(m.fonctionnementByte, 2); ok {
+			m.pce = true
+			m.PCEMessage()
+		}
 	case AckPCEStop:
-		ok = !BitReadAt(m.fonctionnementByte, 2)
+		if ok = !BitReadAt(m.fonctionnementByte, 2); ok {
+			m.pce = false
+		}
 	default:
 		warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.tag, ack)
 		return
@@ -299,6 +312,13 @@ func (m *Minitel) CleanNRowsFrom(row, col, n int) error {
 //
 // WRITES
 //
+
+func (m *Minitel) WriteStatusLine(s string) error {
+	buf := []byte{Us, 0x40, 0x40}
+	buf = append(buf, GetRepeatRune(' ', 35)...)
+	buf = append(buf, EncodeMessage(s)...)
+	return m.Send(buf)
+}
 
 func (m *Minitel) WriteBytesAt(lineId, colId int, inBuf []byte) error {
 	buf := GetMoveCursorAt(lineId, colId)

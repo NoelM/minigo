@@ -20,7 +20,3 @@ jobs:
 
     - name: Test Minigo
       run: go test -v .
-
-    - name: Build Example Chat
-      run: cd examples/chat && go build -v .
-

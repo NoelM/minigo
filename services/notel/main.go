@@ -66,9 +66,9 @@ var (
 )
 
 const (
-	ServeWS             = true
+	ServeWS             = false
 	ServeUSR56KPro      = true
-	ServeUSR56KFaxModem = true
+	ServeUSR56KFaxModem = false
 )
 
 const (
@@ -245,7 +245,7 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 		infoLog.Printf("[%s] ring-handler: minitel session closed\n", modemTag)
 	})
 
-	modem.Serve(false)
+	modem.Serve(true)
 }
 
 func NotelHandler(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup) {

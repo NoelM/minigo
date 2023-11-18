@@ -150,6 +150,9 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 }
 
 func (m *Minitel) Listen() {
+	// Remove me!
+	m.startPCE()
+
 	var keyBuffer []byte
 	var keyValue int32
 
@@ -199,7 +202,7 @@ func (m *Minitel) Listen() {
 			if keyValue == Sub {
 				cntSub += 1
 
-				if cntSub > 3 {
+				if cntSub > 3 && !m.pce {
 					m.startPCE()
 				}
 			}

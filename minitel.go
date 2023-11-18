@@ -170,7 +170,7 @@ func (m *Minitel) Listen() {
 
 	// Sub is a message for bad lines transmissions
 	var cntSub int
-	var lastSub time.Time
+	var firstSub time.Time
 
 	for m.IsConnected() {
 		var err error
@@ -210,16 +210,20 @@ func (m *Minitel) Listen() {
 			if done {
 				switch keyValue {
 				case Sub:
-					cntSub += 1
-					lastSub = time.Now()
-					infoLog.Printf("[%s] listen: recv SUB cnt=%d pce=%t\n", m.tag, cntSub, m.pce)
+					if time.Since(firstSub) < 10*time.Second {
+						cntSub += 1
+						infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", m.tag, time.Since(firstSub).Seconds(), cntSub, m.pce)
 
-					if cntSub > MaxSub && time.Since(lastSub) < 10*time.Second && !m.pce {
-						infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.tag, cntSub, m.pce)
-						m.startPCE()
+						if cntSub > MaxSub && !m.pce {
+							infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.tag, cntSub, m.pce)
+							m.startPCE()
+						}
 
-					} else if time.Since(lastSub) > 10*time.Second {
+					} else {
 						cntSub = 1
+						infoLog.Printf("[%s] listen: recv SUB, reset first=%.0fs cnt=%d pce=%t\n", m.tag, time.Since(firstSub).Seconds(), cntSub, m.pce)
+
+						firstSub = time.Now()
 					}
 
 					keyBuffer = []byte{}

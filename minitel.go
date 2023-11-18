@@ -137,8 +137,9 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 	case AckPCEStart:
 		if ok = BitReadAt(m.fonctionnementByte, 2); ok {
 			m.pce = true
-			m.PCEMessage()
 			m.pceLock.Unlock()
+
+			m.PCEMessage()
 		}
 	case AckPCEStop:
 		if ok = !BitReadAt(m.fonctionnementByte, 2); ok {
@@ -370,9 +371,10 @@ func (m *Minitel) CleanNRowsFrom(row, col, n int) error {
 
 func (m *Minitel) WriteStatusLine(s string) error {
 	buf := []byte{Us, 0x40, 0x41}
-	buf = append(buf, GetRepeatRune(' ', 35)...)
+	buf = append(buf, GetRepeatRune(' ', 34)...)
+	buf = append(buf, Us, 0x40, 0x41)
 	buf = append(buf, EncodeMessage(s)...)
-	return m.freeSend(buf)
+	return m.Send(buf)
 }
 
 func (m *Minitel) WriteBytesAt(lineId, colId int, inBuf []byte) error {

@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"sync"
-	"time"
 	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -95,11 +94,7 @@ func (m *Minitel) stopPCE() (err error) {
 }
 
 func (m *Minitel) PCEMessage() {
-	m.WriteStatusLine("→ Mauvaise connexion...")
-	time.Sleep(2 * time.Second)
-	m.WriteStatusLine("PCE active")
-	m.freeSend([]byte{Us})
-	time.Sleep(2 * time.Second)
+	m.WriteStatusLine("→ Mauvaise connexion: PCE ON")
 }
 
 func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
@@ -374,6 +369,7 @@ func (m *Minitel) WriteStatusLine(s string) error {
 	buf = append(buf, GetRepeatRune(' ', 34)...)
 	buf = append(buf, Us, 0x40, 0x41)
 	buf = append(buf, EncodeMessage(s)...)
+	buf = append(buf, Us)
 	return m.Send(buf)
 }
 

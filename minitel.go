@@ -316,6 +316,7 @@ func (m *Minitel) freeSend(buf []byte) error {
 	if m.pce {
 		for pos := 0; pos < len(buf); pos += 15 {
 			pceBlock := ComputePCEBlock(buf[pos:])
+			infoLog.Printf("pceBlock=%s\n", pceBlock)
 
 			m.sentBlocks.Add(pceBlock)
 			return m.conn.Write(pceBlock)

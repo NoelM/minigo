@@ -66,9 +66,9 @@ var (
 )
 
 const (
-	ServeWS             = false
+	ServeWS             = true
 	ServeUSR56KPro      = true
-	ServeUSR56KFaxModem = false
+	ServeUSR56KFaxModem = true
 )
 
 const (

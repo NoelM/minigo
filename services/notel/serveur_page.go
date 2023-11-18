@@ -16,12 +16,11 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
 		mntl.WriteStringAt(2, 10, "NOTEL")
 		mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-		mntl.WriteStringLeft(3, "Mardi 7 Novembre 2023")
+		mntl.WriteStringLeft(3, "Samedi 18 Novembre 2023")
 
 		messages := []string{
-			"* Désormais une page de connexion sur NOTEL !",
-			"* Arrivée des actualités comme nouveau service, basé sur les flux RSS de France Info",
-			"* De nouveaux services à venir : un service de micro-blog, la gestion de son compte et les statistiques du serveur",
+			"* Après beaucoup d'essais (un grand merci à Jelora et HYRTEL), le serveur intègre la Procédure de Correction d'Erreurs ou PCE",
+			"* Arrivée des actualités comme nouveau service, basé sur les flux RSS de France24",
 			"* Beaucoup de travail sur 'minigo' avec une page TODO des sujets à traiter",
 		}
 

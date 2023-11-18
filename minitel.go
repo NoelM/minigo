@@ -156,9 +156,6 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 }
 
 func (m *Minitel) Listen() {
-	// Remove me!
-	m.startPCE()
-
 	var keyBuffer []byte
 	var keyValue int32
 
@@ -294,8 +291,10 @@ func (m *Minitel) Send(buf []byte) error {
 func (m *Minitel) synSend(id int) error {
 	block := m.sentBlocks.Get(id)
 	if block == nil {
-		errorLog.Printf("[%s] syn-send: cannot repeat block id=%d\n", m.tag, id)
-		return nil
+		warnLog.Printf("[%s] syn-send: cannot repeat block id=%d\n", m.tag, id)
+
+		block = m.prepareMsg([]byte{0})[0]
+		m.sentBlocks.Add(block)
 	}
 
 	buf := []byte{Syn, Syn, 0x40 + byte(id)}
@@ -304,24 +303,35 @@ func (m *Minitel) synSend(id int) error {
 }
 
 func (m *Minitel) freeSend(buf []byte) error {
+	prepared := m.prepareMsg(buf)
+
+	for _, msg := range prepared {
+		if m.pce {
+			m.sentBlocks.Add(msg)
+		} else {
+			m.sentBytes.Add(msg)
+		}
+
+		m.conn.Write(msg)
+	}
+	return nil
+}
+
+func (m *Minitel) prepareMsg(msg []byte) (prepared [][]byte) {
 	if m.parity {
-		for id, b := range buf {
-			buf[id] = GetByteWithParity(b)
+		for id, b := range msg {
+			msg[id] = GetByteWithParity(b)
 		}
 	}
 
 	if m.pce {
-		for pos := 0; pos < len(buf); pos += 15 {
-			pceBlock := ComputePCEBlock(buf[pos:])
-
-			m.sentBlocks.Add(pceBlock)
-			m.conn.Write(pceBlock)
+		for pos := 0; pos < len(msg); pos += 15 {
+			prepared = append(prepared, ComputePCEBlock(msg[pos:]))
 		}
-		return nil
+		return prepared
 
 	} else {
-		m.sentBytes.Add(buf)
-		return m.conn.Write(buf)
+		return append(prepared, msg)
 	}
 }
 

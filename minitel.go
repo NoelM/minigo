@@ -298,6 +298,10 @@ func (m *Minitel) synSend(id int) error {
 	}
 
 	buf := []byte{Syn, Syn, 0x40 + byte(id)}
+	for id, b := range buf {
+		buf[id] = GetByteWithParity(b)
+	}
+
 	buf = append(buf, block...)
 	return m.conn.Write(buf)
 }

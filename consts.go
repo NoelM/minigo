@@ -227,7 +227,7 @@ const Eten = 0x41 // Clavier en mode étendu
 const Rouleau = 0x43 // Ecran en mode rouleau
 
 // Procédure de correction d'erreur
-const PCE = 0x56
+const PCE = 0x44
 
 // Renvoyé par le Minitel pour informer d'erreurs de parité
 const Sub = 0x1A

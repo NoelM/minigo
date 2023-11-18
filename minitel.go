@@ -37,6 +37,7 @@ type Minitel struct {
 	tag      string
 	connLost *prometheus.CounterVec
 	wg       *sync.WaitGroup
+	mtx      sync.Mutex
 }
 
 func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec, wg *sync.WaitGroup) *Minitel {
@@ -74,7 +75,7 @@ func (m *Minitel) startPCE() (err error) {
 	m.ackStack.Add(AckPCEStart)
 
 	buf, _ := GetProCode(Pro2)
-	buf = append(buf, Start, Special, PCE)
+	buf = append(buf, Start, PCE)
 	return m.conn.Write(buf)
 }
 
@@ -82,7 +83,7 @@ func (m *Minitel) stopPCE() (err error) {
 	m.ackStack.Add(AckPCEStop)
 
 	buf, _ := GetProCode(Pro2)
-	buf = append(buf, Stop, Special, PCE)
+	buf = append(buf, Stop, PCE)
 	return m.conn.Write(buf)
 }
 
@@ -258,6 +259,9 @@ func (m *Minitel) IsConnected() bool {
 }
 
 func (m *Minitel) Send(buf []byte) error {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
 	if m.parity {
 		for id, b := range buf {
 			buf[id] = GetByteWithParity(b)

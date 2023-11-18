@@ -56,8 +56,8 @@ func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.Co
 		tag:             tag,
 		connLost:        connLost,
 		wg:              wg,
-		sentBytes:       NewStack(10),
-		sentBlocks:      NewStack(32),
+		sentBytes:       NewStack(1),
+		sentBlocks:      NewStack(16),
 	}
 }
 
@@ -228,10 +228,10 @@ func (m *Minitel) Listen() {
 				}
 
 				if nack {
-					blockId := keyValue - 0x40
-					infoLog.Printf("[%s] listen: recv block to repeat id=%d\n", m.tag, blockId)
+					blockId := int(keyValue - 0x40)
+					infoLog.Printf("[%s] listen: recv block to repeat val=%x id=%d\n", m.tag, keyValue, blockId)
 
-					m.synSend(int(blockId))
+					m.synSend(blockId)
 
 					m.pceLock.Unlock()
 					nack = false

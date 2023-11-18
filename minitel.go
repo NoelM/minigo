@@ -21,7 +21,7 @@ type Minitel struct {
 
 	conn   Connector
 	parity bool
-	pce    bool
+	wg     *sync.WaitGroup
 
 	defaultCouleur  int32
 	defaultGrandeur int32
@@ -34,10 +34,14 @@ type Minitel struct {
 	fonctionnementByte byte
 	protocoleByte      byte
 
+	sentBytes  *Stack
+	sentBlocks *Stack
+
 	tag      string
 	connLost *prometheus.CounterVec
-	wg       *sync.WaitGroup
-	mtx      sync.Mutex
+
+	pce     bool
+	pceLock sync.Mutex
 }
 
 func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec, wg *sync.WaitGroup) *Minitel {
@@ -53,6 +57,8 @@ func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.Co
 		tag:             tag,
 		connLost:        connLost,
 		wg:              wg,
+		sentBytes:       NewStack(10),
+		sentBlocks:      NewStack(32),
 	}
 }
 
@@ -72,7 +78,7 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 }
 
 func (m *Minitel) startPCE() (err error) {
-	m.mtx.Lock()
+	m.pceLock.Lock()
 	m.ackStack.Add(AckPCEStart)
 
 	buf, _ := GetProCode(Pro2)
@@ -130,8 +136,8 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 	case AckPCEStart:
 		if ok = BitReadAt(m.fonctionnementByte, 2); ok {
 			m.pce = true
+			m.pceLock.Unlock()
 			m.PCEMessage()
-			m.mtx.Unlock()
 		}
 	case AckPCEStop:
 		if ok = !BitReadAt(m.fonctionnementByte, 2); ok {
@@ -161,6 +167,7 @@ func (m *Minitel) Listen() {
 
 	var done bool
 	var pro bool
+	var nack bool
 
 	var cnxFinRcvd bool
 
@@ -202,16 +209,40 @@ func (m *Minitel) Listen() {
 				continue
 			}
 
-			if keyValue == Sub {
-				cntSub += 1
-
-				if cntSub > 3 && !m.pce {
-					m.startPCE()
-				}
-			}
-
 			if done {
-				if pro {
+				switch keyValue {
+				case Sub:
+					cntSub += 1
+					infoLog.Printf("[%s] listen: recv SUB cnt=%d pce=%t\n", m.tag, cntSub, m.pce)
+
+					if cntSub > 3 && !m.pce {
+						infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.tag, cntSub, m.pce)
+						m.startPCE()
+					}
+
+					keyBuffer = []byte{}
+					continue
+
+				case Nack:
+					infoLog.Printf("[%s] listen: recv NACK\n", m.tag)
+
+					nack = true
+					m.pceLock.Lock()
+
+					keyBuffer = []byte{}
+					continue
+				}
+
+				if nack {
+					blockId := keyValue - 0x40
+					infoLog.Printf("[%s] listen: recv block to repeat id=%d\n", m.tag, blockId)
+
+					m.synSend(int(blockId))
+
+					m.pceLock.Unlock()
+					nack = false
+
+				} else if pro {
 					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.tag, keyBuffer)
 
 					_, err = m.ackChecker(keyBuffer)
@@ -252,18 +283,30 @@ func (m *Minitel) Listen() {
 	m.wg.Done()
 }
 
-func (m *Minitel) disconnect() {
-	m.conn.Disconnect()
-}
-
 func (m *Minitel) IsConnected() bool {
 	return m.conn.Connected()
 }
 
 func (m *Minitel) Send(buf []byte) error {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
+	m.pceLock.Lock()
+	defer m.pceLock.Unlock()
 
+	return m.freeSend(buf)
+}
+
+func (m *Minitel) synSend(id int) error {
+	block := m.sentBlocks.Get(id)
+	if block == nil {
+		errorLog.Printf("[%s] syn-send: cannot repeat block id=%d\n", m.tag, id)
+		return nil
+	}
+
+	buf := []byte{Syn, Syn, 0x40 + byte(id)}
+	buf = append(buf, block...)
+	return m.conn.Write(buf)
+}
+
+func (m *Minitel) freeSend(buf []byte) error {
 	if m.parity {
 		for id, b := range buf {
 			buf[id] = GetByteWithParity(b)
@@ -273,10 +316,13 @@ func (m *Minitel) Send(buf []byte) error {
 	if m.pce {
 		for pos := 0; pos < len(buf); pos += 15 {
 			pceBlock := ComputePCEBlock(buf[pos:])
+
+			m.sentBlocks.Add(pceBlock)
 			return m.conn.Write(pceBlock)
 		}
 
 	} else {
+		m.sentBytes.Add(buf)
 		return m.conn.Write(buf)
 	}
 

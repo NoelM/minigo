@@ -51,7 +51,7 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		initFunc:         func(mntl *Minitel, inputs *Form, initData map[string]string) int { return NoOp },
 		charFunc:         func(mntl *Minitel, inputs *Form, key rune) {},
 		inChanFunc:       func(mntl *Minitel, inputs *Form, message string) {},
-		connexionFinFunc: func(mntl *Minitel) int { return DisconnectOp },
+		connexionFinFunc: defaultConnexionFinHandlerFunc,
 		envoiFunc:        defaultNavigationHandlerFunc,
 		sommaireFunc:     defaultNavigationHandlerFunc,
 		annulationFunc:   defaultNavigationHandlerFunc,
@@ -61,6 +61,12 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		correctionFunc:   defaultNavigationHandlerFunc,
 		suiteFunc:        defaultNavigationHandlerFunc,
 	}
+}
+
+func defaultConnexionFinHandlerFunc(mntl *Minitel) int {
+	mntl.CleanScreen()
+	mntl.WriteStringLeft(1, "→ Déconnexion demandée, à bientôt !")
+	return DisconnectOp
 }
 
 func defaultNavigationHandlerFunc(mntl *Minitel, input *Form) (map[string]string, int) {
@@ -187,7 +193,7 @@ func (p *Page) Run() (map[string]string, int) {
 				if ValidRune(key) {
 					p.charFunc(p.mntl, p.form, key)
 				} else {
-					errorLog.Printf("page: invalid rune=%d\n", key)
+					errorLog.Printf("page: invalid rune=%x\n", key)
 				}
 			}
 		}

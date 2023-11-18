@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -14,6 +15,8 @@ import (
 var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+
+const MaxSub = 5
 
 type Minitel struct {
 	RecvKey chan int32
@@ -167,6 +170,7 @@ func (m *Minitel) Listen() {
 
 	// Sub is a message for bad lines transmissions
 	var cntSub int
+	var lastSub time.Time
 
 	for m.IsConnected() {
 		var err error
@@ -207,11 +211,15 @@ func (m *Minitel) Listen() {
 				switch keyValue {
 				case Sub:
 					cntSub += 1
+					lastSub = time.Now()
 					infoLog.Printf("[%s] listen: recv SUB cnt=%d pce=%t\n", m.tag, cntSub, m.pce)
 
-					if cntSub > 3 && !m.pce {
+					if cntSub > MaxSub && time.Since(lastSub) < 10*time.Second && !m.pce {
 						infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.tag, cntSub, m.pce)
 						m.startPCE()
+
+					} else if time.Since(lastSub) > 10*time.Second {
+						cntSub = 1
 					}
 
 					keyBuffer = []byte{}

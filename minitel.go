@@ -95,9 +95,10 @@ func (m *Minitel) stopPCE() (err error) {
 }
 
 func (m *Minitel) PCEMessage() {
-	m.WriteStatusLine("Mauvaise connexion")
+	m.WriteStatusLine("→ Mauvaise connexion...")
 	time.Sleep(2 * time.Second)
-	m.WriteStatusLine("Mode lent actif")
+	m.WriteStatusLine("PCE active")
+	m.freeSend([]byte{Us})
 	time.Sleep(2 * time.Second)
 }
 
@@ -136,8 +137,8 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 	case AckPCEStart:
 		if ok = BitReadAt(m.fonctionnementByte, 2); ok {
 			m.pce = true
-			m.pceLock.Unlock()
 			m.PCEMessage()
+			m.pceLock.Unlock()
 		}
 	case AckPCEStop:
 		if ok = !BitReadAt(m.fonctionnementByte, 2); ok {
@@ -326,8 +327,6 @@ func (m *Minitel) freeSend(buf []byte) error {
 		m.sentBytes.Add(buf)
 		return m.conn.Write(buf)
 	}
-
-	return nil
 }
 
 func (m *Minitel) Reset() error {
@@ -370,10 +369,10 @@ func (m *Minitel) CleanNRowsFrom(row, col, n int) error {
 //
 
 func (m *Minitel) WriteStatusLine(s string) error {
-	buf := []byte{Us, 0x40, 0x40}
+	buf := []byte{Us, 0x40, 0x41}
 	buf = append(buf, GetRepeatRune(' ', 35)...)
 	buf = append(buf, EncodeMessage(s)...)
-	return m.Send(buf)
+	return m.freeSend(buf)
 }
 
 func (m *Minitel) WriteBytesAt(lineId, colId int, inBuf []byte) error {

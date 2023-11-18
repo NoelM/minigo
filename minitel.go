@@ -72,6 +72,7 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 }
 
 func (m *Minitel) startPCE() (err error) {
+	m.mtx.Lock()
 	m.ackStack.Add(AckPCEStart)
 
 	buf, _ := GetProCode(Pro2)
@@ -105,7 +106,7 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 	case Protocole:
 		m.protocoleByte = keyBuffer[3]
 	default:
-		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.tag, keyBuffer[3])
+		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.tag, keyBuffer[2])
 		return
 	}
 
@@ -130,6 +131,7 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 		if ok = BitReadAt(m.fonctionnementByte, 2); ok {
 			m.pce = true
 			m.PCEMessage()
+			m.mtx.Unlock()
 		}
 	case AckPCEStop:
 		if ok = !BitReadAt(m.fonctionnementByte, 2); ok {

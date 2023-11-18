@@ -245,7 +245,7 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 		infoLog.Printf("[%s] ring-handler: minitel session closed\n", modemTag)
 	})
 
-	modem.Serve(true)
+	modem.Serve(false)
 }
 
 func NotelHandler(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup) {

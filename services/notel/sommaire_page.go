@@ -59,10 +59,10 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	list.Display()
 
 	mntl.WriteAttributes(minigo.Clignotement, minigo.DoubleHauteur)
-	mntl.WriteStringCenter(19, "= Maintenance =")
+	mntl.WriteStringCenter(19, "→ Rendez-vous ←")
 	mntl.WriteAttributes(minigo.Fixe, minigo.GrandeurNormale)
 
-	mntl.WriteStringCenter(20, "Samedi 18 entre 15 et 16h")
+	mntl.WriteStringCenter(20, "Dimanche 19 Nov. à 20h")
 
 	mntl.WriteStringLeft(24, fmt.Sprintf("> Connectés: %d", NbConnectedUsers.Load()))
 	form.AppendInput("choice", minigo.NewInput(mntl, 24, 32, 2, 1, true))

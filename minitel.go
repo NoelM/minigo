@@ -80,6 +80,10 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 }
 
 func (m *Minitel) startPCE() (err error) {
+	if !m.pceLock.TryLock() {
+		return nil
+	}
+
 	m.pceLock.Lock()
 	m.ackStack.Add(AckPCEStart)
 

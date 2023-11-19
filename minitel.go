@@ -89,7 +89,8 @@ func (m *Minitel) startPCE() (err error) {
 
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Start, PCE)
-	return m.conn.Write(buf)
+
+	return m.freeSend(buf)
 }
 
 func (m *Minitel) stopPCE() (err error) {

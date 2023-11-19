@@ -46,6 +46,9 @@ func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 	sommairePage.SetCharFunc(keySommaire)
 	sommairePage.SetEnvoiFunc(envoiSommaire)
 	sommairePage.SetCorrectionFunc(correctionSommaire)
+	sommairePage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, chatId
+	})
 
 	return sommairePage
 }

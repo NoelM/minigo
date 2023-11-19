@@ -16,7 +16,7 @@ var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshor
 var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 const (
-	MaxSubPerMinute = 5
+	MaxSubPerMinute = 10
 	MsgStackLen     = 16
 )
 

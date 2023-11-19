@@ -16,7 +16,7 @@ var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshor
 var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
-const MaxSub = 5
+const MaxSubPerMinute = 5
 
 type Minitel struct {
 	RecvKey chan int32
@@ -212,11 +212,11 @@ func (m *Minitel) Listen() {
 			if done {
 				switch keyValue {
 				case Sub:
-					if time.Since(firstSub) < 10*time.Second {
+					if time.Since(firstSub) < time.Minute {
 						cntSub += 1
 						infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", m.tag, time.Since(firstSub).Seconds(), cntSub, m.pce)
 
-						if cntSub > MaxSub && !m.pce {
+						if cntSub > MaxSubPerMinute && !m.pce {
 							infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.tag, cntSub, m.pce)
 							m.startPCE()
 						}

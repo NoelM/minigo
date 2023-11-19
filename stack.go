@@ -14,6 +14,14 @@ func NewStack(maxSize int) *Stack {
 	}
 }
 
+func (s *Stack) InitPCE() *Stack {
+	for id := range s.container {
+		s.container[id] = make([]byte, 17)
+	}
+
+	return s
+}
+
 func (s *Stack) Add(msg []byte) {
 	buf := make([]byte, len(msg))
 	copy(buf, msg)

@@ -395,14 +395,40 @@ func EncodeAttributes(attributes ...byte) (buf []byte) {
 	return
 }
 
-func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
+func ApplyParity(in []byte) (out []byte) {
+	out = make([]byte, len(in))
+
+	for id, b := range in {
+		out[id] = GetByteWithParity(b)
+	}
+
+	return out
+}
+
+func ApplyPCE(in []byte, parity bool) (out [][]byte) {
+	var tmp []byte
+
+	if parity {
+		tmp = ApplyParity(in)
+	} else {
+		tmp = in
+	}
+
+	for pos := 0; pos < len(tmp); pos += 15 {
+		out = append(out, ComputePCEBlock(tmp[pos:]))
+	}
+
+	return out
+}
+
+func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err error) {
 	// Special characters, switch G2 mode
-	if keyBuffer[0] == Ss2 {
-		if len(keyBuffer) <= 1 {
+	if entryBytes[0] == Ss2 {
+		if len(entryBytes) <= 1 {
 			return
 		}
 
-		switch keyBuffer[1] {
+		switch entryBytes[1] {
 		case Livre:
 			value = '£'
 		case Paragraphe:
@@ -416,13 +442,13 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 		case Beta:
 			value = 'ß'
 		default:
-			if IsAccent(keyBuffer[1]) {
-				if len(keyBuffer) <= 2 {
+			if IsAccent(entryBytes[1]) {
+				if len(entryBytes) <= 2 {
 					return
 				}
 
 				// Ignore the SS2 header
-				value = DecodeAccent(keyBuffer[1:])
+				value = DecodeAccent(entryBytes[1:])
 			}
 		}
 
@@ -431,27 +457,27 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 			return
 		}
 
-	} else if keyBuffer[0] == Special {
-		if len(keyBuffer) == 1 {
+	} else if entryBytes[0] == Special {
+		if len(entryBytes) == 1 {
 			return
 		}
-	} else if keyBuffer[0] == Esc {
-		if len(keyBuffer) == 1 {
+	} else if entryBytes[0] == Esc {
+		if len(entryBytes) == 1 {
 			return
 		}
 
-		if keyBuffer[1] == CodeReceptionPrise {
-			if len(keyBuffer) == 2 {
+		if entryBytes[1] == CodeReceptionPrise {
+			if len(entryBytes) == 2 {
 				return
 			}
 
-			if keyBuffer[2] == 0x34 || keyBuffer[2] == 0x32 {
-				if len(keyBuffer) == 3 {
+			if entryBytes[2] == 0x34 || entryBytes[2] == 0x32 {
+				if len(entryBytes) == 3 {
 					return
 				}
 			}
-		} else if keyBuffer[1] == Pro2 { // PRO2 = ESC + 0x3A
-			if len(keyBuffer) < 4 {
+		} else if entryBytes[1] == Pro2 { // PRO2 = ESC + 0x3A
+			if len(entryBytes) < 4 {
 				return
 			}
 			// PRO2, RESP BYTE, STATUS BYTE
@@ -460,13 +486,13 @@ func ReadKey(keyBuffer []byte) (done bool, pro bool, value int32, err error) {
 		}
 	}
 
-	switch len(keyBuffer) {
+	switch len(entryBytes) {
 	case 1:
-		value = int32(keyBuffer[0])
+		value = int32(entryBytes[0])
 	case 2:
-		value = int32(binary.BigEndian.Uint16(keyBuffer))
+		value = int32(binary.BigEndian.Uint16(entryBytes))
 	case 4:
-		value = int32(binary.BigEndian.Uint32(keyBuffer))
+		value = int32(binary.BigEndian.Uint32(entryBytes))
 	default:
 		err = errors.New("unable to cast readbuffer")
 	}

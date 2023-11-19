@@ -1,7 +1,6 @@
 package minigo
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -16,7 +15,10 @@ var infoLog = log.New(os.Stdout, "[minigo] info:", log.Ldate|log.Ltime|log.Lshor
 var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
-const MaxSubPerMinute = 5
+const (
+	MaxSubPerMinute = 5
+	MsgStackLen     = 16
+)
 
 type Minitel struct {
 	RecvKey chan int32
@@ -42,8 +44,8 @@ type Minitel struct {
 	tag      string
 	connLost *prometheus.CounterVec
 
-	pce     bool
-	pceLock sync.Mutex
+	pce       bool
+	writeLock sync.Mutex
 }
 
 func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec, wg *sync.WaitGroup) *Minitel {
@@ -59,8 +61,8 @@ func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.Co
 		tag:             tag,
 		connLost:        connLost,
 		wg:              wg,
-		sentBytes:       NewStack(1),
-		sentBlocks:      NewStack(16),
+		sentBytes:       NewStack(MsgStackLen),
+		sentBlocks:      NewStack(MsgStackLen).InitPCE(),
 	}
 }
 
@@ -80,7 +82,7 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 }
 
 func (m *Minitel) startPCE() (err error) {
-	if !m.pceLock.TryLock() {
+	if !m.writeLock.TryLock() {
 		return nil
 	}
 	m.ackStack.Add(AckPCEStart)
@@ -91,7 +93,7 @@ func (m *Minitel) startPCE() (err error) {
 }
 
 func (m *Minitel) stopPCE() (err error) {
-	if !m.pceLock.TryLock() {
+	if !m.writeLock.TryLock() {
 		return nil
 	}
 	m.ackStack.Add(AckPCEStop)
@@ -105,59 +107,66 @@ func (m *Minitel) PCEMessage() {
 	m.WriteStatusLine("→ Mauvaise connexion: PCE ON")
 }
 
-func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
-	switch keyBuffer[2] {
+func (m *Minitel) saveProtocol(entryBuffer []byte) {
+	switch entryBuffer[2] {
 	case Terminal:
-		m.terminalByte = keyBuffer[3]
+		m.terminalByte = entryBuffer[3]
 	case Fonctionnement:
-		m.fonctionnementByte = keyBuffer[3]
+		m.fonctionnementByte = entryBuffer[3]
 	case Vitesse:
-		m.vitesseByte = keyBuffer[3]
+		m.vitesseByte = entryBuffer[3]
 	case Protocole:
-		m.protocoleByte = keyBuffer[3]
+		m.protocoleByte = entryBuffer[3]
 	default:
-		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.tag, keyBuffer[2])
+		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.tag, entryBuffer[2])
 		return
 	}
 
+}
+
+func (m *Minitel) ackChecker() {
 	var ok bool
+	var ack AckType
+	nbAck := m.ackStack.Len()
 
-	ack, ok = m.ackStack.Pop()
-	if !ok {
-		warnLog.Printf("[%s] ack-checker: no remaining ack to check\n", m.tag)
-		return
-	}
-
-	switch ack {
-	case AckRouleau:
-		ok = BitReadAt(m.fonctionnementByte, 1)
-	case AckPage:
-		ok = !BitReadAt(m.fonctionnementByte, 1)
-	case AckMinuscule:
-		ok = BitReadAt(m.fonctionnementByte, 3)
-	case AckMajuscule:
-		ok = !BitReadAt(m.fonctionnementByte, 3)
-	case AckPCEStart:
-		if ok = BitReadAt(m.fonctionnementByte, 2); ok {
-			m.pce = true
-			m.pceLock.Unlock()
-
-			m.PCEMessage()
+	for i := 0; i < nbAck; i += 1 {
+		ack, ok = m.ackStack.Pop()
+		if !ok {
+			warnLog.Printf("[%s] ack-checker: no remaining ack to check\n", m.tag)
+			return
 		}
-	case AckPCEStop:
-		if ok = !BitReadAt(m.fonctionnementByte, 2); ok {
-			m.pce = false
-		}
-	default:
-		warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.tag, ack)
-		return
-	}
 
-	if !ok {
-		err = fmt.Errorf("not verified for acknowledgment ackType=%d", ack)
-		errorLog.Printf("[%s] ack-checker: %s\n", m.tag, err.Error())
-	} else {
-		infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.tag, ack)
+		switch ack {
+		case AckRouleau:
+			ok = BitReadAt(m.fonctionnementByte, 1)
+		case AckPage:
+			ok = !BitReadAt(m.fonctionnementByte, 1)
+		case AckMinuscule:
+			ok = BitReadAt(m.fonctionnementByte, 3)
+		case AckMajuscule:
+			ok = !BitReadAt(m.fonctionnementByte, 3)
+		case AckPCEStart:
+			if ok = BitReadAt(m.fonctionnementByte, 2); ok {
+				m.pce = true
+				m.writeLock.Unlock()
+
+				m.PCEMessage()
+			}
+		case AckPCEStop:
+			if ok = !BitReadAt(m.fonctionnementByte, 2); ok {
+				m.pce = false
+			}
+		default:
+			warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.tag, ack)
+		}
+
+		if !ok {
+			errorLog.Printf("[%s] ack-checker: not verified for acknowledgment ackType=%d\n", m.tag, ack)
+			m.ackStack.Add(ack)
+
+		} else {
+			infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.tag, ack)
+		}
 	}
 
 	return
@@ -204,7 +213,7 @@ func (m *Minitel) Listen() {
 
 			entryBytes = append(entryBytes, b)
 
-			done, pro, entry, err = ReadKey(entryBytes)
+			done, pro, entry, err = ReadEntryBytes(entryBytes)
 			if err != nil {
 				errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.tag, entryBytes, err.Error())
 
@@ -238,7 +247,7 @@ func (m *Minitel) Listen() {
 					infoLog.Printf("[%s] listen: recv NACK\n", m.tag)
 
 					nackRcvd = true
-					m.pceLock.Lock()
+					m.writeLock.Lock()
 
 					entryBytes = []byte{}
 					continue
@@ -250,15 +259,15 @@ func (m *Minitel) Listen() {
 
 					m.synSend(blockId)
 
-					m.pceLock.Unlock()
+					m.writeLock.Unlock()
 					nackRcvd = false
 
 				} else if pro {
 					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.tag, entryBytes)
 
-					_, err = m.ackChecker(entryBytes)
-					if err != nil {
-						errorLog.Printf("[%s] listen: unable to acknowledge protocol code=%x: %s\n", m.tag, entryBytes, err.Error())
+					m.saveProtocol(entryBytes)
+					if !m.ackStack.Empty() {
+						m.ackChecker()
 					}
 
 				} else {
@@ -299,61 +308,36 @@ func (m *Minitel) IsConnected() bool {
 }
 
 func (m *Minitel) Send(buf []byte) error {
-	m.pceLock.Lock()
-	defer m.pceLock.Unlock()
+	m.writeLock.Lock()
+	defer m.writeLock.Unlock()
 
 	return m.freeSend(buf)
 }
 
 func (m *Minitel) synSend(id int) error {
 	block := m.sentBlocks.Get(id)
-	if block == nil {
-		warnLog.Printf("[%s] syn-send: cannot repeat block id=%d\n", m.tag, id)
 
-		block = m.prepareMsg([]byte{0})[0]
-		m.sentBlocks.Add(block)
-	}
-
-	buf := []byte{Syn, Syn, 0x40 + byte(id)}
-	for id, b := range buf {
-		buf[id] = GetByteWithParity(b)
-	}
-
+	buf := ApplyParity([]byte{Syn, Syn, 0x40 + byte(id)})
 	buf = append(buf, block...)
+
 	return m.conn.Write(buf)
 }
 
 func (m *Minitel) freeSend(buf []byte) error {
-	prepared := m.prepareMsg(buf)
-
-	for _, msg := range prepared {
-		if m.pce {
-			m.sentBlocks.Add(msg)
-		} else {
-			m.sentBytes.Add(msg)
-		}
-
-		m.conn.Write(msg)
-	}
-	return nil
-}
-
-func (m *Minitel) prepareMsg(msg []byte) (prepared [][]byte) {
-	if m.parity {
-		for id, b := range msg {
-			msg[id] = GetByteWithParity(b)
-		}
-	}
+	var err error
 
 	if m.pce {
-		for pos := 0; pos < len(msg); pos += 15 {
-			prepared = append(prepared, ComputePCEBlock(msg[pos:]))
+		PCEBlocks := ApplyPCE(buf, m.parity)
+		for _, blk := range PCEBlocks {
+			err = m.conn.Write(blk)
 		}
-		return prepared
-
+	} else if m.parity {
+		err = m.conn.Write(ApplyParity(buf))
 	} else {
-		return append(prepared, msg)
+		err = m.conn.Write(buf)
 	}
+
+	return err
 }
 
 func (m *Minitel) Reset() error {

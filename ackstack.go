@@ -34,3 +34,11 @@ func (a *AckStack) Pop() (ack AckType, ok bool) {
 
 	return ack, true
 }
+
+func (a *AckStack) Len() int {
+	return len(a.container)
+}
+
+func (a *AckStack) Empty() bool {
+	return len(a.container) == 0
+}

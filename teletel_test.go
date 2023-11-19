@@ -68,6 +68,12 @@ func TestGetByteWithParity(t *testing.T) {
 	if computed := GetByteWithParity(originalByte); computed != expectedByte {
 		t.Fatalf("expected result: %b got %b", expectedByte, computed)
 	}
+
+	originalByte = 0b00000000
+	expectedByte = 0b00000000
+	if computed := GetByteWithParity(originalByte); computed != expectedByte {
+		t.Fatalf("expected result: %b got %b", expectedByte, computed)
+	}
 }
 
 func TestCheckByteParity(t *testing.T) {

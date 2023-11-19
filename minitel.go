@@ -91,6 +91,9 @@ func (m *Minitel) startPCE() (err error) {
 }
 
 func (m *Minitel) stopPCE() (err error) {
+	if !m.pceLock.TryLock() {
+		return nil
+	}
 	m.ackStack.Add(AckPCEStop)
 
 	buf, _ := GetProCode(Pro2)
@@ -161,56 +164,56 @@ func (m *Minitel) ackChecker(keyBuffer []byte) (ack AckType, err error) {
 }
 
 func (m *Minitel) Listen() {
-	var keyBuffer []byte
-	var keyValue int32
+	var entryBytes []byte
+	var entry int32
 
 	var done bool
 	var pro bool
-	var nack bool
 
+	var nackRcvd bool
 	var cnxFinRcvd bool
 
-	// Sub is a message for bad lines transmissions
+	// SUB is a message for bad lines transmissions
 	var cntSub int
 	var firstSub time.Time
 
 	for m.IsConnected() {
 		var err error
-		var inBytes []byte
+		var readBytes []byte
 
-		inBytes, err = m.conn.Read()
+		readBytes, err = m.conn.Read()
 		if err != nil {
 			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", m.tag, err.Error())
 			break
 		}
-		if len(inBytes) == 0 {
+		if len(readBytes) == 0 {
 			continue
 		}
 
 		var parityErr error
-		for _, b := range inBytes {
+		for _, b := range readBytes {
 
 			if m.parity {
 				if b, parityErr = CheckByteParity(b); parityErr != nil {
 					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", m.tag, b)
 
-					keyBuffer = []byte{}
+					entryBytes = []byte{}
 					continue
 				}
 			}
 
-			keyBuffer = append(keyBuffer, b)
+			entryBytes = append(entryBytes, b)
 
-			done, pro, keyValue, err = ReadKey(keyBuffer)
+			done, pro, entry, err = ReadKey(entryBytes)
 			if err != nil {
-				errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.tag, keyBuffer, err.Error())
+				errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.tag, entryBytes, err.Error())
 
-				keyBuffer = []byte{}
+				entryBytes = []byte{}
 				continue
 			}
 
 			if done {
-				switch keyValue {
+				switch entry {
 				case Sub:
 					if time.Since(firstSub) < time.Minute {
 						cntSub += 1
@@ -228,40 +231,40 @@ func (m *Minitel) Listen() {
 						firstSub = time.Now()
 					}
 
-					keyBuffer = []byte{}
+					entryBytes = []byte{}
 					continue
 
 				case Nack:
 					infoLog.Printf("[%s] listen: recv NACK\n", m.tag)
 
-					nack = true
+					nackRcvd = true
 					m.pceLock.Lock()
 
-					keyBuffer = []byte{}
+					entryBytes = []byte{}
 					continue
 				}
 
-				if nack {
-					blockId := int(keyValue - 0x40)
-					infoLog.Printf("[%s] listen: recv block to repeat val=%x id=%d\n", m.tag, keyValue, blockId)
+				if nackRcvd {
+					blockId := int(entry - 0x40)
+					infoLog.Printf("[%s] listen: recv block to repeat val=%x id=%d\n", m.tag, entry, blockId)
 
 					m.synSend(blockId)
 
 					m.pceLock.Unlock()
-					nack = false
+					nackRcvd = false
 
 				} else if pro {
-					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.tag, keyBuffer)
+					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.tag, entryBytes)
 
-					_, err = m.ackChecker(keyBuffer)
+					_, err = m.ackChecker(entryBytes)
 					if err != nil {
-						errorLog.Printf("[%s] listen: unable to acknowledge protocol code=%x: %s\n", m.tag, keyBuffer, err.Error())
+						errorLog.Printf("[%s] listen: unable to acknowledge protocol code=%x: %s\n", m.tag, entryBytes, err.Error())
 					}
 
 				} else {
-					m.RecvKey <- keyValue
+					m.RecvKey <- entry
 
-					if keyValue == ConnexionFin {
+					if entry == ConnexionFin {
 						infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.tag)
 
 						cnxFinRcvd = true
@@ -269,7 +272,7 @@ func (m *Minitel) Listen() {
 					}
 				}
 
-				keyBuffer = []byte{}
+				entryBytes = []byte{}
 			}
 		}
 

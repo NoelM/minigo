@@ -83,8 +83,6 @@ func (m *Minitel) startPCE() (err error) {
 	if !m.pceLock.TryLock() {
 		return nil
 	}
-
-	m.pceLock.Lock()
 	m.ackStack.Add(AckPCEStart)
 
 	buf, _ := GetProCode(Pro2)

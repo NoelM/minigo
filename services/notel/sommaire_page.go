@@ -65,7 +65,9 @@ func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
 	mntl.CleanScreen()
 	mntl.SendVDT("static/notel.vdt")
-	mntl.WriteAttributes(minigo.FondNormal, minigo.GrandeurNormale)
+	mntl.ModeG0()
+
+	mntl.WriteAttributes(minigo.FondNormal, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
 	list := minigo.NewList(mntl, 8, 1, 20, 2)
 	list.AppendItem("*CHA", "MINICHAT")

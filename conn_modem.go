@@ -210,16 +210,6 @@ func (m *Modem) Connect() {
 
 	time.Sleep(500 * time.Millisecond)
 
-	status, err := m.port.GetModemStatusBits()
-	if err != nil {
-		warnLog.Printf("unable to get modem status: %s\n", err.Error())
-	}
-
-	if !status.DCD {
-		errorLog.Println("unable establish connection")
-		return
-	}
-
 	m.SetConnected(true)
 	infoLog.Println("connection V.23 established")
 

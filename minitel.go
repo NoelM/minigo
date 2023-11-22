@@ -94,7 +94,7 @@ func (m *Minitel) startPCE() (err error) {
 }
 
 func (m *Minitel) PCEMessage() {
-	m.WriteStatusLine("→ Mauvaise connexion: PCE ON")
+	m.WriteStatusLine("→ Cnx dégradée: mode lent")
 }
 
 func (m *Minitel) saveProtocol(entryBuffer []byte) {
@@ -326,12 +326,12 @@ func (m *Minitel) Send(buf []byte) error {
 }
 
 func (m *Minitel) synSend(id int) error {
+	m.conn.Write(ApplyParity([]byte{Syn, Syn, 0x40 + byte(id)}))
+
+	time.Sleep(150 * time.Millisecond)
+
 	block := m.sentBlocks.Get(id)
-
-	buf := ApplyParity([]byte{Syn, Syn, 0x40 + byte(id)})
-	buf = append(buf, block...)
-
-	return m.conn.Write(buf)
+	return m.conn.Write(block)
 }
 
 func (m *Minitel) freeSend(buf []byte) error {

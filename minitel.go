@@ -349,9 +349,11 @@ func (m *Minitel) freeSend(buf []byte) error {
 
 		PCEBlocks := ApplyPCE(buf, m.parity)
 		for _, blk := range PCEBlocks {
+			m.sentBlocks.Add(blk)
 			err = m.conn.Write(blk)
 		}
 	} else if m.parity {
+		m.sentBlocks.Add(buf)
 		err = m.conn.Write(ApplyParity(buf))
 	} else {
 		err = m.conn.Write(buf)

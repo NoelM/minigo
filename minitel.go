@@ -46,6 +46,7 @@ type Minitel struct {
 
 	pce       bool
 	writeLock sync.Mutex
+	synHeader []byte
 }
 
 func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec, wg *sync.WaitGroup) *Minitel {
@@ -93,10 +94,6 @@ func (m *Minitel) startPCE() (err error) {
 	return m.freeSend(buf)
 }
 
-func (m *Minitel) PCEMessage() {
-	m.WriteStatusLine("→ Cnx dégradée: mode lent")
-}
-
 func (m *Minitel) saveProtocol(entryBuffer []byte) {
 	switch entryBuffer[2] {
 	case Terminal:
@@ -140,7 +137,6 @@ func (m *Minitel) ackChecker() {
 				m.writeLock.Unlock()
 
 				m.sentBlocks.Reset()
-				m.PCEMessage()
 			}
 		case AckPCEStop:
 			if ok = !BitReadAt(m.fonctionnementByte, 2); ok {
@@ -234,7 +230,7 @@ func (m *Minitel) Listen() {
 
 						if cntSub > MaxSubPerMinute && !m.pce {
 							infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.source, cntSub, m.pce)
-							//m.startPCE()
+							m.startPCE()
 						}
 
 					} else {
@@ -327,7 +323,13 @@ func (m *Minitel) Send(buf []byte) error {
 }
 
 func (m *Minitel) synSend(id int) error {
-	m.conn.Write(ApplyParity([]byte{Syn, Syn, 0x40 + byte(id)}))
+	synHeader := ApplyParity([]byte{Syn, Syn, 0x40 + byte(id)})
+	if m.sentBlocks.empty {
+		m.synHeader = synHeader
+		return nil
+	}
+
+	m.conn.Write(synHeader)
 
 	time.Sleep(150 * time.Millisecond)
 
@@ -339,6 +341,12 @@ func (m *Minitel) freeSend(buf []byte) error {
 	var err error
 
 	if m.pce {
+		if m.synHeader != nil {
+			err = m.conn.Write(m.synHeader)
+			time.Sleep(100 * time.Millisecond)
+			m.synHeader = nil
+		}
+
 		PCEBlocks := ApplyPCE(buf, m.parity)
 		for _, blk := range PCEBlocks {
 			err = m.conn.Write(blk)

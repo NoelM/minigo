@@ -22,6 +22,10 @@ func (s *Stack) InitPCE() *Stack {
 	return s
 }
 
+func (s *Stack) Reset() {
+	s.curId = 0
+}
+
 func (s *Stack) Add(msg []byte) {
 	buf := make([]byte, len(msg))
 	copy(buf, msg)

@@ -139,6 +139,7 @@ func (m *Minitel) ackChecker() {
 				m.pce = true
 				m.writeLock.Unlock()
 
+				m.sentBlocks.Reset()
 				m.PCEMessage()
 			}
 		case AckPCEStop:

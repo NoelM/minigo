@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/NoelM/minigo"
 )
@@ -15,25 +14,35 @@ const (
 	serveurId
 )
 
+var ServIdMap = map[string]int{
+	"*CHA": chatId,
+	"*MTO": meteoId,
+	"*INF": infoId,
+	"*SRV": serveurId,
+}
+
 func SommaireHandler(m *minigo.Minitel, login string) {
 	infoLog.Println("enters sommaire handler")
-	var id int
-	for id >= sommaireId || id == minigo.SommaireOp {
-		switch id {
-		case sommaireId:
-			_, id = NewPageSommaire(m).Run()
-		case minigo.SommaireOp:
-			_, id = NewPageSommaire(m).Run()
+
+	var op int
+	var choice map[string]string
+
+	for op != minigo.DisconnectOp {
+		choice, op = NewPageSommaire(m).Run()
+		serviceId, ok := ServIdMap[choice["choice"]]
+		if !ok {
+			continue
+		}
+
+		switch serviceId {
 		case chatId:
-			id = ServiceMiniChat(m, login)
+			op = ServiceMiniChat(m, login)
 		case meteoId:
-			id = ServiceMeteo(m)
+			op = ServiceMeteo(m)
 		case infoId:
-			_, id = NewPageInfo(m).Run()
+			_, op = NewPageInfo(m).Run()
 		case serveurId:
-			_, id = NewServeurPage(m).Run()
-		default:
-			id = sommaireId
+			_, op = NewServeurPage(m).Run()
 		}
 	}
 	infoLog.Println("quits sommaire handler")
@@ -58,14 +67,21 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.SendVDT("static/notel.vdt")
 	mntl.WriteAttributes(minigo.FondNormal, minigo.GrandeurNormale)
 
-	list := minigo.NewList(mntl, []string{"MINICHAT", "METEO", "INFOS", "SERVEUR"})
+	list := minigo.NewList(mntl, 8, 1, 20, 2)
+	list.AppendItem("*CHA", "MINICHAT")
+	list.AppendItem("*MTO", "METEO")
+	list.AppendItem("*INF", "INFOS")
+	list.AppendItem("*SRV", "SERVEUR")
+
 	list.Display()
 
-	mntl.WriteAttributes(minigo.Clignotement, minigo.DoubleHauteur)
-	mntl.WriteStringCenter(19, "→ Rendez-vous ←")
-	mntl.WriteAttributes(minigo.Fixe, minigo.GrandeurNormale)
+	/*
+		mntl.WriteAttributes(minigo.Clignotement, minigo.DoubleHauteur)
+		mntl.WriteStringCenter(19, "→ Rendez-vous ←")
+		mntl.WriteAttributes(minigo.Fixe, minigo.GrandeurNormale)
 
-	mntl.WriteStringCenter(20, "Dimanche 19 Nov. à 20h")
+		mntl.WriteStringCenter(20, "Dimanche 19 Nov. à 20h")
+	*/
 
 	mntl.WriteStringLeft(24, fmt.Sprintf("> Connectés: %d", NbConnectedUsers.Load()))
 	form.AppendInput("choice", minigo.NewInput(mntl, 24, 32, 2, 1, true))
@@ -83,12 +99,7 @@ func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, 
 	mntl.Reset()
 	infoLog.Printf("chosen service: %s\n", form.ValueActive())
 
-	id, err := strconv.Atoi(string(form.ValueActive()))
-	if err != nil {
-		warnLog.Println("unable to parse choice")
-		return nil, sommaireId
-	}
-	return form.ToMap(), id
+	return form.ToMap(), minigo.SommaireOp
 }
 
 func correctionSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {

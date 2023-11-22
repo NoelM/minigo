@@ -4,40 +4,48 @@ import "fmt"
 
 type List struct {
 	mntl        *Minitel
-	items       []string
-	refX        int
-	refY        int
-	entryHeight int
+	orderedKeys []string
+	items       map[string]string
+	refCol      int
+	refRow      int
+	maxRow      int
+	brk         int
 }
 
-func NewList(mntl *Minitel, items []string) *List {
+func NewList(mntl *Minitel, row, col, maxRow, brk int) *List {
 	return &List{
 		mntl:        mntl,
-		items:       items,
-		refX:        1,
-		refY:        8,
-		entryHeight: 2,
+		items:       make(map[string]string),
+		orderedKeys: make([]string, 0),
+		refRow:      row,
+		refCol:      col,
+		maxRow:      maxRow,
+		brk:         brk,
 	}
 }
 
-func (l *List) SetXY(x, y int) {
-	l.refX = x
-	l.refY = y
-}
-
-func (l *List) AppendItem(item string) {
-	l.items = append(l.items, item)
-}
-
-func (l *List) SetEntryHeight(h int) {
-	l.entryHeight = h
+func (l *List) AppendItem(key, value string) {
+	l.orderedKeys = append(l.orderedKeys, key)
+	l.items[key] = value
 }
 
 func (l *List) Display() {
-	for i := 0; i < len(l.items); i += 1 {
+
+	line := l.refRow
+	colAlign := 0
+	for _, key := range l.orderedKeys {
+		value := l.items[key]
+
 		l.mntl.WriteAttributes(GrandeurNormale, InversionFond)
-		l.mntl.WriteStringAt(l.refY+l.entryHeight*i, l.refX, fmt.Sprintf(" %d ", i+1))
+		l.mntl.WriteStringAt(line, colAlign+l.refCol, fmt.Sprintf(" %s ", key))
+
 		l.mntl.WriteAttributes(FondNormal)
-		l.mntl.WriteStringAt(l.refY+l.entryHeight*i, l.refX+4, l.items[i])
+		l.mntl.WriteStringAt(line, colAlign+l.refCol+len(key)+3, value)
+
+		line += l.brk
+		if line >= l.maxRow {
+			line = l.refRow
+			colAlign = 20
+		}
 	}
 }

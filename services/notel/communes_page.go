@@ -35,7 +35,7 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 		mntl.WriteStringLeft(2, "CHOISISSEZ UNE COMMUNE:")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		communeList := minigo.NewList(mntl, nil)
+		communeList := minigo.NewListEnum(mntl, nil)
 		communeList.SetXY(1, 4)
 		communeList.SetEntryHeight(1)
 

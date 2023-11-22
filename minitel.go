@@ -234,7 +234,7 @@ func (m *Minitel) Listen() {
 
 						if cntSub > MaxSubPerMinute && !m.pce {
 							infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.source, cntSub, m.pce)
-							m.startPCE()
+							//m.startPCE()
 						}
 
 					} else {

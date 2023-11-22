@@ -67,7 +67,8 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.SendVDT("static/notel.vdt")
 	mntl.ModeG0()
 
-	mntl.WriteAttributes(minigo.FondNormal, minigo.CaractereBlanc, minigo.GrandeurNormale)
+	mntl.WriteAttributes(minigo.FondNormal, minigo.GrandeurNormale)
+	mntl.WriteStringLeft(7, " ")
 
 	list := minigo.NewList(mntl, 8, 1, 20, 2)
 	list.AppendItem("*CHA", "MINICHAT")

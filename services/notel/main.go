@@ -67,7 +67,7 @@ var (
 
 const (
 	ServeWS             = true
-	ServeUSR56KPro      = true
+	ServeUSR56KPro      = false
 	ServeUSR56KFaxModem = true
 )
 
@@ -145,7 +145,7 @@ func main() {
 			},
 		}
 		wg.Add(1)
-		go serveModem(&wg, USR56KFaxModem, "/dev/ttyUSB1", USR56KFaxModemTag)
+		go serveModem(&wg, USR56KFaxModem, "/dev/ttyUSB0", USR56KFaxModemTag)
 	}
 
 	wg.Add(1)

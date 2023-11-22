@@ -41,7 +41,7 @@ type Minitel struct {
 	sentBytes  *Stack
 	sentBlocks *Stack
 
-	tag      string
+	source   string
 	connLost *prometheus.CounterVec
 
 	pce       bool
@@ -58,7 +58,7 @@ func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.Co
 		defaultFond:     FondNormal,
 		ackStack:        NewAckStack(),
 		RecvKey:         make(chan int32),
-		tag:             tag,
+		source:          tag,
 		connLost:        connLost,
 		wg:              wg,
 		sentBytes:       NewStack(MsgStackLen),
@@ -93,17 +93,6 @@ func (m *Minitel) startPCE() (err error) {
 	return m.freeSend(buf)
 }
 
-func (m *Minitel) stopPCE() (err error) {
-	if !m.writeLock.TryLock() {
-		return nil
-	}
-	m.ackStack.Add(AckPCEStop)
-
-	buf, _ := GetProCode(Pro2)
-	buf = append(buf, Stop, PCE)
-	return m.conn.Write(buf)
-}
-
 func (m *Minitel) PCEMessage() {
 	m.WriteStatusLine("→ Mauvaise connexion: PCE ON")
 }
@@ -119,10 +108,9 @@ func (m *Minitel) saveProtocol(entryBuffer []byte) {
 	case Protocole:
 		m.protocoleByte = entryBuffer[3]
 	default:
-		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.tag, entryBuffer[2])
+		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.source, entryBuffer[2])
 		return
 	}
-
 }
 
 func (m *Minitel) ackChecker() {
@@ -133,7 +121,7 @@ func (m *Minitel) ackChecker() {
 	for i := 0; i < nbAck; i += 1 {
 		ack, ok = m.ackStack.Pop()
 		if !ok {
-			warnLog.Printf("[%s] ack-checker: no remaining ack to check\n", m.tag)
+			warnLog.Printf("[%s] ack-checker: no remaining ack to check\n", m.source)
 			return
 		}
 
@@ -158,29 +146,27 @@ func (m *Minitel) ackChecker() {
 				m.pce = false
 			}
 		default:
-			warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.tag, ack)
+			warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.source, ack)
 		}
 
 		if !ok {
-			errorLog.Printf("[%s] ack-checker: not verified for acknowledgment ackType=%d\n", m.tag, ack)
+			errorLog.Printf("[%s] ack-checker: not verified for acknowledgment ackType=%d\n", m.source, ack)
 			m.ackStack.Add(ack)
 
 		} else {
-			infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.tag, ack)
+			infoLog.Printf("[%s] ack-checker: verified acknowledgement ackType=%d\n", m.source, ack)
 		}
 	}
-
-	return
 }
 
 func (m *Minitel) Listen() {
-	var entryBytes []byte
+	var entryBuffer []byte
 	var entry int32
 
 	var done bool
 	var pro bool
 
-	var nackRcvd bool
+	var nackBlockId bool
 	var cnxFinRcvd bool
 
 	// SUB is a message for bad lines transmissions
@@ -191,82 +177,103 @@ func (m *Minitel) Listen() {
 		var err error
 		var readBytes []byte
 
+		// Read bytes from the connector (serial port, websocket)
 		readBytes, err = m.conn.Read()
 		if err != nil {
-			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", m.tag, err.Error())
+			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", m.source, err.Error())
 			break
-		}
-		if len(readBytes) == 0 {
+		} else if len(readBytes) == 0 {
 			continue
 		}
 
+		// Read all bytes received
 		var parityErr error
 		for _, b := range readBytes {
 
 			if m.parity {
 				if b, parityErr = CheckByteParity(b); parityErr != nil {
-					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", m.tag, b)
+					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", m.source, b)
 
-					entryBytes = []byte{}
-					continue
+					// Resets entryBytes because one-parity error might corrupt all the bytes
+					// We do not wait for other bytes, they'll be useless
+					// for instance, a 4 bytes messages, with 1 lost cannot be infered
+					entryBuffer = []byte{}
+					break
 				}
 			}
 
-			entryBytes = append(entryBytes, b)
+			entryBuffer = append(entryBuffer, b)
 
-			done, pro, entry, err = ReadEntryBytes(entryBytes)
+			// Now we read the entryBuffer
+			// done:  is true when the word has a sense
+			// pro:   is true if the message is a protocol message
+			// entry: is non-zero when 'done' is true
+			// err:   stands for words bigger than 4 bytes (uint32)
+			done, pro, entry, err = ReadEntryBytes(entryBuffer)
 			if err != nil {
-				errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.tag, entryBytes, err.Error())
+				errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.source, entryBuffer, err.Error())
 
-				entryBytes = []byte{}
+				entryBuffer = []byte{}
 				continue
 			}
 
+			// Enters here only if the previous buffer has been full read
+			// Now one gets a non-zero 'entry' value
 			if done {
+				// First check prioritary entries
+				// SUB, means a bad connection, materialized by parity errors
+				// NACK, asks for a repetition of the last PCE block
 				switch entry {
 				case Sub:
+
+					// The enablement of PCE is restricted to a rate of 10 SUB per minutes
 					if time.Since(firstSub) < time.Minute {
 						cntSub += 1
-						infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", m.tag, time.Since(firstSub).Seconds(), cntSub, m.pce)
+						infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", m.source, time.Since(firstSub).Seconds(), cntSub, m.pce)
 
 						if cntSub > MaxSubPerMinute && !m.pce {
-							infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.tag, cntSub, m.pce)
+							infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", m.source, cntSub, m.pce)
 							m.startPCE()
 						}
 
 					} else {
 						cntSub = 1
-						infoLog.Printf("[%s] listen: recv SUB, reset first=%.0fs cnt=%d pce=%t\n", m.tag, time.Since(firstSub).Seconds(), cntSub, m.pce)
+						infoLog.Printf("[%s] listen: recv SUB, reset first=%.0fs cnt=%d pce=%t\n", m.source, time.Since(firstSub).Seconds(), cntSub, m.pce)
 
 						firstSub = time.Now()
 					}
 
-					entryBytes = []byte{}
+					entryBuffer = []byte{}
 					continue
 
 				case Nack:
-					infoLog.Printf("[%s] listen: recv NACK\n", m.tag)
+					infoLog.Printf("[%s] listen: recv NACK\n", m.source)
 
-					nackRcvd = true
+					nackBlockId = true
 					m.writeLock.Lock()
 
-					entryBytes = []byte{}
+					entryBuffer = []byte{}
 					continue
 				}
 
-				if nackRcvd {
+				// nackBlk is set to true if the Minitel asked for a NACK
+				if nackBlockId {
 					blockId := int(entry - 0x40)
-					infoLog.Printf("[%s] listen: recv block to repeat val=%x id=%d\n", m.tag, entry, blockId)
+					infoLog.Printf("[%s] listen: recv block to repeat val=%x id=%d\n", m.source, entry, blockId)
 
-					m.synSend(blockId)
+					if blockId >= 16 {
+						errorLog.Printf("[%s] listen: block id out for range\n", m.source)
+					} else {
+						m.synSend(blockId)
+					}
 
 					m.writeLock.Unlock()
-					nackRcvd = false
+					nackBlockId = false
 
 				} else if pro {
-					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.tag, entryBytes)
+					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.source, entryBuffer)
 
-					m.saveProtocol(entryBytes)
+					m.saveProtocol(entryBuffer)
 					if !m.ackStack.Empty() {
 						m.ackChecker()
 					}
@@ -275,32 +282,35 @@ func (m *Minitel) Listen() {
 					m.RecvKey <- entry
 
 					if entry == ConnexionFin {
-						infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.tag)
+						infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.source)
 
 						cnxFinRcvd = true
 						break
 					}
 				}
 
-				entryBytes = []byte{}
+				entryBuffer = []byte{}
 			}
 		}
 
-		// The CnxFin only breaks the previous loop
+		// If ConnexionFin has been received we quit the listen loop
 		if cnxFinRcvd {
 			break
 		}
 	}
-	infoLog.Printf("[%s] listen: loop exited\n", m.tag)
 
+	infoLog.Printf("[%s] listen: loop exited\n", m.source)
+
+	// If the loop has been exited without a ConnexionFin, one considers a lost connexion issue
 	if !cnxFinRcvd {
-		infoLog.Printf("[%s] listen: connection lost: sending ConnexionFin to Page\n", m.tag)
-		m.connLost.With(prometheus.Labels{"source": m.tag}).Inc()
+		infoLog.Printf("[%s] listen: connection lost: sending ConnexionFin to Page\n", m.source)
+		m.connLost.With(prometheus.Labels{"source": m.source}).Inc()
 
+		// The application loop waits for the ConnexionFin signal to quit
 		m.RecvKey <- ConnexionFin
 	}
 
-	infoLog.Printf("[%s] listen: end of listen\n", m.tag)
+	infoLog.Printf("[%s] listen: end of listen\n", m.source)
 	m.wg.Done()
 }
 

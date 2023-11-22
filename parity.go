@@ -44,6 +44,6 @@ func CheckByteParity(b byte) (byte, error) {
 	if IsByteEven(b) != BitReadAt(b, ParityBitPosition) {
 		return BitWriteAt(b, ParityBitPosition, false), nil
 	} else {
-		return 0, errors.New("invalid parity received")
+		return b, errors.New("invalid parity received")
 	}
 }

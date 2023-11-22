@@ -353,9 +353,10 @@ func (m *Minitel) freeSend(buf []byte) error {
 			err = m.conn.Write(blk)
 		}
 	} else if m.parity {
-		m.sentBlocks.Add(buf)
+		m.sentBytes.Add(buf)
 		err = m.conn.Write(ApplyParity(buf))
 	} else {
+		m.sentBytes.Add(buf)
 		err = m.conn.Write(buf)
 	}
 

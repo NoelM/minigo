@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 )
 
 func GetProCode(pro byte) ([]byte, error) {
@@ -499,4 +500,10 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 
 	done = true
 	return
+}
+
+const OneByteDuration = 833 * time.Microsecond
+
+func WaitAt1200Bd(n int) {
+	time.Sleep(time.Duration(n) * OneByteDuration)
 }

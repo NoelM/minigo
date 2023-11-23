@@ -20,6 +20,8 @@ const (
 	MsgStackLen     = 16
 )
 
+const NackTempo = 1120 * time.Millisecond
+
 type Minitel struct {
 	RecvKey chan int32
 
@@ -91,7 +93,7 @@ func (m *Minitel) startPCE() (err error) {
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Start, PCE)
 
-	return m.freeSend(buf)
+	return m.conn.Write(ApplyParity(buf))
 }
 
 func (m *Minitel) saveProtocol(entryBuffer []byte) {
@@ -163,12 +165,16 @@ func (m *Minitel) Listen() {
 	var done bool
 	var pro bool
 
-	var nackBlockId bool
 	var cnxFinRcvd bool
 
 	// SUB is a message for bad lines transmissions
 	var cntSub int
 	var firstSub time.Time
+
+	// Last NACK
+	var lastNack time.Time
+	var checkNackTempo bool
+	var waitForBlockId bool
 
 	for m.IsConnected() {
 		var err error
@@ -217,6 +223,11 @@ func (m *Minitel) Listen() {
 			// Enters here only if the previous buffer has been full read
 			// Now one gets a non-zero 'entry' value
 			if done {
+				if checkNackTempo && entry != Nack {
+					m.writeLock.Unlock()
+					checkNackTempo = false
+				}
+
 				// First check prioritary entries
 				// SUB, means a bad connection, materialized by parity errors
 				// NACK, asks for a repetition of the last PCE block
@@ -245,27 +256,38 @@ func (m *Minitel) Listen() {
 
 				case Nack:
 					infoLog.Printf("[%s] listen: recv NACK\n", m.source)
+					lastNack = time.Now()
 
-					nackBlockId = true
-					m.writeLock.Lock()
+					waitForBlockId = true
+					if !checkNackTempo {
+						m.writeLock.Lock()
+					} else {
+						checkNackTempo = false
+					}
 
 					entryBuffer = []byte{}
 					continue
 				}
 
 				// nackBlk is set to true if the Minitel asked for a NACK
-				if nackBlockId {
+				if waitForBlockId {
 					blockId := int(entry - 0x40)
 					infoLog.Printf("[%s] listen: recv block to repeat val=%x id=%d\n", m.source, entry, blockId)
 
-					if blockId >= 16 {
-						errorLog.Printf("[%s] listen: block id out for range\n", m.source)
+					if blockId >= 0 && blockId < 16 {
+						if sent := m.synSend(blockId); sent {
+							checkNackTempo = true
+						}
 					} else {
-						m.synSend(blockId)
+						errorLog.Printf("[%s] listen: block id out for range\n", m.source)
 					}
 
-					m.writeLock.Unlock()
-					nackBlockId = false
+					if !checkNackTempo {
+						m.writeLock.Unlock()
+					} else {
+						time.Sleep(NackTempo - time.Since(lastNack))
+					}
+					waitForBlockId = false
 
 				} else if pro {
 					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.source, entryBuffer)
@@ -315,49 +337,60 @@ func (m *Minitel) IsConnected() bool {
 	return m.conn.Connected()
 }
 
-func (m *Minitel) Send(buf []byte) error {
-	m.writeLock.Lock()
-	defer m.writeLock.Unlock()
-
-	return m.freeSend(buf)
-}
-
-func (m *Minitel) synSend(id int) error {
+func (m *Minitel) synSend(id int) bool {
 	synHeader := ApplyParity([]byte{Syn, Syn, 0x40 + byte(id)})
 	if m.sentBlocks.empty {
 		m.synHeader = synHeader
-		return nil
+		return false
 	}
 
 	m.conn.Write(synHeader)
 
-	time.Sleep(150 * time.Millisecond)
-
 	block := m.sentBlocks.Get(id)
-	return m.conn.Write(block)
+	m.conn.Write(block)
+
+	return true
 }
 
-func (m *Minitel) freeSend(buf []byte) error {
+func (m *Minitel) Send(buf []byte) error {
 	var err error
 
 	if m.pce {
 		if m.synHeader != nil {
 			err = m.conn.Write(m.synHeader)
-			time.Sleep(100 * time.Millisecond)
+			WaitAt1200Bd(len(m.synHeader))
+
 			m.synHeader = nil
 		}
 
 		PCEBlocks := ApplyPCE(buf, m.parity)
 		for _, blk := range PCEBlocks {
-			m.sentBlocks.Add(blk)
+			m.writeLock.Lock()
+
 			err = m.conn.Write(blk)
+			m.sentBlocks.Add(blk)
+			WaitAt1200Bd(len(blk))
+
+			m.writeLock.Unlock()
 		}
+
 	} else if m.parity {
-		m.sentBytes.Add(buf)
+		m.writeLock.Lock()
+
 		err = m.conn.Write(ApplyParity(buf))
-	} else {
 		m.sentBytes.Add(buf)
+		WaitAt1200Bd(len(buf))
+
+		m.writeLock.Unlock()
+
+	} else {
+		m.writeLock.Lock()
+
 		err = m.conn.Write(buf)
+		m.sentBytes.Add(buf)
+		WaitAt1200Bd(len(buf))
+
+		m.writeLock.Unlock()
 	}
 
 	return err

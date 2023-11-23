@@ -124,23 +124,11 @@ func main() {
 	if ServeUSR56KFaxModem {
 		USR56KFaxModem := []minigo.ATCommand{
 			{
-				Command: "ATZ0",
+				Command: "ATM0L0E0&H1&S1&R2",
 				Reply:   "OK",
 			},
 			{
-				Command: "AT&F1",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATL0M0",
-				Reply:   "OK",
-			},
-			{
-				Command: "AT&N2",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATS27=16",
+				Command: "ATS27=16S34=8S9=100&B1",
 				Reply:   "OK",
 			},
 		}

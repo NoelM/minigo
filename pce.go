@@ -73,6 +73,7 @@ func ComputePCEBlock(buf []byte) []byte {
 }
 
 type PCEManager struct {
+	pending bool
 	status  bool
 	blocks  *Stack
 	remains [][]byte
@@ -102,6 +103,7 @@ func NewPCEManager(conn Connector, writeMtx *sync.Mutex, source string) *PCEMana
 
 func (p *PCEManager) On() {
 	p.status = true
+	p.pending = false
 	p.blocks.Reset()
 
 	p.writeMtx.Unlock()
@@ -121,7 +123,7 @@ func (p *PCEManager) IncSub() bool {
 		p.subCnt += 1
 		infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", p.source, time.Since(p.subTs).Seconds(), p.subCnt, p.status)
 
-		if p.subCnt > MaxSubPerMinute && !p.status {
+		if p.subCnt > MaxSubPerMinute && !p.status && !p.pending {
 			infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", p.source, p.subCnt, p.status)
 
 			p.startPCE()

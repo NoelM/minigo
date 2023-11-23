@@ -502,7 +502,9 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 	return
 }
 
-const OneByteDuration = 833 * time.Microsecond
+// 1 octet = 10 bauds (start + stop bits)
+// exact is 8.333 ms
+const OneByteDuration = 8 * time.Millisecond
 
 func WaitAt1200Bd(n int) {
 	time.Sleep(time.Duration(n) * OneByteDuration)

@@ -48,3 +48,7 @@ func (s *Stack) Last() []byte {
 func (s *Stack) Get(id int) []byte {
 	return s.container[id]
 }
+
+func (s *Stack) Empty() bool {
+	return s.empty
+}

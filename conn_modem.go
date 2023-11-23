@@ -222,7 +222,7 @@ func (m *Modem) Connect() {
 	}
 
 	// start to serve the teletel content
-	m.port.SetReadTimeout(5 * time.Second)
+	m.port.SetReadTimeout(10 * time.Millisecond)
 	go m.ringHandler(m)
 }
 

@@ -1,5 +1,12 @@
 package minigo
 
+import (
+	"sync"
+	"time"
+)
+
+const MaxSubPerMinute = 1
+
 // Imported from 'linux/lib/crc7.c'
 //
 // Table for CRC-7 (polynomial x^7 + x^3 + 1).
@@ -63,4 +70,162 @@ func ComputePCEBlock(buf []byte) []byte {
 
 	inner = append(inner, GetByteWithParity(crc), 0)
 	return inner
+}
+
+type PCEManager struct {
+	status  bool
+	blocks  *Stack
+	remains [][]byte
+
+	subTs  time.Time
+	subCnt int
+
+	nackRcv bool
+	blockId int
+	pendSyn bool
+
+	conn     Connector
+	writeMtx *sync.Mutex
+
+	source string
+}
+
+func NewPCEManager(conn Connector, writeMtx *sync.Mutex, source string) *PCEManager {
+	return &PCEManager{
+		conn:     conn,
+		writeMtx: writeMtx,
+		blockId:  -1,
+		blocks:   NewStack(16),
+		source:   source,
+	}
+}
+
+func (p *PCEManager) On() {
+	p.status = true
+	p.blocks.Reset()
+
+	p.writeMtx.Unlock()
+}
+
+func (p *PCEManager) Off() {
+	p.status = false
+}
+
+func (p *PCEManager) Status() bool {
+	return p.status
+}
+
+func (p *PCEManager) IncSub() bool {
+	// The enablement of PCE is restricted to a rate of 10 SUB per minutes
+	if time.Since(p.subTs) < time.Minute {
+		p.subCnt += 1
+		infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", p.source, time.Since(p.subTs).Seconds(), p.subCnt, p.status)
+
+		if p.subCnt > MaxSubPerMinute && !p.status {
+			infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", p.source, p.subCnt, p.status)
+
+			p.startPCE()
+			return true
+		}
+
+	} else {
+		p.subCnt = 1
+		infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", p.source, time.Since(p.subTs).Seconds(), p.subCnt, p.status)
+
+		p.subTs = time.Now()
+	}
+
+	return false
+}
+
+func (p *PCEManager) resetNack() {
+	p.nackRcv = false
+	p.blockId = -1
+	p.pendSyn = false
+}
+
+func (p *PCEManager) GotNack() {
+	p.writeMtx.Lock()
+	p.nackRcv = true
+}
+
+func (p *PCEManager) WaitForBlockId() bool {
+	return p.nackRcv && p.blockId < 0
+}
+
+func (p *PCEManager) GotBlockId(blockId int32) {
+	defer p.writeMtx.Unlock()
+
+	p.blockId = p.blockId - 0x40
+	if p.blockId < 0 || p.blockId > 15 {
+		p.resetNack()
+	}
+
+	if p.blocks.Empty() {
+		p.pendSyn = true
+		return
+	}
+
+	p.synSend()
+}
+
+func (p *PCEManager) Send(msg []byte) {
+	p.remains = append(p.remains, ApplyPCE(msg, true)...)
+}
+
+func (p *PCEManager) SendNext() {
+	var buf []byte
+
+	if p.pendSyn {
+		buf = ApplyParity([]byte{Syn, Syn, 0x40 + byte(p.blockId)})
+	}
+
+	if len(p.remains) > 0 {
+		blk := p.popRemains()
+
+		if p.pendSyn {
+			buf = append(buf, p.popRemains()...)
+			p.resetNack()
+		} else {
+			buf = blk
+			p.blocks.Add(blk)
+		}
+
+		p.writeAndLock(buf)
+	}
+}
+
+func (p *PCEManager) writeAndLock(b []byte) {
+	p.writeMtx.Lock()
+	defer p.writeMtx.Unlock()
+	p.conn.Write(b)
+}
+
+func (p *PCEManager) popRemains() []byte {
+	b := make([]byte, len(p.remains[0]))
+	copy(b, p.remains[0])
+
+	if len(p.remains) > 1 {
+		p.remains = p.remains[1:]
+	} else {
+		p.remains = make([][]byte, 0)
+	}
+
+	return b
+}
+
+func (p *PCEManager) synSend() {
+	synMsg := ApplyParity([]byte{Syn, Syn, 0x40 + byte(p.blockId)})
+	synMsg = append(synMsg, p.blocks.Get(p.blockId)...)
+
+	p.conn.Write(synMsg)
+}
+
+func (p *PCEManager) startPCE() error {
+	p.writeMtx.Lock()
+
+	buf, _ := GetProCode(Pro2)
+	buf = append(buf, Start, PCE)
+
+	return p.conn.Write(ApplyParity(buf))
 }

@@ -97,10 +97,21 @@ func AckPCE(data []byte) (ack bool, next bool) {
 		if len(data) == 1 {
 			return false, true
 		}
+
+		if data[1] == Pro2 {
+			if len(data) == 2 {
+				return false, true
+			}
+
+			if data[2] == Fonctionnement {
+				if len(data) == 3 {
+					return false, true
+				}
+
+				return BitReadAt(data[3], 2), false
+			}
+		}
 	}
 
-	return data[0] == Esc &&
-		data[1] == Pro2 &&
-		data[2] == Fonctionnement &&
-		data[3]&0b00000100 != 0
+	return
 }

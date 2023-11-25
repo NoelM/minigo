@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,9 +18,8 @@ var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lsh
 type Minitel struct {
 	RecvKey chan int32
 
-	conn   Connector
-	parity bool
-	wg     *sync.WaitGroup
+	net Network
+	wg  *sync.WaitGroup
 
 	defaultCouleur  int32
 	defaultGrandeur int32
@@ -35,14 +35,12 @@ type Minitel struct {
 	source   string
 	connLost *prometheus.CounterVec
 
-	writeLock  sync.Mutex
-	pceManager *PCEManager
+	writeLock sync.Mutex
 }
 
 func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec, wg *sync.WaitGroup) *Minitel {
-	m := &Minitel{
-		conn:            conn,
-		parity:          parity,
+	return &Minitel{
+		net:             *NewNetwork(conn, parity, tag),
 		defaultCouleur:  CaractereBlanc,
 		defaultGrandeur: GrandeurNormale,
 		currentGrandeur: GrandeurNormale,
@@ -53,10 +51,6 @@ func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.Co
 		connLost:        connLost,
 		wg:              wg,
 	}
-
-	m.pceManager = NewPCEManager(conn, &m.writeLock, tag)
-
-	return m
 }
 
 func (m *Minitel) charWidth() int {
@@ -72,18 +66,6 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 			m.currentGrandeur = int32(attr)
 		}
 	}
-}
-
-func (m *Minitel) startPCE() (err error) {
-	if !m.writeLock.TryLock() {
-		return nil
-	}
-	m.ackStack.Add(AckPCEStart)
-
-	buf, _ := GetProCode(Pro2)
-	buf = append(buf, Start, PCE)
-
-	return m.conn.Write(ApplyParity(buf))
 }
 
 func (m *Minitel) saveProtocol(entryBuffer []byte) {
@@ -123,14 +105,6 @@ func (m *Minitel) ackChecker() {
 			ok = BitReadAt(m.fonctionnementByte, 3)
 		case AckMajuscule:
 			ok = !BitReadAt(m.fonctionnementByte, 3)
-		case AckPCEStart:
-			if ok = BitReadAt(m.fonctionnementByte, 2); ok {
-				m.pceManager.On()
-			}
-		case AckPCEStop:
-			if ok = !BitReadAt(m.fonctionnementByte, 2); ok {
-				m.pceManager.Off()
-			}
 		default:
 			warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.source, ack)
 		}
@@ -146,117 +120,63 @@ func (m *Minitel) ackChecker() {
 }
 
 func (m *Minitel) Listen() {
-	var entryBuffer []byte
-	var entry int32
+	var inbyte byte
+	var inbuf []byte
 
 	var done bool
 	var pro bool
+	var entry int32
+	var err error
 
 	var cnxFinRcvd bool
 
-	for m.IsConnected() {
-		var err error
-		var readBytes []byte
+	for m.net.Connected() {
 
-		// Read bytes from the connector (serial port, websocket)
-		readBytes, err = m.conn.Read()
-		if err != nil {
-			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", m.source, err.Error())
-			break
-		}
-
-		if m.pceManager.Status() {
-			m.pceManager.SendNext()
-		}
-
-		if len(readBytes) == 0 {
+		select {
+		case inbyte = <-m.net.In:
+		default:
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 
-		// Read all bytes received
-		var parityErr error
-		for _, b := range readBytes {
+		inbuf = append(inbuf, inbyte)
 
-			if m.parity {
-				if b, parityErr = CheckByteParity(b); parityErr != nil {
-					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", m.source, b)
+		// Now we read the entryBuffer
+		// done:  is true when the word has a sense
+		// pro:   is true if the message is a protocol message
+		// entry: is non-zero when 'done' is true
+		// err:   stands for words bigger than 4 bytes (uint32)
+		done, pro, entry, err = ReadEntryBytes(inbuf)
+		if err != nil {
+			errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.source, inbuf, err.Error())
 
-					// Resets entryBytes because one-parity error might corrupt all the bytes
-					// We do not wait for other bytes, they'll be useless
-					// for instance, a 4 bytes messages, with 1 lost cannot be infered
-					entryBuffer = []byte{}
+			inbuf = []byte{}
+			continue
+		}
+
+		// Enters here only if the previous buffer has been full read
+		// Now one gets a non-zero 'entry' value
+		if done {
+			if pro {
+				infoLog.Printf("[%s] listen: received protocol code=%x\n", m.source, inbuf)
+
+				m.saveProtocol(inbuf)
+				if !m.ackStack.Empty() {
+					m.ackChecker()
+				}
+
+			} else {
+				m.RecvKey <- entry
+
+				if entry == ConnexionFin {
+					infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.source)
+
+					cnxFinRcvd = true
 					break
 				}
 			}
 
-			entryBuffer = append(entryBuffer, b)
-
-			// Now we read the entryBuffer
-			// done:  is true when the word has a sense
-			// pro:   is true if the message is a protocol message
-			// entry: is non-zero when 'done' is true
-			// err:   stands for words bigger than 4 bytes (uint32)
-			done, pro, entry, err = ReadEntryBytes(entryBuffer)
-			if err != nil {
-				errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.source, entryBuffer, err.Error())
-
-				entryBuffer = []byte{}
-				continue
-			}
-
-			// Enters here only if the previous buffer has been full read
-			// Now one gets a non-zero 'entry' value
-			if done {
-				// First check prioritary entries
-				// SUB, means a bad connection, materialized by parity errors
-				// NACK, asks for a repetition of the last PCE block
-				switch entry {
-				case Sub:
-					if ok := m.pceManager.IncSub(); ok {
-						m.ackStack.Add(AckPCEStart)
-					}
-
-					entryBuffer = []byte{}
-					continue
-
-				case Nack:
-					m.pceManager.GotNack()
-
-					entryBuffer = []byte{}
-					continue
-				}
-
-				// nackBlk is set to true if the Minitel asked for a NACK
-				if m.pceManager.WaitForBlockId() {
-					m.pceManager.GotBlockId(entry)
-
-					entryBuffer = []byte{}
-					continue
-				}
-
-				// other regular cases
-				if pro {
-					infoLog.Printf("[%s] listen: received protocol code=%x\n", m.source, entryBuffer)
-
-					m.saveProtocol(entryBuffer)
-					if !m.ackStack.Empty() {
-						m.ackChecker()
-					}
-
-				} else {
-					// TODO: solve this, here it blocks!
-					m.RecvKey <- entry
-
-					if entry == ConnexionFin {
-						infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.source)
-
-						cnxFinRcvd = true
-						break
-					}
-				}
-
-				entryBuffer = []byte{}
-			}
+			inbuf = []byte{}
 		}
 
 		// If ConnexionFin has been received we quit the listen loop
@@ -280,27 +200,13 @@ func (m *Minitel) Listen() {
 	m.wg.Done()
 }
 
-func (m *Minitel) IsConnected() bool {
-	return m.conn.Connected()
-}
-
 func (m *Minitel) Send(buf []byte) (err error) {
-
-	if m.pceManager.Status() {
-		m.pceManager.Send(buf)
-
-	} else if m.parity {
-		m.writeLock.Lock()
-		err = m.conn.Write(ApplyParity(buf))
-		m.writeLock.Unlock()
-
-	} else {
-		m.writeLock.Lock()
-		err = m.conn.Write(buf)
-		m.writeLock.Unlock()
+	select {
+	case m.net.Out <- buf:
+	default:
 	}
 
-	return err
+	return nil
 }
 
 func (m *Minitel) Reset() error {

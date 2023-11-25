@@ -7,6 +7,7 @@ type Network struct {
 	parity bool
 	source string
 
+	subTs  time.Time
 	subCnt int
 
 	nackTs      time.Time
@@ -39,6 +40,8 @@ func NewNetwork(conn Connector, parity bool, source string) *Network {
 }
 
 func (n *Network) ListenLoop() {
+	pceAck := make([]byte, 0)
+
 	for n.conn.Connected() {
 
 		inBytes, readErr := n.conn.Read()
@@ -58,6 +61,19 @@ func (n *Network) ListenLoop() {
 				}
 			}
 
+			if n.pcePending {
+				pceAck = append(pceAck, b)
+				if ack, next := AckPCE(pceAck); ack {
+					n.pce = true
+					n.pcePending = false
+					pceAck = []byte{}
+
+				} else if !next {
+					n.pcePending = false
+					pceAck = []byte{}
+				}
+			}
+
 			if n.nackBlock {
 				if b >= 0x40 && b <= 0x4F {
 					n.nackBlockId = b - byte(0x40)
@@ -66,7 +82,7 @@ func (n *Network) ListenLoop() {
 				n.nackBlock = false
 
 			} else if b == Sub {
-				n.subCnt += 1
+				n.IncSub()
 
 			} else if b == Nack {
 				n.nackTs = time.Now()
@@ -77,6 +93,18 @@ func (n *Network) ListenLoop() {
 
 			}
 		}
+	}
+}
+
+func (n *Network) IncSub() {
+	if time.Since(n.subTs) < time.Minute {
+		n.subCnt += 1
+		if n.subCnt > MaxSubPerMinute && !n.pce && !n.pcePending {
+			n.send(GetRequestPCE())
+			n.pcePending = true
+		}
+	} else {
+		n.subCnt = 1
 	}
 }
 
@@ -127,7 +155,7 @@ func (n *Network) SendLoop() {
 
 		// PCE send blocks from pceStack
 		if n.pce && !n.nackSynSend {
-			// We pop the last-inserted block, and send it if exists
+			// We pop the first-inserted block, and send it if exists
 			if blk := n.pceStack.Pop(); blk != nil {
 				n.send(blk)
 				n.pceCache.Add(blk)
@@ -138,4 +166,8 @@ func (n *Network) SendLoop() {
 
 func (n *Network) send(data []byte) {
 	n.conn.Write(data)
+}
+
+func (n *Network) Connected() bool {
+	return n.conn.Connected()
 }

@@ -1,11 +1,9 @@
 package minigo
 
-import (
-	"sync"
-	"time"
-)
+import "time"
 
-const MaxSubPerMinute = 1
+const MaxSubPerMinute = 10
+const NackTimer = 1140 * time.Millisecond
 
 // Imported from 'linux/lib/crc7.c'
 //
@@ -61,7 +59,7 @@ func getCRC7(data []byte) byte {
 	return crc >> 1
 }
 
-func ComputePCEBlock(buf []byte) []byte {
+func GetPCEBlock(buf []byte) []byte {
 	// make sure we a have the good length
 	inner := make([]byte, 15)
 	copy(inner, buf)
@@ -72,162 +70,37 @@ func ComputePCEBlock(buf []byte) []byte {
 	return inner
 }
 
-type PCEManager struct {
-	pending bool
-	status  bool
-	blocks  *Stack
-	remains [][]byte
-
-	subTs  time.Time
-	subCnt int
-
-	nackRcv bool
-	blockId int
-	pendSyn bool
-
-	conn     Connector
-	writeMtx *sync.Mutex
-
-	source string
+func GetSynFrame(blockId byte, block []byte) []byte {
+	buf := ApplyParity([]byte{Syn, Syn, blockId + 0x40})
+	return append(buf, block...)
 }
 
-func NewPCEManager(conn Connector, writeMtx *sync.Mutex, source string) *PCEManager {
-	return &PCEManager{
-		conn:     conn,
-		writeMtx: writeMtx,
-		blockId:  -1,
-		blocks:   NewStack(16),
-		source:   source,
-	}
-}
+func ApplyPCE(in []byte) (out [][]byte) {
+	tmp := ApplyParity(in)
 
-func (p *PCEManager) On() {
-	p.status = true
-	p.pending = false
-	p.blocks.Reset()
-
-	p.writeMtx.Unlock()
-}
-
-func (p *PCEManager) Off() {
-	p.status = false
-}
-
-func (p *PCEManager) Status() bool {
-	return p.status
-}
-
-func (p *PCEManager) IncSub() bool {
-	// The enablement of PCE is restricted to a rate of 10 SUB per minutes
-	if time.Since(p.subTs) < time.Minute {
-		p.subCnt += 1
-		infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", p.source, time.Since(p.subTs).Seconds(), p.subCnt, p.status)
-
-		if p.subCnt > MaxSubPerMinute && !p.status && !p.pending {
-			infoLog.Printf("[%s] listen: too many SUB cnt=%d pce=%t: activate PCE\n", p.source, p.subCnt, p.status)
-
-			p.startPCE()
-			return true
-		}
-
-	} else {
-		p.subCnt = 1
-		infoLog.Printf("[%s] listen: recv SUB, first=%.0fs cnt=%d pce=%t\n", p.source, time.Since(p.subTs).Seconds(), p.subCnt, p.status)
-
-		p.subTs = time.Now()
+	for pos := 0; pos < len(tmp); pos += 15 {
+		out = append(out, GetPCEBlock(tmp[pos:]))
 	}
 
-	return false
+	return out
 }
 
-func (p *PCEManager) resetNack() {
-	p.nackRcv = false
-	p.blockId = -1
-	p.pendSyn = false
-}
-
-func (p *PCEManager) GotNack() {
-	p.writeMtx.Lock()
-	p.nackRcv = true
-}
-
-func (p *PCEManager) WaitForBlockId() bool {
-	return p.nackRcv && p.blockId < 0
-}
-
-func (p *PCEManager) GotBlockId(blockId int32) {
-	defer p.writeMtx.Unlock()
-
-	p.blockId = p.blockId - 0x40
-	if p.blockId < 0 || p.blockId > 15 {
-		p.resetNack()
-	}
-
-	if p.blocks.Empty() {
-		p.pendSyn = true
-		return
-	}
-
-	p.synSend()
-}
-
-func (p *PCEManager) Send(msg []byte) {
-	p.remains = append(p.remains, ApplyPCE(msg, true)...)
-}
-
-func (p *PCEManager) SendNext() {
-	var buf []byte
-
-	if p.pendSyn {
-		buf = ApplyParity([]byte{Syn, Syn, 0x40 + byte(p.blockId)})
-	}
-
-	if len(p.remains) > 0 {
-		blk := p.popRemains()
-
-		if p.pendSyn {
-			buf = append(buf, p.popRemains()...)
-			p.resetNack()
-		} else {
-			buf = blk
-			p.blocks.Add(blk)
-		}
-
-		p.writeAndLock(buf)
-	}
-}
-
-func (p *PCEManager) writeAndLock(b []byte) {
-	p.writeMtx.Lock()
-	defer p.writeMtx.Unlock()
-	p.conn.Write(b)
-}
-
-func (p *PCEManager) popRemains() []byte {
-	b := make([]byte, len(p.remains[0]))
-	copy(b, p.remains[0])
-
-	if len(p.remains) > 1 {
-		p.remains = p.remains[1:]
-	} else {
-		p.remains = make([][]byte, 0)
-	}
-
-	return b
-}
-
-func (p *PCEManager) synSend() {
-	synMsg := ApplyParity([]byte{Syn, Syn, 0x40 + byte(p.blockId)})
-	synMsg = append(synMsg, p.blocks.Get(p.blockId)...)
-
-	p.conn.Write(synMsg)
-}
-
-func (p *PCEManager) startPCE() error {
-	p.writeMtx.Lock()
-
+func GetRequestPCE() []byte {
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Start, PCE)
 
-	return p.conn.Write(ApplyParity(buf))
+	return ApplyParity(buf)
+}
+
+func AckPCE(data []byte) (ack bool, next bool) {
+	if data[0] == Esc {
+		if len(data) == 1 {
+			return false, true
+		}
+	}
+
+	return data[0] == Esc &&
+		data[1] == Pro2 &&
+		data[2] == Fonctionnement &&
+		data[3]&0b00000100 != 0
 }

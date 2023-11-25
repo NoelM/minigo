@@ -405,17 +405,11 @@ func ApplyParity(in []byte) (out []byte) {
 	return out
 }
 
-func ApplyPCE(in []byte, parity bool) (out [][]byte) {
-	var tmp []byte
-
-	if parity {
-		tmp = ApplyParity(in)
-	} else {
-		tmp = in
-	}
+func ApplyPCE(in []byte) (out [][]byte) {
+	tmp := ApplyParity(in)
 
 	for pos := 0; pos < len(tmp); pos += 15 {
-		out = append(out, ComputePCEBlock(tmp[pos:]))
+		out = append(out, GetPCEBlock(tmp[pos:]))
 	}
 
 	return out

@@ -21,9 +21,6 @@ type NavigationFunc func(mntl *Minitel, inputs *Form) (map[string]string, int)
 type ConnexionFinFunc func(mntl *Minitel) int
 
 type Page struct {
-	InChan  chan string
-	OutChan chan string
-
 	mntl     *Minitel
 	name     string
 	initData map[string]string
@@ -130,9 +127,6 @@ func (p *Page) Run() (map[string]string, int) {
 
 	for {
 		select {
-		case msg := <-p.InChan:
-			p.inChanFunc(p.mntl, p.form, msg)
-
 		case key := <-p.mntl.RecvKey:
 			switch key {
 			case Envoi:

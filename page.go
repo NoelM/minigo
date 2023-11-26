@@ -119,76 +119,79 @@ func (p *Page) SetConnexionFinFunc(f ConnexionFinFunc) {
 }
 
 func (p *Page) Run() (map[string]string, int) {
-
 	p.form = &Form{}
+
+PAGEINIT:
 	if op := p.initFunc(p.mntl, p.form, p.initData); op != NoOp {
 		return nil, op
 	}
 
 	for {
-		select {
-		case key := <-p.mntl.RecvKey:
-			switch key {
-			case Envoi:
-				if out, op := p.envoiFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("page: key Envoi: quit %s page, with op=%d\n", p.name, op)
-					return out, op
-				}
+		key := <-p.mntl.In
 
-			case Sommaire:
-				if out, op := p.sommaireFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("page: key Sommaire: quit %s page, with op=%d\n", p.name, op)
-					return out, op
-				}
+		switch key {
+		case Envoi:
+			if out, op := p.envoiFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Envoi: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
 
-			case Annulation:
-				if out, op := p.annulationFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("page: key Annulation: quit %s page, with op=%d\n", p.name, op)
-					return out, op
-				}
+		case Sommaire:
+			if out, op := p.sommaireFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Sommaire: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
 
-			case Retour:
-				if out, op := p.retourFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("page: key Retour: quit %s page, with op=%d\n", p.name, op)
-					return out, op
-				}
+		case Annulation:
+			if out, op := p.annulationFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Annulation: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
 
-			case Repetition:
-				if out, op := p.repetitionFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("page: key Repetition: quit %s page, with op=%d\n", p.name, op)
-					return out, op
-				}
+		case Retour:
+			if out, op := p.retourFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Retour: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
 
-			case Guide:
-				if out, op := p.guideFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("page: key Guide: quit %s page, with op=%d\n", p.name, op)
-					return out, op
-				}
+		case Repetition:
+			if out, op := p.repetitionFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Repetition: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
 
-			case Correction:
-				if out, op := p.correctionFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("page: key Correction: quit %s page, with op=%d\n", p.name, op)
-					return out, op
-				}
+		case Guide:
+			if out, op := p.guideFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Guide: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
 
-			case Suite:
-				if out, op := p.suiteFunc(p.mntl, p.form); op != NoOp {
-					infoLog.Printf("page: key Suite: quit %s page, with op=%d\n", p.name, op)
-					return out, op
-				}
+		case Correction:
+			if out, op := p.correctionFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Correction: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
 
-			case ConnexionFin:
-				if op := p.connexionFinFunc(p.mntl); op != NoOp {
-					infoLog.Printf("page: key ConnexionFin: quit page %s, with op=%d\n", p.name, op)
-					return nil, op
-				}
+		case Suite:
+			if out, op := p.suiteFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Suite: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
 
-			default:
-				if ValidRune(key) {
-					p.charFunc(p.mntl, p.form, key)
-				} else {
-					errorLog.Printf("page: invalid rune=%x\n", key)
-				}
+		case ConnexionFin:
+			if op := p.connexionFinFunc(p.mntl); op != NoOp {
+				infoLog.Printf("page: key ConnexionFin: quit page %s, with op=%d\n", p.name, op)
+				return nil, op
+			}
+
+		case PCE:
+			goto PAGEINIT
+
+		default:
+			if ValidRune(key) {
+				p.charFunc(p.mntl, p.form, key)
+			} else {
+				errorLog.Printf("page: invalid rune=%x\n", key)
 			}
 		}
 	}

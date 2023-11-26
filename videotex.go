@@ -405,16 +405,6 @@ func ApplyParity(in []byte) (out []byte) {
 	return out
 }
 
-func ApplyPCE(in []byte) (out [][]byte) {
-	tmp := ApplyParity(in)
-
-	for pos := 0; pos < len(tmp); pos += 15 {
-		out = append(out, GetPCEBlock(tmp[pos:]))
-	}
-
-	return out
-}
-
 func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err error) {
 	// Special characters, switch G2 mode
 	if entryBytes[0] == Ss2 {

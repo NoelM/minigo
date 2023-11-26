@@ -16,10 +16,8 @@ var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshor
 var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 type Minitel struct {
-	RecvKey chan int32
-
-	net Network
-	wg  *sync.WaitGroup
+	net   Network
+	group *sync.WaitGroup
 
 	defaultCouleur  int32
 	defaultGrandeur int32
@@ -35,21 +33,21 @@ type Minitel struct {
 	source   string
 	connLost *prometheus.CounterVec
 
-	writeLock sync.Mutex
+	In chan int32
 }
 
-func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec, wg *sync.WaitGroup) *Minitel {
+func NewMinitel(conn Connector, parity bool, source string, connLost *prometheus.CounterVec, group *sync.WaitGroup) *Minitel {
 	return &Minitel{
-		net:             *NewNetwork(conn, parity, wg, tag),
+		net:             *NewNetwork(conn, parity, group, source),
 		defaultCouleur:  CaractereBlanc,
 		defaultGrandeur: GrandeurNormale,
 		currentGrandeur: GrandeurNormale,
 		defaultFond:     FondNormal,
 		ackStack:        NewAckStack(),
-		RecvKey:         make(chan int32),
-		source:          tag,
+		source:          source,
 		connLost:        connLost,
-		wg:              wg,
+		group:           group,
+		In:              make(chan int32, 256),
 	}
 }
 
@@ -84,6 +82,7 @@ func (m *Minitel) saveProtocol(entryBuffer []byte) {
 	}
 }
 
+// TODO: this AckChecker, does not ack anything, it only prints a message
 func (m *Minitel) ackChecker() {
 	var ok bool
 	var ack AckType
@@ -121,14 +120,9 @@ func (m *Minitel) ackChecker() {
 
 func (m *Minitel) Serve() {
 	var inbyte byte
-	var inbuf []byte
+	var word []byte
 
-	var done bool
-	var pro bool
-	var entry int32
-	var err error
-
-	var cnxFinRcvd bool
+	var gotCnxFin bool
 
 	m.net.Serve()
 
@@ -137,77 +131,70 @@ func (m *Minitel) Serve() {
 		select {
 		case inbyte = <-m.net.In:
 		default:
+			// No message from the network, we'll wait a bit
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 
-		inbuf = append(inbuf, inbyte)
+		word = append(word, inbyte)
 
-		// Now we read the entryBuffer
+		// Now we read the word
 		// done:  is true when the word has a sense
 		// pro:   is true if the message is a protocol message
 		// entry: is non-zero when 'done' is true
 		// err:   stands for words bigger than 4 bytes (uint32)
-		done, pro, entry, err = ReadEntryBytes(inbuf)
+		done, pro, entry, err := ReadEntryBytes(word)
 		if err != nil {
-			errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.source, inbuf, err.Error())
+			errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.source, word, err.Error())
 
-			inbuf = []byte{}
+			word = []byte{}
 			continue
 		}
 
-		// Enters here only if the previous buffer has been full read
-		// Now one gets a non-zero 'entry' value
 		if done {
+			// Enters here only if the previous buffer has been full read
+			// Now one gets a non-zero 'entry' value
 			if pro {
-				infoLog.Printf("[%s] listen: received protocol code=%x\n", m.source, inbuf)
+				infoLog.Printf("[%s] listen: received protocol code=%x\n", m.source, word)
 
-				m.saveProtocol(inbuf)
+				m.saveProtocol(word)
 				if !m.ackStack.Empty() {
 					m.ackChecker()
 				}
 
 			} else {
-				m.RecvKey <- entry
+				m.In <- entry
 
 				if entry == ConnexionFin {
 					infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.source)
 
-					cnxFinRcvd = true
+					gotCnxFin = true
 					break
 				}
 			}
 
-			inbuf = []byte{}
-		}
-
-		// If ConnexionFin has been received we quit the listen loop
-		if cnxFinRcvd {
-			break
+			// We have read the word properly, let's reset it
+			word = []byte{}
 		}
 	}
 
 	infoLog.Printf("[%s] listen: loop exited\n", m.source)
 
-	// If the loop has been exited without a ConnexionFin, one considers a lost connexion issue
-	if !cnxFinRcvd {
+	if !gotCnxFin {
+		// The loop has been exited without a ConnexionFin, one considers a lost connexion issue
 		infoLog.Printf("[%s] listen: connection lost: sending ConnexionFin to Page\n", m.source)
 		m.connLost.With(prometheus.Labels{"source": m.source}).Inc()
 
 		// The application loop waits for the ConnexionFin signal to quit
-		m.RecvKey <- ConnexionFin
+		m.In <- ConnexionFin
 	}
 
 	infoLog.Printf("[%s] listen: end of listen\n", m.source)
-	m.wg.Done()
+	m.group.Done()
 }
 
-func (m *Minitel) Send(buf []byte) (err error) {
-	select {
-	case m.net.Out <- buf:
-	default:
-	}
-
+func (m *Minitel) Send(buf []byte) error {
+	m.net.Out <- buf
 	return nil
 }
 

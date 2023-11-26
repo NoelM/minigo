@@ -1,6 +1,7 @@
 package minigo
 
 import (
+	"sync"
 	"time"
 )
 
@@ -22,26 +23,33 @@ type Network struct {
 	pceStack   chan []byte
 	pceCache   *Cache
 
-	msgStack *Stack
+	group *sync.WaitGroup
 
 	In  chan byte
 	Out chan []byte
 }
 
-func NewNetwork(conn Connector, parity bool, source string) *Network {
+func NewNetwork(conn Connector, parity bool, group *sync.WaitGroup, source string) *Network {
 	return &Network{
 		conn:     conn,
 		parity:   parity,
 		source:   source,
 		pceStack: make(chan []byte, 256),
 		pceCache: NewCache(),
-		msgStack: NewStack(),
+		group:    group,
 		In:       make(chan byte, 1024),
 		Out:      make(chan []byte, 256),
 	}
 }
 
-func (n *Network) ListenLoop() {
+func (n *Network) Serve() {
+	n.group.Add(2)
+
+	go n.listenLoop()
+	go n.sendLoop()
+}
+
+func (n *Network) listenLoop() {
 	pceAck := make([]byte, 0)
 
 	for n.conn.Connected() {
@@ -66,7 +74,7 @@ func (n *Network) ListenLoop() {
 			if b == Sub {
 				// SUB desginates parity error, we increment counter wetherer
 				// the PCE starts or not
-				n.IncSub()
+				n.incSub()
 
 				// The byte is not sent to the minitel
 				continue
@@ -125,7 +133,7 @@ func (n *Network) ListenLoop() {
 	}
 }
 
-func (n *Network) IncSub() {
+func (n *Network) incSub() {
 	if time.Since(n.subTime) < time.Minute {
 		// If the counter has been reset less than a miniute ago, we increment
 		n.subCnt += 1
@@ -143,7 +151,7 @@ func (n *Network) IncSub() {
 	}
 }
 
-func (n *Network) SendLoop() {
+func (n *Network) sendLoop() {
 	for n.conn.Connected() {
 		if n.nackBlock || n.pcePending {
 			// Some commands block all the Send commands:
@@ -207,9 +215,12 @@ func (n *Network) SendLoop() {
 		// PCE send blocks from pceStack
 		if n.pce && !n.nackSynSend {
 			// We pop the first-inserted block, and send it if exists
-			if blk := n.pceStack.Pop(); blk != nil {
+			select {
+			case blk := <-n.pceStack:
 				n.send(blk)
 				n.pceCache.Add(blk)
+			default:
+				time.Sleep(100 * time.Millisecond)
 			}
 		}
 	}

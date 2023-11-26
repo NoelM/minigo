@@ -40,7 +40,7 @@ type Minitel struct {
 
 func NewMinitel(conn Connector, parity bool, tag string, connLost *prometheus.CounterVec, wg *sync.WaitGroup) *Minitel {
 	return &Minitel{
-		net:             *NewNetwork(conn, parity, tag),
+		net:             *NewNetwork(conn, parity, wg, tag),
 		defaultCouleur:  CaractereBlanc,
 		defaultGrandeur: GrandeurNormale,
 		currentGrandeur: GrandeurNormale,
@@ -119,7 +119,7 @@ func (m *Minitel) ackChecker() {
 	}
 }
 
-func (m *Minitel) Listen() {
+func (m *Minitel) Serve() {
 	var inbyte byte
 	var inbuf []byte
 
@@ -129,6 +129,8 @@ func (m *Minitel) Listen() {
 	var err error
 
 	var cnxFinRcvd bool
+
+	m.net.Serve()
 
 	for m.net.Connected() {
 

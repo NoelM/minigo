@@ -5,23 +5,25 @@ const CacheSize = 16
 type Cache struct {
 	maxSize   int
 	curId     int
+	maxId     int
 	container [][]byte
 }
 
 func NewCache() *Cache {
 	return &Cache{
-		curId:     -1,
+		curId:     0,
 		container: make([][]byte, CacheSize),
 	}
 }
 
 func (c *Cache) Reset() {
-	c.curId = -1
+	c.curId = 0
+	c.maxId = -1
 }
 
 func (c *Cache) Add(msg []byte) {
-	if c.curId < 0 {
-		c.curId = 0
+	if c.curId > c.maxId {
+		c.maxId = c.curId
 	}
 
 	c.container[c.curId] = make([]byte, len(msg))
@@ -33,14 +35,14 @@ func (c *Cache) Add(msg []byte) {
 	}
 }
 
-func (c *Cache) Last() []byte {
-	return c.container[CacheSize-1]
-}
-
 func (c *Cache) Get(id byte) []byte {
 	return c.container[id]
 }
 
 func (c *Cache) Empty() bool {
-	return c.curId < 0
+	return c.maxId < 0
+}
+
+func (c *Cache) Has(id byte) bool {
+	return id <= byte(c.maxId)
 }

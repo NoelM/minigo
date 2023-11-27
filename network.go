@@ -247,7 +247,11 @@ func (n *Network) sendLoop() {
 
 			} else {
 				// otherwise we just send it!
-				n.send(msg)
+				if n.parity {
+					n.send(ApplyParity(msg))
+				} else {
+					n.send(msg)
+				}
 				continue
 			}
 		default:

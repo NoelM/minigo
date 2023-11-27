@@ -120,8 +120,6 @@ func (p *Page) SetConnexionFinFunc(f ConnexionFinFunc) {
 
 func (p *Page) Run() (map[string]string, int) {
 	p.form = &Form{}
-
-PAGEINIT:
 	if op := p.initFunc(p.mntl, p.form, p.initData); op != NoOp {
 		return nil, op
 	}
@@ -185,7 +183,10 @@ PAGEINIT:
 			}
 
 		case PCE:
-			goto PAGEINIT
+			p.form = &Form{}
+			if op := p.initFunc(p.mntl, p.form, p.initData); op != NoOp {
+				return nil, op
+			}
 
 		default:
 			if ValidRune(key) {

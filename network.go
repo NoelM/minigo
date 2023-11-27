@@ -154,6 +154,8 @@ func (n *Network) listenLoop() {
 			n.In <- b
 		}
 	}
+
+	n.group.Done()
 }
 
 func (n *Network) incSub() {
@@ -274,6 +276,8 @@ func (n *Network) sendLoop() {
 			}
 		}
 	}
+
+	n.group.Done()
 }
 
 func (n *Network) send(data []byte) {

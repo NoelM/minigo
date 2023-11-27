@@ -3,7 +3,6 @@ package minigo
 const CacheSize = 16
 
 type Cache struct {
-	maxSize   int
 	curId     int
 	maxId     int
 	container [][]byte
@@ -30,7 +29,7 @@ func (c *Cache) Add(msg []byte) {
 	copy(c.container[c.curId], msg)
 
 	c.curId += 1
-	if c.curId == c.maxSize {
+	if c.curId == CacheSize {
 		c.curId = 0
 	}
 }

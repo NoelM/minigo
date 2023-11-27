@@ -80,6 +80,10 @@ func (m *Minitel) saveProtocol(entryBuffer []byte) {
 		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.source, entryBuffer[2])
 		return
 	}
+
+	if ok := BitReadAt(m.fonctionnementByte, 2); ok {
+		m.toApp(PCE)
+	}
 }
 
 // TODO: this AckChecker, does not ack anything, it only prints a message
@@ -163,7 +167,7 @@ func (m *Minitel) Serve() {
 				}
 
 			} else {
-				m.In <- entry
+				m.toApp(entry)
 
 				if entry == ConnexionFin {
 					infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.source)
@@ -186,7 +190,7 @@ func (m *Minitel) Serve() {
 		m.connLost.With(prometheus.Labels{"source": m.source}).Inc()
 
 		// The application loop waits for the ConnexionFin signal to quit
-		m.In <- ConnexionFin
+		m.toApp(ConnexionFin)
 	}
 
 	infoLog.Printf("[%s] listen: end of listen\n", m.source)
@@ -196,6 +200,10 @@ func (m *Minitel) Serve() {
 func (m *Minitel) Send(buf []byte) error {
 	m.net.Out <- buf
 	return nil
+}
+
+func (m *Minitel) toApp(entry int32) {
+	m.In <- entry
 }
 
 func (m *Minitel) Reset() error {

@@ -124,23 +124,11 @@ func main() {
 	if ServeUSR56KFaxModem {
 		USR56KFaxModem := []minigo.ATCommand{
 			{
-				Command: "ATZ0",
+				Command: "ATM0L0E0&H1&S1&R2",
 				Reply:   "OK",
 			},
 			{
-				Command: "AT&F1",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATL0M0",
-				Reply:   "OK",
-			},
-			{
-				Command: "AT&N2",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATS27=16",
+				Command: "ATS27=16S34=8S9=100&B1",
 				Reply:   "OK",
 			},
 		}
@@ -185,7 +173,7 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		innerWg.Add(2)
 
 		m := minigo.NewMinitel(ws, false, WSTag, promConnLostNb, &innerWg)
-		go m.Listen()
+		go m.Serve()
 
 		NotelHandler(m, WSTag, &innerWg)
 		innerWg.Wait()
@@ -234,7 +222,7 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 		connectionWg.Add(2)
 
 		m := minigo.NewMinitel(mdm, true, modemTag, promConnLostNb, &connectionWg)
-		go m.Listen()
+		go m.Serve()
 
 		NotelHandler(m, modemTag, &connectionWg)
 		connectionWg.Wait()

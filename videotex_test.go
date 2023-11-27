@@ -90,7 +90,7 @@ func TestCheckByteParity(t *testing.T) {
 	}
 
 	var wrongParityByte byte = 0b11000001
-	var wrongParityRemoved byte = 0
+	var wrongParityRemoved byte = 0b11000001
 	if computed, err := CheckByteParity(wrongParityByte); computed != wrongParityRemoved || err == nil {
 		t.Fatalf("wrong parity check for %b, expected %b, computed %b, with error: %s", goodParityByte, wrongParityRemoved, computed, err.Error())
 	}

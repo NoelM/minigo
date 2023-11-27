@@ -16,12 +16,12 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
 		mntl.WriteStringAt(2, 10, "NOTEL")
 		mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-		mntl.WriteStringLeft(3, "Samedi 18 Novembre 2023")
+		mntl.WriteStringLeft(3, "Lundi 27 Novembre 2023")
 
 		messages := []string{
-			"* Après beaucoup d'essais (un grand merci à Jelora et HYRTEL), le serveur intègre la Procédure de Correction d'Erreurs ou PCE",
-			"* Arrivée des actualités comme nouveau service, basé sur les flux RSS de France24",
-			"* Beaucoup de travail sur 'minigo' avec une page TODO des sujets à traiter",
+			"* Ca y est ! La PCE est complète, si votre Minitel reporte plus de 5 erreurs de parités par minute, la PCE s'active automatiquement",
+			"* Bug connu: pour l'instant il faut se déconnecter avec deux appuis sur Connexion/Fin",
+			"* Le reste: pour la PCE j'avais mis en pause les statistiques d'usage du serveur, la modification de se compte et un service de micro-blog",
 		}
 
 		line := 5

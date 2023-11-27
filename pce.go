@@ -1,5 +1,10 @@
 package minigo
 
+import "time"
+
+const MaxSubPerMinute = 5
+const NackTimer = 1140 * time.Millisecond
+
 // Imported from 'linux/lib/crc7.c'
 //
 // Table for CRC-7 (polynomial x^7 + x^3 + 1).
@@ -54,7 +59,7 @@ func getCRC7(data []byte) byte {
 	return crc >> 1
 }
 
-func ComputePCEBlock(buf []byte) []byte {
+func GetPCEBlock(buf []byte) []byte {
 	// make sure we a have the good length
 	inner := make([]byte, 15)
 	copy(inner, buf)
@@ -63,4 +68,50 @@ func ComputePCEBlock(buf []byte) []byte {
 
 	inner = append(inner, GetByteWithParity(crc), 0)
 	return inner
+}
+
+func GetSynFrame(blockId byte, block []byte) []byte {
+	buf := ApplyParity([]byte{Syn, Syn, blockId + 0x40})
+	return append(buf, block...)
+}
+
+func ApplyPCE(in []byte) (out [][]byte) {
+	tmp := ApplyParity(in)
+
+	for pos := 0; pos < len(tmp); pos += 15 {
+		out = append(out, GetPCEBlock(tmp[pos:]))
+	}
+
+	return out
+}
+
+func GetRequestPCE() []byte {
+	buf, _ := GetProCode(Pro2)
+	buf = append(buf, Start, PCE)
+
+	return ApplyParity(buf)
+}
+
+func AckPCE(data []byte) (ack bool, next bool) {
+	if data[0] == Esc {
+		if len(data) == 1 {
+			return false, true
+		}
+
+		if data[1] == Pro2 {
+			if len(data) == 2 {
+				return false, true
+			}
+
+			if data[2] == Fonctionnement {
+				if len(data) == 3 {
+					return false, true
+				}
+
+				return BitReadAt(data[3], 2), false
+			}
+		}
+	}
+
+	return
 }

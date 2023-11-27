@@ -142,7 +142,7 @@ func (m *Modem) ReadTimeout(d time.Duration) ([]byte, error) {
 
 func (m *Modem) Connected() bool {
 	m.mutex.RLock()
-	defer m.mutex.Unlock()
+	defer m.mutex.RUnlock()
 	return m.connected
 }
 

@@ -80,10 +80,6 @@ func (m *Minitel) saveProtocol(entryBuffer []byte) {
 		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.source, entryBuffer[2])
 		return
 	}
-
-	if ok := BitReadAt(m.fonctionnementByte, 2); ok {
-		m.toApp(PCE)
-	}
 }
 
 // TODO: this AckChecker, does not ack anything, it only prints a message

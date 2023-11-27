@@ -141,11 +141,9 @@ func (m *Modem) ReadTimeout(d time.Duration) ([]byte, error) {
 }
 
 func (m *Modem) Connected() bool {
-	status, err := m.port.GetModemStatusBits()
-	if err != nil {
-		return false
-	}
-	return status.DCD
+	m.mutex.RLock()
+	defer m.mutex.Unlock()
+	return m.connected
 }
 
 func (m *Modem) SetConnected(status bool) {

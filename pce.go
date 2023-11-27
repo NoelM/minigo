@@ -2,7 +2,7 @@ package minigo
 
 import "time"
 
-const MaxSubPerMinute = 2
+const MaxSubPerMinute = 5
 const NackTimer = 1140 * time.Millisecond
 
 // Imported from 'linux/lib/crc7.c'

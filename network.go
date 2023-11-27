@@ -69,7 +69,9 @@ func (n *Network) listenLoop() {
 		// Read all bytes received
 		for _, b := range inBytes {
 			if n.parity {
-				if b, parityErr := CheckByteParity(b); parityErr != nil {
+				var parityErr error
+
+				if b, parityErr = CheckByteParity(b); parityErr != nil {
 					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", n.source, b)
 					continue
 				}

@@ -17,6 +17,8 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 	var grid *sdk.Grid
 
 	gamePage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
+		mntl.CleanScreen()
+
 		level, err := strconv.ParseInt(initData["level"], 10, 32)
 		if err != nil {
 			return minigo.QuitOp
@@ -50,13 +52,16 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 				colPos := colRef + padding*col
 
 				if val == 0 {
+					infoLog.Printf("input at %d %d\n", linePos, colPos)
 					matrix.SetInput(line, col, minigo.NewInput(mntl, linePos, colPos, 1, 1, true))
 				} else {
+					infoLog.Printf("value=%d at %d %d\n", val, linePos, colPos)
 					mntl.WriteStringAt(linePos, colPos, fmt.Sprintf("%d", val))
 				}
 			}
 		}
 
+		matrix.InitAll()
 		matrix.ActivateFirst()
 
 		mntl.WriteStringLeft(24, "NAVIGUEZ ←↑→↓")

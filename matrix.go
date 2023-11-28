@@ -12,7 +12,7 @@ type Matrix struct {
 
 func NewMatrix(rows, cols int) *Matrix {
 	return &Matrix{
-		inputs: make([]*Input, rows),
+		inputs: make([]*Input, rows*cols),
 		rows:   rows,
 		cols:   cols,
 		maxId:  rows * cols,

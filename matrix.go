@@ -92,8 +92,10 @@ func (m *Matrix) UnHideActive() {
 }
 
 func (m *Matrix) UnHideAll() {
-	for i := 0; i < len(m.inputs); i += 1 {
-		m.inputs[i].UnHide()
+	for _, in := range m.inputs {
+		if in != nil {
+			in.UnHide()
+		}
 	}
 	m.activateInput()
 }
@@ -106,8 +108,10 @@ func (m *Matrix) HideActive() {
 }
 
 func (m *Matrix) HideAll() {
-	for i := 0; i < len(m.inputs); i += 1 {
-		m.inputs[i].Hide()
+	for _, in := range m.inputs {
+		if in != nil {
+			in.Hide()
+		}
 	}
 }
 
@@ -119,8 +123,10 @@ func (m *Matrix) ResetActive() {
 }
 
 func (m *Matrix) ResetAll() {
-	for i := 0; i < len(m.inputs); i += 1 {
-		m.inputs[i].Reset()
+	for _, in := range m.inputs {
+		if in != nil {
+			in.Reset()
+		}
 	}
 	m.ActivateFirst()
 }
@@ -133,8 +139,13 @@ func (m *Matrix) activateInput() {
 }
 
 func (m *Matrix) ActivateFirst() {
-	m.active = 0
-	m.activateInput()
+	for id, in := range m.inputs {
+		if in != nil {
+			m.active = id
+			in.Activate()
+			break
+		}
+	}
 }
 
 func (m *Matrix) ActivateLeft() {

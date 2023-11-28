@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/jedib0t/go-sudoku/generator"
 	sdk "github.com/jedib0t/go-sudoku/sudoku"
 	"github.com/jedib0t/go-sudoku/sudoku/difficulty"
 )
@@ -36,7 +38,10 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 			d = difficulty.Insane
 		}
 
-		grid = sdk.NewGrid()
+		var rnd *rand.Rand
+		gen := generator.BackTrackingGenerator(generator.WithRNG(rnd))
+
+		grid, _ = gen.Generate(nil)
 		grid.ApplyDifficulty(d)
 
 		array := grid.MarshalArray()

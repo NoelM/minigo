@@ -460,6 +460,11 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 					return
 				}
 			}
+		} else if entryBytes[1] == 0x5B { // CSI = ESC(1B) + 5B
+			if len(entryBytes) == 2 {
+				return
+			}
+
 		} else if entryBytes[1] == Pro2 { // PRO2 = ESC + 0x3A
 			if len(entryBytes) < 4 {
 				return
@@ -475,6 +480,11 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 		value = int32(entryBytes[0])
 	case 2:
 		value = int32(binary.BigEndian.Uint16(entryBytes))
+	case 3:
+		tmp := make([]byte, 4)
+		copy(tmp[1:3], entryBytes)
+
+		value = int32(binary.BigEndian.Uint32(tmp))
 	case 4:
 		value = int32(binary.BigEndian.Uint32(entryBytes))
 	default:

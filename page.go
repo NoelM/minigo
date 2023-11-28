@@ -16,7 +16,6 @@ const (
 
 type InitFunc func(mntl *Minitel, inputs *Form, initData map[string]string) int
 type KeyboardFunc func(mntl *Minitel, inputs *Form, key rune)
-type InChanFunc func(mntl *Minitel, inputs *Form, message string)
 type NavigationFunc func(mntl *Minitel, inputs *Form) (map[string]string, int)
 type ConnexionFinFunc func(mntl *Minitel) int
 
@@ -28,7 +27,6 @@ type Page struct {
 
 	initFunc         InitFunc
 	charFunc         KeyboardFunc
-	inChanFunc       InChanFunc
 	connexionFinFunc ConnexionFinFunc
 	envoiFunc        NavigationFunc
 	sommaireFunc     NavigationFunc
@@ -38,6 +36,10 @@ type Page struct {
 	guideFunc        NavigationFunc
 	correctionFunc   NavigationFunc
 	suiteFunc        NavigationFunc
+	hautFunc         NavigationFunc
+	basFunc          NavigationFunc
+	droiteFunc       NavigationFunc
+	gaucheFunc       NavigationFunc
 }
 
 func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
@@ -47,7 +49,6 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		initData:         initData,
 		initFunc:         func(mntl *Minitel, inputs *Form, initData map[string]string) int { return NoOp },
 		charFunc:         func(mntl *Minitel, inputs *Form, key rune) {},
-		inChanFunc:       func(mntl *Minitel, inputs *Form, message string) {},
 		connexionFinFunc: defaultConnexionFinHandlerFunc,
 		envoiFunc:        defaultNavigationHandlerFunc,
 		sommaireFunc:     defaultNavigationHandlerFunc,
@@ -57,6 +58,10 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 		guideFunc:        defaultNavigationHandlerFunc,
 		correctionFunc:   defaultNavigationHandlerFunc,
 		suiteFunc:        defaultNavigationHandlerFunc,
+		hautFunc:         defaultNavigationHandlerFunc,
+		basFunc:          defaultNavigationHandlerFunc,
+		droiteFunc:       defaultNavigationHandlerFunc,
+		gaucheFunc:       defaultNavigationHandlerFunc,
 	}
 }
 
@@ -110,8 +115,20 @@ func (p *Page) SetSuiteFunc(f NavigationFunc) {
 	p.suiteFunc = f
 }
 
-func (p *Page) SetInChanFunc(f InChanFunc) {
-	p.inChanFunc = f
+func (p *Page) SetHautFunc(f NavigationFunc) {
+	p.hautFunc = f
+}
+
+func (p *Page) SetBasFunc(f NavigationFunc) {
+	p.basFunc = f
+}
+
+func (p *Page) SetDroiteFunc(f NavigationFunc) {
+	p.droiteFunc = f
+}
+
+func (p *Page) SetGaucheFunc(f NavigationFunc) {
+	p.gaucheFunc = f
 }
 
 func (p *Page) SetConnexionFinFunc(f ConnexionFinFunc) {
@@ -173,6 +190,30 @@ func (p *Page) Run() (map[string]string, int) {
 		case Suite:
 			if out, op := p.suiteFunc(p.mntl, p.form); op != NoOp {
 				infoLog.Printf("page: key Suite: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
+
+		case ToucheFlecheHaut:
+			if out, op := p.hautFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Haut: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
+
+		case ToucheFlecheBas:
+			if out, op := p.basFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Bas: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
+
+		case ToucheFlecheDroite:
+			if out, op := p.droiteFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Droite: quit %s page, with op=%d\n", p.name, op)
+				return out, op
+			}
+
+		case ToucheFlecheGauche:
+			if out, op := p.gaucheFunc(p.mntl, p.form); op != NoOp {
+				infoLog.Printf("page: key Gauche: quit %s page, with op=%d\n", p.name, op)
 				return out, op
 			}
 

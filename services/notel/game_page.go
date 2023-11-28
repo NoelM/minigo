@@ -44,7 +44,6 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 		grid.ApplyDifficulty(d)
 
 		array := grid.MarshalArray()
-		fmt.Println(array)
 
 		lineRef := 5
 		colRef := 2
@@ -57,17 +56,14 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 				colPos := colRef + padding*col
 
 				if val == 0 {
-					infoLog.Printf("input at %d %d\n", linePos, colPos)
-					matrix.SetInput(line, col, minigo.NewInput(mntl, line, col, 1, 1, true))
+					matrix.SetInput(line, col, minigo.NewInput(mntl, linePos, colPos, 1, 1, true))
 				} else {
-					infoLog.Printf("value=%d at %d %d\n", val, line, col)
 					mntl.WriteStringAt(linePos, colPos, fmt.Sprintf("%d", val))
 				}
 			}
 		}
 
 		matrix.InitAll()
-		matrix.ActivateFirst()
 
 		mntl.WriteStringLeft(24, "NAVIGUEZ ←↑→↓")
 		mntl.WriteHelperRight(24, "VALIDEZ", "ENVOI")

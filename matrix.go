@@ -23,7 +23,7 @@ func (m *Matrix) SetInput(row, col int, input *Input) {
 	if row > m.rows-1 || col > m.cols-1 {
 		return
 	}
-	m.inputs[row*col] = input
+	m.inputs[row*m.cols+col] = input
 }
 
 func (m *Matrix) ToMap() map[string]string {

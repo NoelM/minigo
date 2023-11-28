@@ -38,8 +38,8 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 			d = difficulty.Insane
 		}
 
-		var rnd *rand.Rand
-		gen := generator.BackTrackingGenerator(generator.WithRNG(rnd))
+		var rnd rand.Rand
+		gen := generator.BackTrackingGenerator(generator.WithRNG(&rnd))
 
 		grid, _ = gen.Generate(nil)
 		grid.ApplyDifficulty(d)

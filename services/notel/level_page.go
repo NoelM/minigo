@@ -21,9 +21,9 @@ func NewPageLevel(mntl *minigo.Minitel) *minigo.Page {
 		list.SetEntryHeight(1)
 		list.Display()
 
-		inputs.AppendInput("level", minigo.NewInput(mntl, 12, 8, 2, 1, true))
+		inputs.AppendInput("level", minigo.NewInput(mntl, 12, 8, 1, 1, true))
 
-		mntl.WriteHelperLeft(12, "NIVEAU .. +", "ENVOI")
+		mntl.WriteHelperLeft(12, "NIVEAU . +", "ENVOI")
 		inputs.ActivateFirst()
 
 		return minigo.NoOp
@@ -53,6 +53,10 @@ func NewPageLevel(mntl *minigo.Minitel) *minigo.Page {
 
 	levelPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		return map[string]string{"level": "2"}, minigo.EnvoiOp
+	})
+
+	levelPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key rune) {
+		inputs.AppendKeyActive(key)
 	})
 
 	return levelPage

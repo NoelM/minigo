@@ -446,26 +446,6 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 			return
 		}
 
-	} else if entryBytes[0] == Prog {
-		if len(entryBytes) == 1 {
-			return
-		}
-
-		if entryBytes[1] == RepStatusClavier {
-			if len(entryBytes) == 2 {
-				return
-			}
-
-			if entryBytes[2] == CodeReceptionClavier {
-				if len(entryBytes) == 3 {
-					return
-				}
-
-				done, pro = true, true
-				return
-			}
-		}
-
 	} else if entryBytes[0] == Esc {
 		if len(entryBytes) == 1 {
 			return
@@ -482,16 +462,27 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 				}
 			}
 
-		} else if entryBytes[1] == 0x5B { // CSI = ESC(1B) + 5B
+		} else if entryBytes[1] == 0x5B {
+			// CSI = ESC(1B) + 5B
 			if len(entryBytes) == 2 {
 				return
 			}
 
-		} else if entryBytes[1] == Pro2 { // PRO2 = ESC + 0x3A
+		} else if entryBytes[1] == Pro2 {
+			// ESC + 0x3A (PRO2) + [2 BYTES]
 			if len(entryBytes) < 4 {
 				return
 			}
-			// PRO2, RESP BYTE, STATUS BYTE
+
+			done, pro = true, true
+			return
+
+		} else if entryBytes[1] == Pro3 {
+			// ESC + 0x3B (PRO3) + [3 BYTES]
+			if len(entryBytes) < 5 {
+				return
+			}
+
 			done, pro = true, true
 			return
 		}

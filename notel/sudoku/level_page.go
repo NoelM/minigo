@@ -54,7 +54,8 @@ func RunPageLevel(mntl *minigo.Minitel) (level, op int) {
 	})
 
 	levelPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		return map[string]string{"level": "2"}, minigo.EnvoiOp
+		level = 2
+		return nil, minigo.EnvoiOp
 	})
 
 	levelPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key rune) {

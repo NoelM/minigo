@@ -58,6 +58,11 @@ func RunPageLevel(mntl *minigo.Minitel) (level, op int) {
 		return nil, minigo.EnvoiOp
 	})
 
+	levelPage.SetCorrectionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		inputs.CorrectionActive()
+		return nil, minigo.NoOp
+	})
+
 	levelPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key rune) {
 		inputs.AppendKeyActive(key)
 	})

@@ -68,11 +68,6 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 }
 
 func (m *Minitel) saveProtocol(entryBuffer []byte) {
-	if entryBuffer[0] == Prog && entryBuffer[1] == Clavier {
-		m.clavierByte = entryBuffer[2]
-		return
-	}
-
 	switch entryBuffer[2] {
 	case Terminal:
 		m.terminalByte = entryBuffer[3]
@@ -82,6 +77,8 @@ func (m *Minitel) saveProtocol(entryBuffer []byte) {
 		m.vitesseByte = entryBuffer[3]
 	case Protocole:
 		m.protocoleByte = entryBuffer[3]
+	case CodeReceptionClavier:
+		m.clavierByte = entryBuffer[3]
 	default:
 		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.source, entryBuffer[2])
 		return

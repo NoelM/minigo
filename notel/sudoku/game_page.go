@@ -107,6 +107,11 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		return nil, minigo.EnvoiOp
 	})
 
+	gamePage.SetCorrectionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		matrix.CorrectionActive()
+		return nil, minigo.NoOp
+	})
+
 	gamePage.SetHautFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		matrix.ActivateUp()
 		return nil, minigo.NoOp

@@ -406,8 +406,8 @@ func ApplyParity(in []byte) (out []byte) {
 }
 
 func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err error) {
-	// Special characters, switch G2 mode
 	if entryBytes[0] == Ss2 {
+		// Special characters, switch G2 mode
 		if len(entryBytes) <= 1 {
 			return
 		}
@@ -445,18 +445,25 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 		if len(entryBytes) == 1 {
 			return
 		}
+
 	} else if entryBytes[0] == Prog {
 		if len(entryBytes) == 1 {
 			return
 		}
 
-		if entryBytes[1] == Clavier {
+		if entryBytes[1] == RepStatusClavier {
 			if len(entryBytes) == 2 {
 				return
 			}
 
-			done, pro = true, true
-			return
+			if entryBytes[2] == CodeReceptionClavier {
+				if len(entryBytes) == 3 {
+					return
+				}
+
+				done, pro = true, true
+				return
+			}
 		}
 
 	} else if entryBytes[0] == Esc {
@@ -474,6 +481,7 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 					return
 				}
 			}
+
 		} else if entryBytes[1] == 0x5B { // CSI = ESC(1B) + 5B
 			if len(entryBytes) == 2 {
 				return

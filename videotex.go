@@ -445,6 +445,20 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 		if len(entryBytes) == 1 {
 			return
 		}
+	} else if entryBytes[0] == Prog {
+		if len(entryBytes) == 1 {
+			return
+		}
+
+		if entryBytes[1] == Clavier {
+			if len(entryBytes) == 2 {
+				return
+			}
+
+			done, pro = true, true
+			return
+		}
+
 	} else if entryBytes[0] == Esc {
 		if len(entryBytes) == 1 {
 			return

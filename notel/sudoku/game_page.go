@@ -22,6 +22,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 
 	gamePage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
+		mntl.ClavierEtendu()
 
 		var d difficulty.Difficulty
 		var dName string
@@ -74,6 +75,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 	})
 
 	gamePage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		mntl.ClavierStandard()
 		return nil, minigo.SommaireOp
 	})
 
@@ -101,6 +103,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			time.Sleep(2 * time.Second)
 		}
 
+		mntl.ClavierStandard()
 		return nil, minigo.EnvoiOp
 	})
 

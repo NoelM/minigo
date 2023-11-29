@@ -275,6 +275,7 @@ const (
 const (
 	Terminal       = 0x71
 	Fonctionnement = 0x73
+	Clavier        = 0x73
 	Vitesse        = 0x75
 	Protocole      = 0x77
 )

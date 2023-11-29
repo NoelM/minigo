@@ -29,6 +29,7 @@ type Minitel struct {
 	vitesseByte        byte
 	fonctionnementByte byte
 	protocoleByte      byte
+	clavierByte        byte
 
 	source   string
 	connLost *prometheus.CounterVec
@@ -67,6 +68,11 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 }
 
 func (m *Minitel) saveProtocol(entryBuffer []byte) {
+	if entryBuffer[0] == Prog && entryBuffer[1] == Clavier {
+		m.clavierByte = entryBuffer[2]
+		return
+	}
+
 	switch entryBuffer[2] {
 	case Terminal:
 		m.terminalByte = entryBuffer[3]
@@ -104,6 +110,10 @@ func (m *Minitel) ackChecker() {
 			ok = BitReadAt(m.fonctionnementByte, 3)
 		case AckMajuscule:
 			ok = !BitReadAt(m.fonctionnementByte, 3)
+		case AckClavierEtendu:
+			ok = BitReadAt(m.clavierByte, 0)
+		case AckClavierStandard:
+			ok = !BitReadAt(m.clavierByte, 0)
 		default:
 			warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.source, ack)
 		}
@@ -390,6 +400,22 @@ func (m *Minitel) RouleauOff() error {
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Stop, Rouleau)
 	return m.Send(buf)
+}
+
+//
+// CLAVIER ETENDU
+//
+
+func (m *Minitel) ClavierEtendu() error {
+	m.ackStack.Add(AckClavierEtendu)
+
+	return m.Send([]byte{Prog, Start, Eten})
+}
+
+func (m *Minitel) ClavierStandard() error {
+	m.ackStack.Add(AckClavierEtendu)
+
+	return m.Send([]byte{Prog, Stop, Eten})
 }
 
 //

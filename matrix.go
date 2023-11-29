@@ -6,7 +6,6 @@ type Matrix struct {
 	inputs []*Input
 	rows   int
 	cols   int
-	maxId  int
 	active int
 }
 
@@ -15,7 +14,6 @@ func NewMatrix(rows, cols int) *Matrix {
 		inputs: make([]*Input, rows*cols),
 		rows:   rows,
 		cols:   cols,
-		maxId:  rows * cols,
 	}
 }
 
@@ -187,7 +185,7 @@ func (m *Matrix) ActivateNext() {
 func (m *Matrix) ActivateUp() {
 	nextActive := m.active
 
-	upPos := m.active - m.rows
+	upPos := m.active - m.cols
 	for i := 0; i < len(m.inputs); i += 1 {
 		if upPos-i >= 0 && upPos-i < len(m.inputs) && m.inputs[upPos-i] != nil {
 			nextActive = upPos - i
@@ -206,7 +204,7 @@ func (m *Matrix) ActivateUp() {
 func (m *Matrix) ActivateDown() {
 	nextActive := m.active
 
-	downPos := m.active + m.rows
+	downPos := m.active + m.cols
 	for i := 0; i < len(m.inputs); i += 1 {
 		if downPos-i >= 0 && downPos-i < len(m.inputs) && m.inputs[downPos-i] != nil {
 			nextActive = downPos - i

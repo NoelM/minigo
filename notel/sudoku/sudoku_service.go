@@ -1,15 +1,15 @@
-package main
+package sudoku
 
 import "github.com/NoelM/minigo"
 
-func SudokuService(mntl *minigo.Minitel) int {
+func SudokuService(mntl *minigo.Minitel, login string) int {
 LEVEL:
-	level, op := NewPageLevel(mntl).Run()
+	level, op := RunPageLevel(mntl)
 	if op != minigo.EnvoiOp {
 		return minigo.SommaireOp
 	}
 
-	_, op = NewPageGame(mntl, level).Run()
+	op = RunPageGame(mntl, login, level)
 	if op == minigo.EnvoiOp {
 		goto LEVEL
 	}

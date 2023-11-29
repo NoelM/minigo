@@ -1,4 +1,4 @@
-package main
+package sudoku
 
 import (
 	"strconv"
@@ -6,7 +6,7 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func NewPageLevel(mntl *minigo.Minitel) *minigo.Page {
+func RunPageLevel(mntl *minigo.Minitel) (level, op int) {
 	levelPage := minigo.NewPage("sudoku:level", mntl, nil)
 
 	levelPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
@@ -15,6 +15,7 @@ func NewPageLevel(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteAttributes(minigo.DoubleHauteur)
 		mntl.WriteStringLeft(2, "SUDOKU")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
+		mntl.WriteStringLeft(3, "Expérimental, donc des bugs paaaartout")
 
 		list := minigo.NewListEnum(mntl, []string{"Facile", "Moyen", "Difficile", "Extrême"})
 		list.SetXY(1, 5)
@@ -35,20 +36,21 @@ func NewPageLevel(mntl *minigo.Minitel) *minigo.Page {
 
 	levelPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		var err error
-		var level int64
+		var parseLevel int64
 		if v := inputs.ValueActive(); v != "" {
-			if level, err = strconv.ParseInt(v, 10, 32); err != nil {
+			if parseLevel, err = strconv.ParseInt(v, 10, 32); err != nil {
 				inputs.ResetAll()
 				return nil, minigo.NoOp
 			}
 		}
 
-		if level < 0 && level > 4 {
+		if parseLevel < 0 && parseLevel > 4 {
 			inputs.ResetAll()
 			return nil, minigo.NoOp
 		}
 
-		return inputs.ToMap(), minigo.EnvoiOp
+		level = int(parseLevel)
+		return nil, minigo.EnvoiOp
 	})
 
 	levelPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
@@ -59,5 +61,6 @@ func NewPageLevel(mntl *minigo.Minitel) *minigo.Page {
 		inputs.AppendKeyActive(key)
 	})
 
-	return levelPage
+	_, op = levelPage.Run()
+	return level, op
 }

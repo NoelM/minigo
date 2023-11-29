@@ -1,4 +1,4 @@
-package main
+package sudoku
 
 import (
 	"fmt"
@@ -12,31 +12,34 @@ import (
 	"github.com/jedib0t/go-sudoku/sudoku/difficulty"
 )
 
-func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
+func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 
-	gamePage := minigo.NewPage("sudoku:game", mntl, level)
+	gamePage := minigo.NewPage("sudoku:game", mntl, nil)
 	matrix := minigo.NewMatrix(9, 9)
 	var grid *sdk.Grid
+
+	start := time.Now()
 
 	gamePage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
-		level, err := strconv.ParseInt(initData["level"], 10, 32)
-		if err != nil {
-			return minigo.QuitOp
-		}
-
 		var d difficulty.Difficulty
+		var dName string
 		switch level {
 		case 1:
 			d = difficulty.Easy
+			dName = "FACILE"
 		case 2:
 			d = difficulty.Medium
+			dName = "MOYENNE"
 		case 3:
 			d = difficulty.Hard
+			dName = "DIFFICILE"
 		case 4:
 			d = difficulty.Insane
+			dName = "EXTREME"
 		}
+		mntl.WriteStringLeft(1, fmt.Sprintf("Grille %s", dName))
 
 		gen := generator.BackTrackingGenerator(generator.WithRNG(rand.New(rand.NewSource(time.Now().UnixNano()))))
 
@@ -45,8 +48,8 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 
 		array := grid.MarshalArray()
 
-		lineRef := 5
-		colRef := 2
+		lineRef := 2
+		colRef := 5
 		padding := 2
 
 		for line := range array {
@@ -65,8 +68,8 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 
 		matrix.InitAll()
 
-		mntl.WriteStringLeft(24, "NAVIGUEZ ←↑→↓")
-		mntl.WriteHelperRight(24, "VALIDEZ", "ENVOI")
+		mntl.WriteStringLeft(24, "Naviguez ←↑→↓")
+		mntl.WriteHelperRight(24, "Vérifiez", "ENVOI")
 
 		return minigo.NoOp
 	})
@@ -95,7 +98,7 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 			mntl.WriteStringLeft(2, "Grille invalide...")
 			return nil, minigo.NoOp
 		} else {
-			mntl.WriteStringLeft(2, "BRAVO ! Réussi")
+			mntl.WriteStringLeft(2, fmt.Sprintf("Bravo %s ! C'est réussi en %s", login, time.Since(start).Round(time.Second).String()))
 			time.Sleep(2 * time.Second)
 		}
 
@@ -126,5 +129,6 @@ func NewPageGame(mntl *minigo.Minitel, level map[string]string) *minigo.Page {
 		matrix.AppendKeyActive(key)
 	})
 
-	return gamePage
+	_, op = gamePage.Run()
+	return op
 }

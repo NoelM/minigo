@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/sudoku"
 )
 
 const (
@@ -54,7 +55,7 @@ func SommaireHandler(m *minigo.Minitel, login string) {
 		case serveurId:
 			_, op = NewServeurPage(m).Run()
 		case sudokuId:
-			op = SudokuService(m)
+			op = sudoku.SudokuService(m, login)
 		}
 	}
 	infoLog.Println("quits sommaire handler")

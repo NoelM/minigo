@@ -406,13 +406,13 @@ func (m *Minitel) RouleauOff() error {
 func (m *Minitel) ClavierEtendu() error {
 	m.ackStack.Add(AckClavierEtendu)
 
-	return m.Send([]byte{Prog, Start, Eten})
+	return m.Send([]byte{Prog, Start, CodeReceptionClavier, Eten})
 }
 
 func (m *Minitel) ClavierStandard() error {
 	m.ackStack.Add(AckClavierEtendu)
 
-	return m.Send([]byte{Prog, Stop, Eten})
+	return m.Send([]byte{Prog, Stop, CodeReceptionClavier, Eten})
 }
 
 //

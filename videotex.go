@@ -495,7 +495,7 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 		value = int32(binary.BigEndian.Uint16(entryBytes))
 	case 3:
 		tmp := make([]byte, 4)
-		copy(tmp[1:3], entryBytes)
+		copy(tmp[1:], entryBytes)
 
 		value = int32(binary.BigEndian.Uint32(tmp))
 	case 4:

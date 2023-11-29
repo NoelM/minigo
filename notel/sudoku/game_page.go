@@ -48,7 +48,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 
 		array := grid.MarshalArray()
 
-		lineRef := 2
+		lineRef := 3
 		colRef := 5
 		padding := 2
 

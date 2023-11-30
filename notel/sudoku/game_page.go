@@ -24,6 +24,17 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		mntl.CleanScreen()
 		mntl.ClavierEtendu()
 
+		mntl.HLine(1, 1, 10, minigo.Top)
+		mntl.HLine(2, 1, 10, minigo.HCenter)
+		mntl.HLine(3, 1, 10, minigo.Bottom)
+
+		mntl.VLine(4, 1, 10, minigo.Left)
+		mntl.VLine(5, 1, 10, minigo.VCenter)
+		mntl.VLine(6, 1, 10, minigo.Right)
+
+		time.Sleep(30 * time.Second)
+		mntl.CleanScreen()
+
 		var d difficulty.Difficulty
 		var dName string
 		switch level {

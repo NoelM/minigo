@@ -389,7 +389,7 @@ func GetVLine(row, col, len int, t LineType) (buf []byte) {
 
 func GetRect(row, col, width, height int) (buf []byte) {
 	buf = GetHLine(row, col, width, Bottom)
-	buf = append(buf, GetVLine(row+1, col, height-2, Right)...)
+	buf = append(buf, GetVLine(row+1, col, height-2, Left)...)
 	buf = append(buf, GetVLine(row+1, col+width, height-2, Left)...)
 	buf = append(buf, GetHLine(row+height, col, width, Top)...)
 	return

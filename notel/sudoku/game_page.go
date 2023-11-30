@@ -55,16 +55,16 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		padding := 2
 
 		for line := range array {
-			linePos := lineRef + padding*line
-			if linePos%3 == 0 {
+			if line%3 == 0 {
 				lineRef += 1
 			}
+			linePos := lineRef + padding*line
 
 			for col, val := range array[line] {
-				colPos := colRef + padding*col
-				if colPos%3 == 0 {
+				if col%3 == 0 {
 					colRef += 1
 				}
+				colPos := colRef + padding*col
 
 				if val == 0 {
 					matrix.SetInput(line, col, minigo.NewInput(mntl, linePos, colPos, 1, 1, true))

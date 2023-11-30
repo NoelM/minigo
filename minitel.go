@@ -448,6 +448,22 @@ func (m *Minitel) MinusculeOff() error {
 }
 
 //
+// LINES
+//
+
+func (m *Minitel) HLine(row, col, len int, t LineType) {
+	m.Send(GetHLine(row, col, len, t))
+}
+
+func (m *Minitel) VLine(row, col, len int, t LineType) {
+	m.Send(GetVLine(row, col, len, t))
+}
+
+func (m *Minitel) Rect(row, col, width, height int) {
+	m.Send(GetVLine(row, col, width, LineType(height)))
+}
+
+//
 // VDT FORMAT
 //
 

@@ -370,6 +370,30 @@ func GetRepeatRune(r rune, n int) (buf []byte) {
 	return
 }
 
+func GetHLine(row, col, len int, t LineType) (buf []byte) {
+	buf = GetMoveCursorAt(row, col)
+	buf = append(buf, GetRepeatRune(rune(t), len-1)...)
+	return
+}
+
+func GetVLine(row, col, len int, t LineType) (buf []byte) {
+	buf = GetMoveCursorAt(row, col)
+
+	for i := 0; i < len; i += 1 {
+		// LF = moves cursor down
+		buf = append(buf, byte(t), Lf)
+	}
+	return
+}
+
+func GetRect(row, col, width, height int) (buf []byte) {
+	buf = GetHLine(row, col, width, Bottom)
+	buf = append(buf, GetVLine(row, col, height, Right)...)
+	buf = append(buf, GetVLine(row, col+width, height, Left)...)
+	buf = append(buf, GetHLine(row+height, col, width, Top)...)
+	return
+}
+
 func EncodeMessage(msg string) (buf []byte) {
 	for _, c := range msg {
 		if b := EncodeRune(c); b != nil {

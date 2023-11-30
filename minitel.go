@@ -460,7 +460,7 @@ func (m *Minitel) VLine(row, col, len int, t LineType) {
 }
 
 func (m *Minitel) Rect(row, col, width, height int) {
-	m.Send(GetVLine(row, col, width, LineType(height)))
+	m.Send(GetRect(row, col, width, height))
 }
 
 //

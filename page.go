@@ -223,15 +223,6 @@ func (p *Page) Run() (map[string]string, int) {
 				return nil, op
 			}
 
-			/*
-					PCE collides with letter D
-				case PCE:
-					p.form = &Form{}
-					if op := p.initFunc(p.mntl, p.form, p.initData); op != NoOp {
-						return nil, op
-					}
-			*/
-
 		default:
 			if ValidRune(key) {
 				p.charFunc(p.mntl, p.form, key)

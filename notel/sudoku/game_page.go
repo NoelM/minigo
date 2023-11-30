@@ -40,7 +40,8 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			d = difficulty.Insane
 			dName = "EXTREME"
 		}
-		mntl.WriteStringCenter(1, fmt.Sprintf("Grille %s", dName))
+		mntl.WriteStringLeft(1, "Grille:")
+		mntl.WriteStringLeft(2, dName)
 
 		gen := generator.BackTrackingGenerator(generator.WithRNG(rand.New(rand.NewSource(time.Now().UnixNano()))))
 
@@ -49,15 +50,21 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 
 		array := grid.MarshalArray()
 
-		lineRef := 3
-		colRef := 11
+		lineRef := 1
+		colRef := 9
 		padding := 2
 
 		for line := range array {
 			linePos := lineRef + padding*line
+			if linePos%3 == 0 {
+				lineRef += 1
+			}
 
 			for col, val := range array[line] {
 				colPos := colRef + padding*col
+				if colPos%3 == 0 {
+					colRef += 1
+				}
 
 				if val == 0 {
 					matrix.SetInput(line, col, minigo.NewInput(mntl, linePos, colPos, 1, 1, true))
@@ -65,10 +72,11 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 					mntl.WriteStringAt(linePos, colPos, fmt.Sprintf("%d", val))
 				}
 			}
+			colRef -= 2
 		}
 
 		mntl.WriteStringLeft(24, "Naviguez ←↑→↓")
-		mntl.WriteHelperRight(24, "Vérifiez", "ENVOI")
+		mntl.WriteHelperRight(24, "Valid. grille", "ENVOI")
 		matrix.InitAll()
 
 		return minigo.NoOp

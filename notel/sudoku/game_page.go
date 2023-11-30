@@ -72,7 +72,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 					mntl.WriteStringAt(linePos, colPos, fmt.Sprintf("%d", val))
 				}
 			}
-			colRef -= 2
+			colRef -= 3
 		}
 
 		mntl.WriteStringLeft(24, "Naviguez ←↑→↓")

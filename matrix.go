@@ -147,18 +147,15 @@ func (m *Matrix) ActivateFirst() {
 }
 
 func (m *Matrix) ActivateLeft() {
-	fmt.Println("activate left")
 	nextActive := m.active
 
-	for i := m.active; i >= 0; i -= 1 {
-		fmt.Println("test", i)
+	for i := m.active - 1; i >= 0; i -= 1 {
 		if m.inputs[i] != nil {
 			nextActive = i
 			break
 		}
 	}
 
-	fmt.Println("new active", nextActive)
 	m.active = nextActive
 	m.activateInput()
 }
@@ -168,18 +165,15 @@ func (m *Matrix) ActivatePrev() {
 }
 
 func (m *Matrix) ActivateRight() {
-	fmt.Println("activate right")
 	nextActive := m.active
 
-	for i := m.active; i < len(m.inputs); i += 1 {
-		fmt.Println("test", i)
+	for i := m.active + 1; i < len(m.inputs); i += 1 {
 		if m.inputs[i] != nil {
 			nextActive = i
 			break
 		}
 	}
 
-	fmt.Println("new active", nextActive)
 	m.active = nextActive
 	m.activateInput()
 }

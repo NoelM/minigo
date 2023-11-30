@@ -40,8 +40,8 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			d = difficulty.Insane
 			dName = "EXTREME"
 		}
-		mntl.WriteStringLeft(1, "Grille:")
-		mntl.WriteStringLeft(2, dName)
+		mntl.WriteStringLeft(3, "Niveau:")
+		mntl.WriteStringLeft(4, dName)
 
 		gen := generator.BackTrackingGenerator(generator.WithRNG(rand.New(rand.NewSource(time.Now().UnixNano()))))
 
@@ -108,14 +108,33 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 
 			row := id / 9
 			col := id - 9*row
-			grid.Set(row, col, int(val))
+			if !grid.Set(row, col, int(val)) {
+				mntl.WriteStringLeft(1, fmt.Sprintf("Element invalide: ligne: %d, col: %d", row+1, col+1))
+				time.Sleep(2 * time.Second)
+				mntl.CleanLine()
+
+				return nil, minigo.NoOp
+			}
+		}
+
+		if !grid.Done() {
+			mntl.WriteStringLeft(1, "Grille incomplète")
+			time.Sleep(2 * time.Second)
+			mntl.CleanLine()
+
+			return nil, minigo.NoOp
+
 		}
 
 		if ok, err := grid.Validate(); err != nil || !ok {
-			mntl.WriteStringLeft(2, "Grille invalide...")
+			mntl.WriteStringLeft(1, "Grille invalide")
+			time.Sleep(2 * time.Second)
+			mntl.CleanLine()
+
 			return nil, minigo.NoOp
+
 		} else {
-			mntl.WriteStringLeft(2, fmt.Sprintf("Bravo %s ! C'est réussi en %s", login, time.Since(start).Round(time.Second).String()))
+			mntl.WriteStringLeft(1, fmt.Sprintf("Bravo %s ! C'est réussi en %s", login, time.Since(start).Round(time.Second).String()))
 			time.Sleep(2 * time.Second)
 		}
 

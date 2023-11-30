@@ -372,7 +372,7 @@ func GetRepeatRune(r rune, n int) (buf []byte) {
 
 func GetHLine(row, col, len int, t LineType) (buf []byte) {
 	buf = GetMoveCursorAt(row, col)
-	buf = append(buf, GetRepeatRune(rune(t), len-1)...)
+	buf = append(buf, byte(t), Rep, 0x40+byte(len-1))
 	return
 }
 
@@ -391,7 +391,7 @@ func GetRect(row, col, width, height int) (buf []byte) {
 	buf = GetHLine(row, col, width, Bottom)
 	buf = append(buf, GetVLine(row+1, col, height-2, Left)...)
 	buf = append(buf, GetVLine(row+1, col+width, height-2, Left)...)
-	buf = append(buf, GetHLine(row+height, col, width, Top)...)
+	buf = append(buf, GetHLine(row+height-1, col, width, Top)...)
 	return
 }
 

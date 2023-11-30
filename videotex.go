@@ -380,16 +380,17 @@ func GetVLine(row, col, len int, t LineType) (buf []byte) {
 	buf = GetMoveCursorAt(row, col)
 
 	for i := 0; i < len; i += 1 {
+		// BS = moves cursor left
 		// LF = moves cursor down
-		buf = append(buf, byte(t), Lf)
+		buf = append(buf, byte(t), Bs, Lf)
 	}
 	return
 }
 
 func GetRect(row, col, width, height int) (buf []byte) {
 	buf = GetHLine(row, col, width, Bottom)
-	buf = append(buf, GetVLine(row, col, height, Right)...)
-	buf = append(buf, GetVLine(row, col+width, height, Left)...)
+	buf = append(buf, GetVLine(row+1, col, height-2, Right)...)
+	buf = append(buf, GetVLine(row+1, col+width, height-2, Left)...)
 	buf = append(buf, GetHLine(row+height, col, width, Top)...)
 	return
 }

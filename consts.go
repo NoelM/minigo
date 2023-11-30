@@ -258,12 +258,12 @@ const Reset = 0x7F
 type LineType byte
 
 const (
-	Top     LineType = 0x7E
-	HCenter LineType = 0x60
 	Bottom  LineType = 0x5F
+	HCenter LineType = 0x60
 	Left    LineType = 0x7B
 	VCenter LineType = 0x7C
 	Right   LineType = 0x7D
+	Top     LineType = 0x7E
 )
 
 // A ranger

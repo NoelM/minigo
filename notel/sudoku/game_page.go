@@ -32,7 +32,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			dName = "FACILE"
 		case 2:
 			d = difficulty.Medium
-			dName = "MOYENNE"
+			dName = "MOYEN"
 		case 3:
 			d = difficulty.Hard
 			dName = "DIFFICILE"
@@ -40,8 +40,8 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			d = difficulty.Insane
 			dName = "EXTREME"
 		}
-		mntl.WriteStringLeft(3, "Niveau:")
-		mntl.WriteStringLeft(4, dName)
+		mntl.WriteStringLeft(2, "Niveau:")
+		mntl.WriteStringLeft(3, dName)
 
 		gen := generator.BackTrackingGenerator(generator.WithRNG(rand.New(rand.NewSource(time.Now().UnixNano()))))
 
@@ -50,7 +50,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 
 		array := grid.MarshalArray()
 
-		lineRef := 1
+		lineRef := 2
 		colRef := 9
 		padding := 2
 
@@ -122,6 +122,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			time.Sleep(2 * time.Second)
 			mntl.CleanLine()
 
+			matrix.ActivateFirst()
 			return nil, minigo.NoOp
 
 		}
@@ -131,6 +132,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			time.Sleep(2 * time.Second)
 			mntl.CleanLine()
 
+			matrix.ActivateFirst()
 			return nil, minigo.NoOp
 
 		} else {

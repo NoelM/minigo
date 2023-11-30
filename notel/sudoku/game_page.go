@@ -113,6 +113,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 				time.Sleep(2 * time.Second)
 				mntl.CleanLine()
 
+				matrix.ActivateFirst()
 				return nil, minigo.NoOp
 			}
 		}

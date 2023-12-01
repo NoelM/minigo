@@ -147,8 +147,10 @@ func printDate(m *minigo.Minitel, lastDate time.Time, date time.Time) {
 	buf := minigo.GetMoveCursorAt(24, 1)
 	// this is not a repetition
 	// needed in rouleau mode
+	buf = append(buf, minigo.EncodeAttribute(minigo.CaractereBleu)...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
+	buf = append(buf, minigo.EncodeAttribute(minigo.CaractereBlanc)...)
 	m.Send(buf)
 
 	m.WriteStringCenter(InputLine-2, dateString)
@@ -196,7 +198,9 @@ func printOneMsg(m *minigo.Minitel, msg Message) {
 	buf = append(buf, minigo.GetMoveCursorAt(InputLine-msgLines-1, 1)...)
 
 	// Print nickname
+	buf = append(buf, minigo.EncodeAttribute(minigo.CaractereBleu)...)
 	buf = append(buf, minigo.EncodeSprintf("%s> ", msg.Nick)...)
+	buf = append(buf, minigo.EncodeAttribute(minigo.CaractereBlanc)...)
 
 	// Print Message
 	buf = append(buf, minigo.EncodeMessage(msg.Text)...)

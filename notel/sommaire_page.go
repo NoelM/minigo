@@ -14,6 +14,7 @@ const (
 	infoId
 	serveurId
 	sudokuId
+	profilId
 )
 
 const (
@@ -22,6 +23,7 @@ const (
 	infoKey    = "*INF"
 	serveurKey = "*SRV"
 	sudokuKey  = "*SDK"
+	profilKey  = "*PRO"
 )
 
 var ServIdMap = map[string]int{
@@ -30,9 +32,10 @@ var ServIdMap = map[string]int{
 	infoKey:    infoId,
 	serveurKey: serveurId,
 	sudokuKey:  sudokuId,
+	profilKey:  profilId,
 }
 
-func SommaireHandler(m *minigo.Minitel, login string) {
+func SommaireHandler(m *minigo.Minitel, nick string) {
 	infoLog.Println("enters sommaire handler")
 
 	var op int
@@ -47,7 +50,7 @@ func SommaireHandler(m *minigo.Minitel, login string) {
 
 		switch serviceId {
 		case chatId:
-			op = ServiceMiniChat(m, login)
+			op = ServiceMiniChat(m, nick)
 		case meteoId:
 			op = ServiceMeteo(m)
 		case infoId:
@@ -55,7 +58,9 @@ func SommaireHandler(m *minigo.Minitel, login string) {
 		case serveurId:
 			_, op = NewServeurPage(m).Run()
 		case sudokuId:
-			op = sudoku.SudokuService(m, login)
+			op = sudoku.SudokuService(m, nick)
+		case profilId:
+			op = RunPageProfil(m, UsersDb, nick)
 		}
 	}
 	infoLog.Println("quits sommaire handler")
@@ -82,14 +87,17 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.ModeG0()
 	mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
-	list := minigo.NewList(mntl, 8, 1, 20, 2)
-	list.AppendItem(chatKey, "MINICHAT")
-	list.AppendItem(meteoKey, "METEO")
-	list.AppendItem(infoKey, "INFOS")
-	list.AppendItem(sudokuKey, "SUDOKU")
-	list.AppendItem(serveurKey, "SERVEUR")
+	listLeft := minigo.NewList(mntl, 8, 1, 20, 2)
+	listLeft.AppendItem(chatKey, "MINICHAT")
+	listLeft.AppendItem(meteoKey, "METEO")
+	listLeft.AppendItem(infoKey, "INFOS")
+	listLeft.AppendItem(sudokuKey, "SUDOKU")
+	listLeft.AppendItem(serveurKey, "SERVEUR")
+	listLeft.Display()
 
-	list.Display()
+	listRight := minigo.NewList(mntl, 8, 20, 20, 2)
+	listRight.AppendItem(profilKey, "PROFIL")
+	listRight.Display()
 
 	mntl.WriteAttributes(minigo.Clignotement, minigo.DoubleHauteur)
 	mntl.WriteStringCenter(19, "→ Rendez-vous ←")

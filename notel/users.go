@@ -29,6 +29,41 @@ func NewUsersDatabase() *UsersDatabase {
 	return &UsersDatabase{}
 }
 
+func (u *UsersDatabase) getHashB64(pwd string) (hashB64 string) {
+	hash := sha512.Sum512([]byte(pwd))
+	hashB64 = base64.StdEncoding.EncodeToString(hash[:])
+	return
+}
+
+func (u *UsersDatabase) loadUser(nick string) (user User, err error) {
+	val, closer, err := u.DB.Get([]byte(nick))
+	if err != nil {
+		return User{}, fmt.Errorf("login error: nick=%s: %s", nick, err.Error())
+	}
+
+	if err = json.Unmarshal(val, &user); err != nil {
+		return User{}, fmt.Errorf("login error: nick=%s: %s", nick, err.Error())
+	}
+	closer.Close()
+
+	return
+}
+
+func (u *UsersDatabase) setUser(user User) (err error) {
+	val, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("unable to marshall user nick=%s: %s", user.Nick, err.Error())
+	}
+
+	u.mutex.Lock()
+	if err = u.DB.Set([]byte(user.Nick), val, pebble.Sync); err != nil {
+		return fmt.Errorf("unable to add user nick=%s: %s", user.Nick, err.Error())
+	}
+	u.mutex.Unlock()
+
+	return
+}
+
 func (u *UsersDatabase) LoadDatabase(dir string) error {
 	db, err := pebble.Open(dir, &pebble.Options{})
 	if err != nil {
@@ -56,25 +91,15 @@ func (u *UsersDatabase) AddUser(nick, pwd string) error {
 		return fmt.Errorf("user already exists")
 	}
 
-	hash := sha512.Sum512([]byte(pwd))
-	hashB64 := base64.StdEncoding.EncodeToString(hash[:])
-
-	usr := &User{
+	usr := User{
 		Nick:        nick,
-		PwdHash:     hashB64,
+		PwdHash:     u.getHashB64(pwd),
 		LastConnect: time.Now(),
 	}
 
-	val, err := json.Marshal(usr)
-	if err != nil {
-		return fmt.Errorf("unable to marshall user nick=%s: %s", nick, err.Error())
-	}
-
-	u.mutex.Lock()
-	if err = u.DB.Set([]byte(nick), val, pebble.Sync); err != nil {
+	if err := u.setUser(usr); err != nil {
 		return fmt.Errorf("unable to add user nick=%s: %s", nick, err.Error())
 	}
-	u.mutex.Unlock()
 
 	return nil
 }
@@ -84,18 +109,11 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 	defer u.mutex.RUnlock()
 	infoLog.Printf("attempt to log=%s\n", nick)
 
-	val, closer, err := u.DB.Get([]byte(nick))
+	user, err := u.loadUser(nick)
 	if err != nil {
 		errorLog.Printf("login error: nick=%s: %s\n", nick, err.Error())
 		return false
 	}
-
-	var user User
-	if err = json.Unmarshal(val, &user); err != nil {
-		errorLog.Printf("login error: nick=%s: %s\n", nick, err.Error())
-		return false
-	}
-	closer.Close()
 
 	lastAllowedConnection := time.Now().Add(-30 * 24 * time.Hour)
 	if user.LastConnect.Before(lastAllowedConnection) {
@@ -105,10 +123,27 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 		return false
 	}
 
-	hash := sha512.Sum512([]byte(pwd))
-	hashB64 := base64.StdEncoding.EncodeToString(hash[:])
+	return user.PwdHash == u.getHashB64(pwd)
+}
 
-	return user.PwdHash == hashB64
+func (u *UsersDatabase) ChangePassword(nick string, pwd string) bool {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	user, err := u.loadUser(nick)
+	if err != nil {
+		errorLog.Printf("change pwd error: nick=%s: %s\n", nick, err.Error())
+		return false
+	}
+
+	user.PwdHash = u.getHashB64(pwd)
+
+	if err = u.setUser(user); err != nil {
+		errorLog.Printf("change pwd error: nick=%s: %s\n", nick, err.Error())
+		return false
+	}
+
+	return true
 }
 
 func (u *UsersDatabase) Quit() {

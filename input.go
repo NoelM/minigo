@@ -27,6 +27,9 @@ func NewInput(m *Minitel, refRow, refCol int, width, height int, dots bool) *Inp
 // getCursorPos returns the absolute position of the cursor
 func (i *Input) getCursorPos() (row, col int) {
 	totalLen := utf8.RuneCount(i.Value)
+	if totalLen == i.height*i.width {
+		totalLen -= 1 // do not move the cursor to the next pos
+	}
 
 	row = totalLen/i.width + i.refRow
 	col = totalLen%i.width + i.refCol

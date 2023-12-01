@@ -62,6 +62,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		mntl.HLine(lineRef+6*padding+2, colRef+1, 9*padding+2, minigo.HCenter)
 
 		// Numbers
+		mntl.WriteAttributes(minigo.InversionFond)
 		for line := range array {
 			if line%3 == 0 {
 				lineRef += 1
@@ -82,9 +83,10 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			}
 			colRef -= 3
 		}
+		mntl.WriteAttributes(minigo.FondNormal)
 
 		mntl.WriteStringLeft(24, "Naviguez ←↑→↓")
-		mntl.WriteHelperRight(24, "Valid. grille", "ENVOI")
+		mntl.WriteHelperRight(24, "Vérif. grille", "ENVOI")
 		matrix.InitAll()
 
 		return minigo.NoOp

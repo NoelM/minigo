@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/pioupiou"
 	"nhooyr.io/websocket"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,7 +25,7 @@ var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lsho
 
 var CommuneDb *CommuneDatabase
 var MessageDb *MessageDatabase
-var UsersDb *UsersDatabase
+var UsersDb *pioupiou.UsersDatabase
 
 var NbConnectedUsers atomic.Int32
 

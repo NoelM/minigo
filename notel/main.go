@@ -66,15 +66,15 @@ var (
 )
 
 const (
-	ServeWS             = true
-	ServeUSR56KPro      = false
-	ServeUSR56KFaxModem = true
+	ServeWS              = true
+	ServeUSR56FaxModem1  = true
+	ServeUSR56KFaxModem2 = true
 )
 
 const (
-	WSTag             = "ws"
-	USR56KProTag      = "usr-56k-pro"
-	USR56KFaxModemTag = "usr-56k-faxmodem"
+	WSTag              = "ws"
+	USR56KFaxModemTag1 = "usr-56k-faxmodem-1"
+	USR56KFaxModemTag2 = "usr-56k-faxmodem-2"
 )
 
 func main() {
@@ -94,46 +94,14 @@ func main() {
 		go serveWS(&wg, "192.168.1.34:3615")
 	}
 
-	if ServeUSR56KPro {
-		USR56KPro := []minigo.ATCommand{
-			{
-				Command: "ATZ0",
-				Reply:   "OK",
-			},
-			{
-				Command: "AT&F1+MCA=0",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATL0M0",
-				Reply:   "OK",
-			},
-			{
-				Command: "AT&N2",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATS27=16",
-				Reply:   "OK",
-			},
-		}
+	if ServeUSR56FaxModem1 {
 		wg.Add(1)
-		go serveModem(&wg, USR56KPro, "/dev/ttyUSB0", USR56KProTag)
+		go serveModem(&wg, ConfUSR56KFaxModem, "/dev/ttyUSB0", USR56KFaxModemTag1)
 	}
 
-	if ServeUSR56KFaxModem {
-		USR56KFaxModem := []minigo.ATCommand{
-			{
-				Command: "ATM0L0E0&H1&S1&R2",
-				Reply:   "OK",
-			},
-			{
-				Command: "ATS27=16S34=8S9=100&B1",
-				Reply:   "OK",
-			},
-		}
+	if ServeUSR56KFaxModem2 {
 		wg.Add(1)
-		go serveModem(&wg, USR56KFaxModem, "/dev/ttyUSB0", USR56KFaxModemTag)
+		go serveModem(&wg, ConfUSR56KFaxModem, "/dev/ttyUSB1", USR56KFaxModemTag2)
 	}
 
 	wg.Add(1)
@@ -193,12 +161,12 @@ func serverMetrics(wg *sync.WaitGroup) {
 
 	for _, cv := range []*prometheus.CounterVec{promConnNb, promConnLostNb, promConnDur, promConnAttemptNb} {
 		cv.With(prometheus.Labels{"source": WSTag}).Inc()
-		cv.With(prometheus.Labels{"source": USR56KProTag}).Inc()
-		cv.With(prometheus.Labels{"source": USR56KFaxModemTag}).Inc()
+		cv.With(prometheus.Labels{"source": USR56KFaxModemTag1}).Inc()
+		cv.With(prometheus.Labels{"source": USR56KFaxModemTag2}).Inc()
 	}
 	promConnActive.With(prometheus.Labels{"source": WSTag}).Set(0)
-	promConnActive.With(prometheus.Labels{"source": USR56KProTag}).Set(0)
-	promConnActive.With(prometheus.Labels{"source": USR56KFaxModemTag}).Set(0)
+	promConnActive.With(prometheus.Labels{"source": USR56KFaxModemTag1}).Set(0)
+	promConnActive.With(prometheus.Labels{"source": USR56KFaxModemTag2}).Set(0)
 
 	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":2112", nil)

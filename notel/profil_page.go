@@ -19,13 +19,13 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *UsersDatabase, pseudo string) (
 
 		mntl.WriteStringLeft(5, "PSEUDO: "+pseudo)
 
-		mntl.WriteStringLeft(7, "Changer mot de passe")
-		mntl.WriteStringLeft(8, "ACTUEL:")
-		inputs.AppendInput("now", minigo.NewInput(mntl, 8, 10, 10, 1, true))
-		mntl.WriteStringLeft(9, "NOUVEAU:")
-		inputs.AppendInput("new", minigo.NewInput(mntl, 9, 10, 10, 1, true))
-		mntl.WriteStringLeft(10, "NOUVEAU:")
-		inputs.AppendInput("newRep", minigo.NewInput(mntl, 10, 10, 10, 1, true))
+		mntl.WriteStringLeft(7, "CHANGER MOT DE PASSE")
+		mntl.WriteStringLeft(9, "Actuel:")
+		inputs.AppendInput("now", minigo.NewInput(mntl, 9, 10, 10, 1, true))
+		mntl.WriteStringLeft(10, "Nouveau:")
+		inputs.AppendInput("new", minigo.NewInput(mntl, 10, 10, 10, 1, true))
+		mntl.WriteStringLeft(11, "Nouveau:")
+		inputs.AppendInput("newRep", minigo.NewInput(mntl, 11, 10, 10, 1, true))
 
 		mntl.WriteHelperLeft(24, "Validez avec", "ENVOI")
 

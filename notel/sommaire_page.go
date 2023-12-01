@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/sudoku"
 )
 
 const (
@@ -12,13 +13,23 @@ const (
 	meteoId
 	infoId
 	serveurId
+	sudokuId
+)
+
+const (
+	chatKey    = "*CHA"
+	meteoKey   = "*MTO"
+	infoKey    = "*INF"
+	serveurKey = "*SRV"
+	sudokuKey  = "*SDK"
 )
 
 var ServIdMap = map[string]int{
-	"*CHA": chatId,
-	"*MTO": meteoId,
-	"*INF": infoId,
-	"*SRV": serveurId,
+	chatKey:    chatId,
+	meteoKey:   meteoId,
+	infoKey:    infoId,
+	serveurKey: serveurId,
+	sudokuKey:  sudokuId,
 }
 
 func SommaireHandler(m *minigo.Minitel, login string) {
@@ -43,6 +54,8 @@ func SommaireHandler(m *minigo.Minitel, login string) {
 			_, op = NewPageInfo(m).Run()
 		case serveurId:
 			_, op = NewServeurPage(m).Run()
+		case sudokuId:
+			op = sudoku.SudokuService(m, login)
 		}
 	}
 	infoLog.Println("quits sommaire handler")
@@ -65,26 +78,23 @@ func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
 	mntl.CleanScreen()
 	mntl.SendVDT("static/notel.vdt")
+	mntl.WriteAttributes(minigo.FondNormal, minigo.GrandeurNormale)
 	mntl.ModeG0()
 
-	mntl.WriteAttributes(minigo.FondNormal, minigo.GrandeurNormale)
-	mntl.WriteStringLeft(7, " ")
-
 	list := minigo.NewList(mntl, 8, 1, 20, 2)
-	list.AppendItem("*CHA", "MINICHAT")
-	list.AppendItem("*MTO", "METEO")
-	list.AppendItem("*INF", "INFOS")
-	list.AppendItem("*SRV", "SERVEUR")
+	list.AppendItem(chatKey, "MINICHAT")
+	list.AppendItem(meteoKey, "METEO")
+	list.AppendItem(infoKey, "INFOS")
+	list.AppendItem(sudokuKey, "SUDOKU")
+	list.AppendItem(serveurKey, "SERVEUR")
 
 	list.Display()
 
-	/*
-		mntl.WriteAttributes(minigo.Clignotement, minigo.DoubleHauteur)
-		mntl.WriteStringCenter(19, "→ Rendez-vous ←")
-		mntl.WriteAttributes(minigo.Fixe, minigo.GrandeurNormale)
+	mntl.WriteAttributes(minigo.Clignotement, minigo.DoubleHauteur)
+	mntl.WriteStringCenter(19, "→ Rendez-vous ←")
+	mntl.WriteAttributes(minigo.Fixe, minigo.GrandeurNormale)
 
-		mntl.WriteStringCenter(20, "Dimanche 19 Nov. à 20h")
-	*/
+	mntl.WriteStringCenter(20, "Dimanche 3 Déc. à 20h")
 
 	mntl.WriteStringLeft(24, fmt.Sprintf("> Connectés: %d", NbConnectedUsers.Load()))
 	mntl.WriteHelperRight(24, "CHOIX ....", "ENVOI")

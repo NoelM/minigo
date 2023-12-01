@@ -10,6 +10,8 @@ const (
 	AckMajuscule
 	AckPCEStart
 	AckPCEStop
+	AckClavierEtendu
+	AckClavierStandard
 )
 
 type AckStack struct {

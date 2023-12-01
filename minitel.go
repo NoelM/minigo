@@ -29,6 +29,7 @@ type Minitel struct {
 	vitesseByte        byte
 	fonctionnementByte byte
 	protocoleByte      byte
+	clavierByte        byte
 
 	source   string
 	connLost *prometheus.CounterVec
@@ -67,19 +68,29 @@ func (m *Minitel) updateGrandeur(attributes ...byte) {
 }
 
 func (m *Minitel) saveProtocol(entryBuffer []byte) {
-	switch entryBuffer[2] {
-	case Terminal:
-		m.terminalByte = entryBuffer[3]
-	case Fonctionnement:
-		m.fonctionnementByte = entryBuffer[3]
-	case Vitesse:
-		m.vitesseByte = entryBuffer[3]
-	case Protocole:
-		m.protocoleByte = entryBuffer[3]
-	default:
-		warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.source, entryBuffer[2])
-		return
+
+	if entryBuffer[1] == Pro3 {
+		switch entryBuffer[3] {
+		case CodeReceptionClavier:
+			m.clavierByte = entryBuffer[4]
+		}
+
+	} else if entryBuffer[1] == Pro2 {
+		switch entryBuffer[2] {
+		case Terminal:
+			m.terminalByte = entryBuffer[3]
+		case Fonctionnement:
+			m.fonctionnementByte = entryBuffer[3]
+		case Vitesse:
+			m.vitesseByte = entryBuffer[3]
+		case Protocole:
+			m.protocoleByte = entryBuffer[3]
+		default:
+			warnLog.Printf("[%s] ack-checker: not handled response byte: %x\n", m.source, entryBuffer[2])
+			return
+		}
 	}
+
 }
 
 // TODO: this AckChecker, does not ack anything, it only prints a message
@@ -104,6 +115,10 @@ func (m *Minitel) ackChecker() {
 			ok = BitReadAt(m.fonctionnementByte, 3)
 		case AckMajuscule:
 			ok = !BitReadAt(m.fonctionnementByte, 3)
+		case AckClavierEtendu:
+			ok = BitReadAt(m.clavierByte, 0)
+		case AckClavierStandard:
+			ok = !BitReadAt(m.clavierByte, 0)
 		default:
 			warnLog.Printf("[%s] ack-checker: not handled ackType=%d\n", m.source, ack)
 		}
@@ -393,6 +408,26 @@ func (m *Minitel) RouleauOff() error {
 }
 
 //
+// CLAVIER ETENDU
+//
+
+func (m *Minitel) ClavierEtendu() error {
+	m.ackStack.Add(AckClavierEtendu)
+
+	buf, _ := GetProCode(Pro3)
+	buf = append(buf, Start, CodeReceptionClavier, Eten)
+	return m.Send(buf)
+}
+
+func (m *Minitel) ClavierStandard() error {
+	m.ackStack.Add(AckClavierEtendu)
+
+	buf, _ := GetProCode(Pro3)
+	buf = append(buf, Stop, CodeReceptionClavier, Eten)
+	return m.Send(buf)
+}
+
+//
 // MINUSCULES
 //
 
@@ -410,6 +445,22 @@ func (m *Minitel) MinusculeOff() error {
 	buf, _ := GetProCode(Pro2)
 	buf = append(buf, Stop, Minuscules)
 	return m.Send(buf)
+}
+
+//
+// LINES
+//
+
+func (m *Minitel) HLine(row, col, len int, t LineType) {
+	m.Send(GetHLine(row, col, len, t))
+}
+
+func (m *Minitel) VLine(row, col, len int, t LineType) {
+	m.Send(GetVLine(row, col, len, t))
+}
+
+func (m *Minitel) Rect(row, col, width, height int) {
+	m.Send(GetRect(row, col, width, height))
 }
 
 //

@@ -255,14 +255,15 @@ const (
 const Reset = 0x7F
 
 // Constantes pour h_line et v_line
+type LineType byte
+
 const (
-	Center = 0
-	Top    = 1
-	Bottom = 2
-	Left   = 3
-	Right  = 4
-	Up     = 5
-	Down   = 6
+	Bottom  LineType = 0x5F
+	HCenter LineType = 0x60
+	Left    LineType = 0x7B
+	VCenter LineType = 0x7C
+	Right   LineType = 0x7D
+	Top     LineType = 0x7E
 )
 
 // A ranger
@@ -277,6 +278,11 @@ const (
 	Fonctionnement = 0x73
 	Vitesse        = 0x75
 	Protocole      = 0x77
+)
+
+const (
+	StatusClavier    = 0x72
+	RepStatusClavier = 0x73
 )
 
 // Correspondance ASCII / Videotex

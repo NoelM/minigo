@@ -40,6 +40,10 @@ func (i *Input) Init() {
 
 // AppendKey appends a new Rune to the Value array
 func (i *Input) AppendKey(r rune) {
+	if utf8.RuneCount(i.Value) == i.width*i.height {
+		return
+	}
+
 	command := GetMoveCursorAt(i.getCursorPos())
 	command = append(command, EncodeRune(r)...)
 	i.m.Send(command)

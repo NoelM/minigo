@@ -370,6 +370,31 @@ func GetRepeatRune(r rune, n int) (buf []byte) {
 	return
 }
 
+func GetHLine(row, col, len int, t LineType) (buf []byte) {
+	buf = GetMoveCursorAt(row, col)
+	buf = append(buf, byte(t), Rep, 0x40+byte(len-1))
+	return
+}
+
+func GetVLine(row, col, len int, t LineType) (buf []byte) {
+	buf = GetMoveCursorAt(row, col)
+
+	for i := 0; i < len; i += 1 {
+		// BS = moves cursor left
+		// LF = moves cursor down
+		buf = append(buf, byte(t), Bs, Lf)
+	}
+	return
+}
+
+func GetRect(row, col, width, height int) (buf []byte) {
+	buf = GetHLine(row, col, width, Bottom)
+	buf = append(buf, GetVLine(row+1, col, height-2, Left)...)
+	buf = append(buf, GetVLine(row+1, col+width, height-2, Left)...)
+	buf = append(buf, GetHLine(row+height-1, col, width, Top)...)
+	return
+}
+
 func EncodeMessage(msg string) (buf []byte) {
 	for _, c := range msg {
 		if b := EncodeRune(c); b != nil {
@@ -406,8 +431,8 @@ func ApplyParity(in []byte) (out []byte) {
 }
 
 func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err error) {
-	// Special characters, switch G2 mode
 	if entryBytes[0] == Ss2 {
+		// Special characters, switch G2 mode
 		if len(entryBytes) <= 1 {
 			return
 		}
@@ -445,6 +470,7 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 		if len(entryBytes) == 1 {
 			return
 		}
+
 	} else if entryBytes[0] == Esc {
 		if len(entryBytes) == 1 {
 			return
@@ -460,11 +486,28 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 					return
 				}
 			}
-		} else if entryBytes[1] == Pro2 { // PRO2 = ESC + 0x3A
+
+		} else if entryBytes[1] == 0x5B {
+			// CSI = ESC(1B) + 5B
+			if len(entryBytes) == 2 {
+				return
+			}
+
+		} else if entryBytes[1] == Pro2 {
+			// ESC + 0x3A (PRO2) + [2 BYTES]
 			if len(entryBytes) < 4 {
 				return
 			}
-			// PRO2, RESP BYTE, STATUS BYTE
+
+			done, pro = true, true
+			return
+
+		} else if entryBytes[1] == Pro3 {
+			// ESC + 0x3B (PRO3) + [3 BYTES]
+			if len(entryBytes) < 5 {
+				return
+			}
+
 			done, pro = true, true
 			return
 		}
@@ -475,6 +518,11 @@ func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err er
 		value = int32(entryBytes[0])
 	case 2:
 		value = int32(binary.BigEndian.Uint16(entryBytes))
+	case 3:
+		tmp := make([]byte, 4)
+		copy(tmp[1:], entryBytes)
+
+		value = int32(binary.BigEndian.Uint32(tmp))
 	case 4:
 		value = int32(binary.BigEndian.Uint32(entryBytes))
 	default:

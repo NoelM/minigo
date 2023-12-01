@@ -25,7 +25,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *UsersDatabase, pseudo string) (
 		mntl.WriteStringLeft(9, "NOUVEAU:")
 		inputs.AppendInput("new", minigo.NewInput(mntl, 9, 10, 10, 1, true))
 		mntl.WriteStringLeft(10, "NOUVEAU:")
-		inputs.AppendInput("newRep", minigo.NewInput(mntl, 9, 10, 10, 1, true))
+		inputs.AppendInput("newRep", minigo.NewInput(mntl, 10, 10, 10, 1, true))
 
 		mntl.WriteHelperLeft(24, "Validez avec", "ENVOI")
 

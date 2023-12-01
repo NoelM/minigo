@@ -11,19 +11,19 @@ func RunPageLevel(mntl *minigo.Minitel) (level, op int) {
 
 	levelPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
-		mntl.SendVDT("static/sudoku.vdt")
+		mntl.SendVDT("sudoku.vdt")
 		mntl.ModeG0()
 
 		mntl.WriteAttributes(minigo.CaractereBlanc, minigo.FondNoir)
 
 		list := minigo.NewListEnum(mntl, []string{"Facile", "Moyen", "Difficile", "Extrême"})
-		list.SetXY(2, 8)
+		list.SetXY(3, 8)
 		list.SetEntryHeight(1)
 		list.Display()
 
 		inputs.AppendInput("level", minigo.NewInput(mntl, 14, 8, 1, 1, true))
 
-		mntl.WriteHelperLeft(14, "NIVEAU . +", "ENVOI")
+		mntl.WriteHelperAt(14, 3, "NIVEAU . +", "ENVOI")
 		inputs.ActivateFirst()
 
 		return minigo.NoOp

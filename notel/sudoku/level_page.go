@@ -21,7 +21,7 @@ func RunPageLevel(mntl *minigo.Minitel) (level, op int) {
 		list.SetEntryHeight(1)
 		list.Display()
 
-		inputs.AppendInput("level", minigo.NewInput(mntl, 14, 11, 1, 1, true))
+		inputs.AppendInput("level", minigo.NewInput(mntl, 14, 10, 1, 1, true))
 
 		mntl.WriteHelperAt(14, 3, "NIVEAU . +", "ENVOI")
 		inputs.ActivateFirst()

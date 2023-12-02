@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/databases"
 	"nhooyr.io/websocket"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,7 +25,7 @@ var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lsho
 
 var CommuneDb *CommuneDatabase
 var MessageDb *MessageDatabase
-var UsersDb *UsersDatabase
+var UsersDb *databases.UsersDatabase
 
 var NbConnectedUsers atomic.Int32
 
@@ -86,7 +87,7 @@ func main() {
 	MessageDb = NewMessageDatabase()
 	MessageDb.LoadMessages("/media/core/messages.db")
 
-	UsersDb = NewUsersDatabase()
+	UsersDb = databases.NewUsersDatabase()
 	UsersDb.LoadDatabase("/media/core/users.db")
 
 	if ServeWS {

@@ -4,9 +4,10 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/databases"
 )
 
-func RunPageProfil(mntl *minigo.Minitel, userDB *UsersDatabase, pseudo string) (op int) {
+func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo string) (op int) {
 	profilPage := minigo.NewPage("pioupiou:profil", mntl, nil)
 
 	profilPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {

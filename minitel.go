@@ -256,11 +256,15 @@ func (m *Minitel) CleanNRowsFrom(row, col, n int) error {
 // WRITES
 //
 
+func (m *Minitel) WriteString(s string) {
+	m.Send(EncodeString(s))
+}
+
 func (m *Minitel) WriteStatusLine(s string) error {
 	buf := []byte{Us, 0x40, 0x41}
 	buf = append(buf, GetRepeatRune(' ', 34)...)
 	buf = append(buf, Us, 0x40, 0x41)
-	buf = append(buf, EncodeMessage(s)...)
+	buf = append(buf, EncodeString(s)...)
 	buf = append(buf, Us)
 	return m.Send(buf)
 }
@@ -295,7 +299,7 @@ func (m *Minitel) WriteStringCenter(lineId int, s string) error {
 
 func (m *Minitel) WriteStringAt(lineId, colId int, s string) error {
 	buf := GetMoveCursorAt(lineId, colId)
-	buf = append(buf, EncodeMessage(s)...)
+	buf = append(buf, EncodeString(s)...)
 	return m.Send(buf)
 }
 
@@ -303,7 +307,7 @@ func (m *Minitel) WriteStringAtWithAttributes(lineId, colId int, s string, attri
 	m.WriteAttributes(attributes...)
 
 	buf := GetMoveCursorAt(lineId, colId)
-	buf = append(buf, EncodeMessage(s)...)
+	buf = append(buf, EncodeString(s)...)
 	m.Send(buf)
 
 	return m.WriteAttributes(byte(m.defaultCouleur), byte(m.defaultFond), byte(m.defaultGrandeur))

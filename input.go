@@ -68,9 +68,9 @@ func (i *Input) Correction() {
 
 	command := GetMoveCursorAt(i.getCursorPos())
 	if i.dots {
-		command = append(command, EncodeMessage(".")...)
+		command = append(command, EncodeString(".")...)
 	} else {
-		command = append(command, EncodeMessage(" ")...)
+		command = append(command, EncodeString(" ")...)
 	}
 	command = append(command, GetMoveCursorAt(i.getCursorPos())...)
 	i.m.Send(command)

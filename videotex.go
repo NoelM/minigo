@@ -153,7 +153,7 @@ func GetTextZone(text string, attributes ...byte) (buf []byte) {
 	for _, atb := range attributes {
 		buf = append(buf, EncodeAttribute(atb)...)
 	}
-	buf = append(buf, EncodeMessage(text)...)
+	buf = append(buf, EncodeString(text)...)
 	buf = append(buf, Sp)
 
 	return
@@ -395,7 +395,7 @@ func GetRect(row, col, width, height int) (buf []byte) {
 	return
 }
 
-func EncodeMessage(msg string) (buf []byte) {
+func EncodeString(msg string) (buf []byte) {
 	for _, c := range msg {
 		if b := EncodeRune(c); b != nil {
 			buf = append(buf, b...)
@@ -405,7 +405,7 @@ func EncodeMessage(msg string) (buf []byte) {
 }
 
 func EncodeSprintf(format string, a ...any) []byte {
-	return EncodeMessage(fmt.Sprintf(format, a...))
+	return EncodeString(fmt.Sprintf(format, a...))
 }
 
 func EncodeAttribute(attribute byte) (buf []byte) {

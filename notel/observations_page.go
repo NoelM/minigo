@@ -107,7 +107,7 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	}
 
 	buf := minigo.EncodeAttributes(minigo.InversionFond)
-	buf = append(buf, minigo.EncodeMessage(newestReport.stationName)...)
+	buf = append(buf, minigo.EncodeString(newestReport.stationName)...)
 	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 

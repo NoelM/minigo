@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/NoelM/minigo/notel/databases"
+	"github.com/NoelM/minigo/notel/logs"
 	irc "github.com/thoj/go-ircevent"
 )
 
@@ -26,7 +28,7 @@ func (i *IrcDriver) Quit() {
 	i.conn.Quit()
 }
 
-func (i *IrcDriver) SendMessage(msg Message) {
+func (i *IrcDriver) SendMessage(msg databases.Message) {
 	i.conn.Privmsg(ircChannel, msg.Text)
 }
 
@@ -38,7 +40,7 @@ func (i *IrcDriver) Loop() error {
 	i.conn.AddCallback("366", func(e *irc.Event) {})
 
 	i.conn.AddCallback("PRIVMSG", func(event *irc.Event) {
-		MessageDb.PushMessage(Message{
+		MessageDb.PushMessage(databases.Message{
 			Nick: event.Nick,
 			Text: event.Message(),
 			Time: time.Now(),
@@ -48,12 +50,12 @@ func (i *IrcDriver) Loop() error {
 
 	err := i.conn.Connect(ircServerURL)
 	if err != nil {
-		errorLog.Printf("unable to connect to IRC: %s\n", err.Error())
+		logs.ErrorLog("unable to connect to IRC: %s\n", err.Error())
 		return err
 	}
 
 	i.conn.Loop()
 
-	infoLog.Println("disconnected from: irc.libera.chat")
+	logs.InfoLog("disconnected from: irc.libera.chat")
 	return nil
 }

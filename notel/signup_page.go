@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
@@ -61,7 +62,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		delete(creds, "pwdRepeat")
 
 		if err == nil {
-			infoLog.Printf("new signup for user=%s\n", creds["login"])
+			logs.InfoLog("new signup for user=%s\n", creds["login"])
 			return creds, minigo.EnvoiOp
 		} else {
 			printSignUpError(mntl, "Erreur serveur")

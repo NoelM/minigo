@@ -16,6 +16,7 @@
 * [ ] Réduire le nombre de goroutines dans la gestion d'une connexion modem
   * Il faut que la boucle listen soit synchrone avec le handler modem
   * De fait, on a une boucle applicative uniquement en goroutine
+* [ ] Repetition recharge toute la page, dans tous les cas
 
 ### PCE
 
@@ -43,6 +44,7 @@
 ## Chat
 
 * [ ] Afficher le nombre de connectées en rangée 0
+* [ ] Suite/Retour pour naviguer dans les messages
 
 ## Actualités
 

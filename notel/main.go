@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/databases"
+	"github.com/NoelM/minigo/notel/logs"
 	"nhooyr.io/websocket"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -19,12 +19,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
-var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
-var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
-
 var CommuneDb *CommuneDatabase
-var MessageDb *MessageDatabase
+var MessageDb *databases.MessageDatabase
 var UsersDb *databases.UsersDatabase
 
 var NbConnectedUsers atomic.Int32
@@ -84,7 +80,7 @@ func main() {
 	CommuneDb = NewCommuneDatabase()
 	CommuneDb.LoadCommuneDatabase("/media/core/communes-departement-region.csv")
 
-	MessageDb = NewMessageDatabase()
+	MessageDb = databases.NewMessageDatabase()
 	MessageDb.LoadMessages("/media/core/messages.db")
 
 	UsersDb = databases.NewUsersDatabase()
@@ -123,12 +119,12 @@ func serveWS(wg *sync.WaitGroup, url string) {
 
 		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 		if err != nil {
-			errorLog.Printf("[%s] serve-ws: unable to open websocket connection: %s\n", tagFull, err.Error())
+			logs.ErrorLog("[%s] serve-ws: unable to open websocket connection: %s\n", tagFull, err.Error())
 			return
 		}
 
 		defer conn.Close(websocket.StatusInternalError, "websocket internal error, quitting")
-		infoLog.Printf("[%s] serve-ws: new connection\n", tagFull)
+		logs.InfoLog("[%s] serve-ws: new connection\n", tagFull)
 
 		conn.SetReadLimit(1024)
 
@@ -147,10 +143,10 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		NotelHandler(m, WSTag, &innerWg)
 		innerWg.Wait()
 
-		infoLog.Printf("[%s] serve-ws: disconnect\n", tagFull)
+		logs.InfoLog("[%s] serve-ws: disconnect\n", tagFull)
 		ws.Disconnect()
 
-		infoLog.Printf("[%s] serve-ws: session closed\n", tagFull)
+		logs.InfoLog("[%s] serve-ws: session closed\n", tagFull)
 	})
 
 	err := http.ListenAndServe(url, fn)
@@ -196,10 +192,10 @@ func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTa
 		NotelHandler(m, modemTag, &connectionWg)
 		connectionWg.Wait()
 
-		infoLog.Printf("[%s] ring-handler: disconnect\n", modemTag)
+		logs.InfoLog("[%s] ring-handler: disconnect\n", modemTag)
 		mdm.Disconnect()
 
-		infoLog.Printf("[%s] ring-handler: minitel session closed\n", modemTag)
+		logs.InfoLog("[%s] ring-handler: minitel session closed\n", modemTag)
 	})
 
 	modem.Serve(false)
@@ -211,7 +207,7 @@ func NotelHandler(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup) {
 	active := NbConnectedUsers.Add(1)
 	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
 
-	infoLog.Printf("[%s] notel-handler: start handler, connected=%d\n", sourceTag, active)
+	logs.InfoLog("[%s] notel-handler: start handler, connected=%d\n", sourceTag, active)
 	startConn := time.Now()
 
 SIGNIN:
@@ -234,7 +230,7 @@ SIGNIN:
 	active = NbConnectedUsers.Add(-1)
 	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
 
-	infoLog.Printf("[%s] notel-handler: quit handler, connected=%d\n", sourceTag, active)
+	logs.InfoLog("[%s] notel-handler: quit handler, connected=%d\n", sourceTag, active)
 
 	wg.Done()
 }

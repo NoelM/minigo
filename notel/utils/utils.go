@@ -1,10 +1,10 @@
-package main
+package utils
 
 import (
 	"time"
 )
 
-func weekdayIdToStringShort(i time.Weekday) string {
+func WeekdayIdToStringShort(i time.Weekday) string {
 	switch i {
 	case time.Sunday:
 		return "Dim."
@@ -24,7 +24,7 @@ func weekdayIdToStringShort(i time.Weekday) string {
 	return ""
 }
 
-func weekdayIdToString(i time.Weekday) string {
+func WeekdayIdToString(i time.Weekday) string {
 	switch i {
 	case time.Sunday:
 		return "Dimanche"
@@ -44,7 +44,7 @@ func weekdayIdToString(i time.Weekday) string {
 	return ""
 }
 
-func monthIdToStringShort(i time.Month) string {
+func MonthIdToStringShort(i time.Month) string {
 	switch i {
 	case time.January:
 		return "Jan."
@@ -74,7 +74,7 @@ func monthIdToStringShort(i time.Month) string {
 	return ""
 }
 
-func monthIdToString(i time.Month) string {
+func MonthIdToString(i time.Month) string {
 	switch i {
 	case time.January:
 		return "Janvier"
@@ -104,7 +104,7 @@ func monthIdToString(i time.Month) string {
 	return ""
 }
 
-func getArrow(diff float64) string {
+func GetArrow(diff float64) string {
 	if diff > 0 {
 		return "↑"
 	}

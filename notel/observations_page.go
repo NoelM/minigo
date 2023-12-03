@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/utils"
 )
 
 func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
@@ -113,17 +114,17 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	// Temperature
 	newTemp := newestReport.temperature - 275.
 	difTemp := newestReport.temperature - oldestReport.temperature
-	buf = append(buf, minigo.EncodeSprintf("%s%2.f°C (%+3.f°C) | ", getArrow(difTemp), newTemp, difTemp)...)
+	buf = append(buf, minigo.EncodeSprintf("%s%2.f°C (%+3.f°C) | ", utils.GetArrow(difTemp), newTemp, difTemp)...)
 
 	// Pressure
 	newPres := newestReport.pressure / 100.
 	difPres := (newestReport.pressure - oldestReport.pressure) / 100.
-	buf = append(buf, minigo.EncodeSprintf("%s%4.f hPa (%+5.f hPa)", getArrow(difPres), newPres, difPres)...)
+	buf = append(buf, minigo.EncodeSprintf("%s%4.f hPa (%+5.f hPa)", utils.GetArrow(difPres), newPres, difPres)...)
 
 	buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 
 	// Wind
-	arrow := getArrow(newestReport.windSpeed - oldestReport.windSpeed)
+	arrow := utils.GetArrow(newestReport.windSpeed - oldestReport.windSpeed)
 	buf = append(buf, minigo.EncodeSprintf(
 		"%-10s %s%3.f km/h (%+3.f km/h)",
 		windDirToString(newestReport.windDir),

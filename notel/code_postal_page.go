@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
@@ -34,10 +35,11 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 
 	codePostalPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		if len(inputs.ValueActive()) != 0 {
-			infoLog.Printf("chosen code postal: %s\n", inputs.ValueActive())
+			logs.InfoLog("chosen code postal: %s\n", inputs.ValueActive())
 			return inputs.ToMap(), minigo.QuitOp
 		}
-		warnLog.Println("empty code postal")
+
+		logs.WarnLog("empty code postal\n")
 		return nil, minigo.NoOp
 	})
 

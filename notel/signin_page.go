@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
@@ -44,7 +45,7 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		delete(creds, "pwd")
 
 		if logged {
-			infoLog.Printf("sign-in: logged as user=%s\n", creds["login"])
+			logs.InfoLog("sign-in: logged as user=%s\n", creds["login"])
 			return creds, minigo.EnvoiOp
 		} else {
 			mntl.WriteStringAtWithAttributes(11, 1, "Pseudo ou MDP invalides", minigo.InversionFond)

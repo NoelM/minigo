@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
+	"github.com/NoelM/minigo/notel/utils"
 )
 
 func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minigo.Page {
@@ -33,31 +35,31 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 
 		communeJSON, ok := initData["commune"]
 		if !ok {
-			errorLog.Println("no commune data")
+			logs.ErrorLog("no commune data\n")
 			return sommaireId
 		}
 
 		if err := json.Unmarshal([]byte(communeJSON), &commune); err != nil {
-			errorLog.Printf("unable to parse the commune JSON: %s\n", err.Error())
+			logs.ErrorLog("unable to parse the commune JSON: %s\n", err.Error())
 			return sommaireId
 		}
 
 		OWApiKey := os.Getenv("OWAPIKEY")
 		body, err := getRequestBody(fmt.Sprintf(OWApiUrlFormat, commune.Latitude, commune.Longitude, OWApiKey))
 		if err != nil {
-			errorLog.Printf("unable to get forecasts: %s\n", err.Error())
+			logs.ErrorLog("unable to get forecasts: %s\n", err.Error())
 			return sommaireId
 		}
 		defer body.Close()
 
 		data, err := io.ReadAll(body)
 		if err != nil {
-			errorLog.Printf("unable to get API response: %s\n", err.Error())
+			logs.ErrorLog("unable to get API response: %s\n", err.Error())
 			return sommaireId
 		}
 
 		if err := json.Unmarshal(data, &forecast); err != nil {
-			errorLog.Printf("unable to parse JSON: %s\n", err.Error())
+			logs.ErrorLog("unable to parse JSON: %s\n", err.Error())
 			return sommaireId
 		}
 		printForecast(mntl, forecast, forecastDate, commune)
@@ -128,9 +130,9 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 
 	// Date of the forecast
 	mntl.WriteStringLeft(3, fmt.Sprintf("%s %d %s",
-		weekdayIdToString(forecastDate.Weekday()),
+		utils.WeekdayIdToString(forecastDate.Weekday()),
 		forecastDate.Day(),
-		monthIdToString(forecastDate.Month()),
+		utils.MonthIdToString(forecastDate.Month()),
 	))
 
 	maxTemp := 0.

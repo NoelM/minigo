@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo.Page {
@@ -56,25 +57,25 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 
 	communesPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		if len(inputs.ValueActive()) == 0 {
-			warnLog.Println("empty commune choice")
+			logs.WarnLog("empty commune choice\n")
 			return nil, minigo.NoOp
 		}
 
 		communeId, err := strconv.ParseInt(inputs.ValueActive(), 10, 32)
 		if err != nil {
-			errorLog.Printf("unable to parse code choice: %s\n", err.Error())
+			logs.ErrorLog("unable to parse code choice: %s\n", err.Error())
 			return nil, sommaireId
 		}
 
 		if communeId > 0 && int(communeId-1) >= len(communes) {
-			errorLog.Printf("choice %d out of range\n", communeId)
+			logs.ErrorLog("choice %d out of range\n", communeId)
 			return nil, sommaireId
 		}
-		infoLog.Printf("chosen commune: %s\n", communes[communeId-1].NomCommune)
+		logs.InfoLog("chosen commune: %s\n", communes[communeId-1].NomCommune)
 
 		data, err := json.Marshal(communes[communeId-1])
 		if err != nil {
-			errorLog.Printf("unable to marshall JSON: %s\n", err.Error())
+			logs.ErrorLog("unable to marshall JSON: %s\n", err.Error())
 			return nil, sommaireId
 		}
 

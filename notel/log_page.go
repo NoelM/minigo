@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 func NewLogPage(mntl *minigo.Minitel) *minigo.Page {
@@ -35,12 +36,12 @@ func initLog(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string
 
 func envoiLog(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	if len(form.ValueActive()) == 0 {
-		warnLog.Println("empty nick input")
+		logs.WarnLog("empty nick input\n")
 		return nil, minigo.QuitOp
 	}
 	mntl.Reset()
 
-	infoLog.Printf("logged as: %s\n", form.ValueActive())
+	logs.InfoLog("logged as: %s\n", form.ValueActive())
 	return form.ToMap(), minigo.QuitOp
 }
 

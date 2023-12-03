@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
+	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/sudoku"
 )
 
@@ -36,7 +38,7 @@ var ServIdMap = map[string]int{
 }
 
 func SommaireHandler(m *minigo.Minitel, nick string) {
-	infoLog.Println("enters sommaire handler")
+	logs.InfoLog("enters sommaire handler\n")
 
 	var op int
 	var choice map[string]string
@@ -50,7 +52,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 
 		switch serviceId {
 		case chatId:
-			op = ServiceMiniChat(m, nick)
+			op = minichat.ServiceMiniChat(m, MessageDb, nick, promMsgNb)
 		case meteoId:
 			op = ServiceMeteo(m)
 		case infoId:
@@ -63,7 +65,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 			op = RunPageProfil(m, UsersDb, nick)
 		}
 	}
-	infoLog.Println("quits sommaire handler")
+	logs.InfoLog("quits sommaire handler\n")
 }
 
 func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
@@ -116,12 +118,12 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 
 func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	if len(form.ValueActive()) == 0 {
-		warnLog.Println("empty choice")
+		logs.WarnLog("empty choice\n")
 		return nil, minigo.NoOp
 	}
 
 	mntl.Reset()
-	infoLog.Printf("chosen service: %s\n", form.ValueActive())
+	logs.InfoLog("chosen service: %s\n", form.ValueActive())
 
 	return form.ToMap(), minigo.SommaireOp
 }

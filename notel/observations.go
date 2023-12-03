@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 var StationIdToName = map[string]string{
@@ -128,14 +130,14 @@ func getLastWeatherData() (map[string][]WeatherReport, error) {
 		var err error
 
 		fileName := fmt.Sprintf(FileFormat, lastPublicationDate.Add(-3*time.Hour*time.Duration(i)).Format("2006010215"))
-		infoLog.Printf("loading file: %s\n", fileName)
+		logs.InfoLog("loading file: %s\n", fileName)
 
 		if filePath, err = downloadFileIfDoesNotExist(fileName); err != nil {
 			return nil, err
 		}
 
 		if err = openAndParseFile(filePath, globalReports); err != nil {
-			errorLog.Printf("ignored file: %s: %s\n", filePath, err.Error())
+			logs.ErrorLog("ignored file: %s: %s\n", filePath, err.Error())
 			continue
 		}
 	}
@@ -148,11 +150,11 @@ func downloadFileIfDoesNotExist(fileName string) (string, error) {
 	fileURL := fmt.Sprintf(URLFormat, fileName)
 
 	if _, err := os.Stat(filePath); err != nil {
-		infoLog.Printf("weather file does not exist at: %s\n", filePath)
-		infoLog.Printf("download file from: %s\n", fileURL)
+		logs.InfoLog("weather file does not exist at: %s\n", filePath)
+		logs.InfoLog("download file from: %s\n", fileURL)
 
 		if err := downloadFile(fileURL, filePath); err != nil {
-			errorLog.Printf("unable to download file: %s\n", err.Error())
+			logs.ErrorLog("unable to download file: %s\n", err.Error())
 			return "", err
 		}
 	}
@@ -162,7 +164,7 @@ func downloadFileIfDoesNotExist(fileName string) (string, error) {
 func openAndParseFile(filePath string, globalReports map[string][]WeatherReport) error {
 	weatherFile, err := os.Open(filePath)
 	if err != nil {
-		errorLog.Printf("unable to open file at: %s\n", filePath)
+		logs.ErrorLog("unable to open file at: %s\n", filePath)
 		return err
 	}
 	defer weatherFile.Close()
@@ -172,7 +174,7 @@ func openAndParseFile(filePath string, globalReports map[string][]WeatherReport)
 
 	weatheRecords, err := fileReader.ReadAll()
 	if err != nil {
-		errorLog.Printf("unable to read weather CSV record: %s\n", err.Error())
+		logs.ErrorLog("unable to read weather CSV record: %s\n", err.Error())
 		return err
 	}
 
@@ -182,37 +184,37 @@ func openAndParseFile(filePath string, globalReports map[string][]WeatherReport)
 		if ok {
 			dte, err := time.Parse("20060102150405", record[dateIdCol])
 			if err != nil {
-				warnLog.Printf("unable to parse date for station %s: %s\n", stationName, err.Error())
+				logs.WarnLog("unable to parse date for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 
 			temp, err := strconv.ParseFloat(record[temperatureCol], 32)
 			if err != nil {
-				warnLog.Printf("unable to parse temperature for station %s: %s\n", stationName, err.Error())
+				logs.WarnLog("unable to parse temperature for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 
 			pres, err := strconv.ParseFloat(record[pressureCol], 32)
 			if err != nil {
-				warnLog.Printf("unable to parse pressure for station %s: %s\n", stationName, err.Error())
+				logs.WarnLog("unable to parse pressure for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 
 			hdty, err := strconv.ParseFloat(record[humidityCol], 32)
 			if err != nil {
-				warnLog.Printf("unable to parse humidity for station %s: %s\n", stationName, err.Error())
+				logs.WarnLog("unable to parse humidity for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 
 			windDir, err := strconv.ParseFloat(record[windDirCol], 32)
 			if err != nil {
-				warnLog.Printf("unable to parse wind-dir for station %s: %s\n", stationName, err.Error())
+				logs.WarnLog("unable to parse wind-dir for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 
 			windSpeed, err := strconv.ParseFloat(record[windSpeedCol], 32)
 			if err != nil {
-				warnLog.Printf("unable to parse wind-speed for station %s: %s\n", stationName, err.Error())
+				logs.WarnLog("unable to parse wind-speed for station %s: %s\n", stationName, err.Error())
 				continue
 			}
 

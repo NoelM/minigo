@@ -265,7 +265,7 @@ func (m *Minitel) WriteStatusLine(s string) error {
 	buf = append(buf, GetRepeatRune(' ', 34)...)
 	buf = append(buf, Us, 0x40, 0x41)
 	buf = append(buf, EncodeString(s)...)
-	buf = append(buf, Us)
+	buf = append(buf, Lf)
 	return m.Send(buf)
 }
 

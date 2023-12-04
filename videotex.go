@@ -39,11 +39,16 @@ func IsPosInBounds(x, y int, resolution uint) (bool, error) {
 }
 
 func GetMoveCursorAt(row, col int) (buf []byte) {
-	buf = GetWord(Csi)
-	buf = append(buf, GetPCode(row)...)
-	buf = append(buf, 0x3B)
-	buf = append(buf, GetPCode(col)...)
-	buf = append(buf, 0x48)
+	if row == 1 && col == 1 {
+		buf = []byte{Rs}
+	} else {
+		buf = GetWord(Csi)
+		buf = append(buf, GetPCode(row)...)
+		buf = append(buf, 0x3B)
+		buf = append(buf, GetPCode(col)...)
+		buf = append(buf, 0x48)
+	}
+
 	return
 }
 

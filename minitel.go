@@ -322,7 +322,7 @@ func (m *Minitel) WriteAttributes(attributes ...byte) error {
 func (m *Minitel) WriteHelperAt(lineId, colId int, helpText, button string) error {
 	m.WriteStringAt(lineId, colId, helpText)
 
-	helpMsgLen := (len(helpText) + 1) * m.charWidth()
+	helpMsgLen := (utf8.RuneCountInString(helpText) + 1) * m.charWidth()
 	buttonCol := minInt(colId+helpMsgLen, ColonnesSimple)
 	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
 }
@@ -330,18 +330,18 @@ func (m *Minitel) WriteHelperAt(lineId, colId int, helpText, button string) erro
 func (m *Minitel) WriteHelperLeft(lineId int, helpText, button string) error {
 	m.WriteStringLeft(lineId, helpText)
 
-	helpMsgLen := (len(helpText) + 2) * m.charWidth()
+	helpMsgLen := (utf8.RuneCountInString(helpText) + 2) * m.charWidth()
 	buttonCol := minInt(helpMsgLen, ColonnesSimple)
 	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
 }
 
 func (m *Minitel) WriteHelperRight(lineId int, helpText, button string) error {
-	startCol := ColonnesSimple - m.charWidth()*(len(helpText)+len(button)+1) // free space
+	startCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+len(button)+1) // free space
 	startCol = maxInt(startCol, 0)
 
 	m.WriteStringAt(lineId, startCol, helpText)
 
-	buttonCol := minInt(startCol+(1+len(helpText))*m.charWidth(), ColonnesSimple)
+	buttonCol := minInt(startCol+(1+utf8.RuneCountInString(helpText))*m.charWidth(), ColonnesSimple)
 	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
 }
 

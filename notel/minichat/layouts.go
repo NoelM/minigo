@@ -198,7 +198,7 @@ func (c *ChatLayout) Update() {
 	c.mntl.MoveCursorAt(rowMsgZoneEnd, 1)
 
 	curLine := rowMsgZoneEnd
-	for msgId := c.maxId; msgId < len(c.messages); msgId += 1 {
+	for msgId := c.maxId + 1; msgId < len(c.messages); msgId += 1 {
 		curLine += c.printDate(msgId, NoLimit, Down)
 		curLine += c.printMessage(msgId, NoLimit, Down)
 	}
@@ -208,7 +208,7 @@ func (c *ChatLayout) Update() {
 		c.mntl.MoveCursorAt(24, 1)
 	}
 
-	for ; curLine <= rowMsgZoneEnd; curLine -= 1 {
+	for ; curLine > rowMsgZoneEnd; curLine -= 1 {
 		c.mntl.Return(1)
 	}
 

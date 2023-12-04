@@ -78,26 +78,21 @@ func (i *Input) Correction() {
 
 // UnHide reveals the input on screen
 func (i *Input) UnHide() {
-	command := GetMoveCursorAt(i.refRow, i.refCol)
+	command := []byte{}
 
-	if len(i.Value) > 0 {
-		command = append(command, i.Value...)
-	}
-
-	rowAbs, colAbs := i.getCursorPos()
-	for row := rowAbs; row < i.refRow+i.height; row += 1 {
+	for row := i.refRow; row < i.refRow+i.height; row += 1 {
 		command = append(command, GetMoveCursorAt(row, i.refCol)...)
 
-		paddingZone := i.width
-		if row == rowAbs {
-			paddingZone = (i.refCol + i.width) - colAbs
-		}
-
 		if i.dots {
-			command = append(command, GetRepeatRune('.', paddingZone-1)...)
+			command = append(command, GetRepeatRune('.', i.width-1)...)
 		} else {
-			command = append(command, GetRepeatRune(' ', paddingZone-1)...)
+			command = append(command, GetRepeatRune(' ', i.width-1)...)
 		}
+	}
+	command = append(command, GetMoveCursorAt(i.refRow, i.refCol)...)
+
+	if len(i.Value) > 0 {
+		command = append(command, EncodeBytes(i.Value)...)
 	}
 
 	i.m.Send(command)

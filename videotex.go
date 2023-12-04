@@ -406,6 +406,10 @@ func GetRect(row, col, width, height int) (buf []byte) {
 	return
 }
 
+func EncodeBytes(byt []byte) (buf []byte) {
+	return EncodeString(string(byt))
+}
+
 func EncodeString(msg string) (buf []byte) {
 	for _, c := range msg {
 		if b := EncodeRune(c); b != nil {

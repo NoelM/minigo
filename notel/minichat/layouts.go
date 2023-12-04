@@ -98,7 +98,7 @@ func (c *ChatLayout) getLastMessages() bool {
 }
 
 func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
-	if limit < 2 {
+	if limit >= 0 && limit < 2 {
 		return 0
 	}
 

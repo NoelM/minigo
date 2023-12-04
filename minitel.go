@@ -504,3 +504,11 @@ func (m *Minitel) ModeG1() error {
 func (m *Minitel) ModeG2() error {
 	return m.Send([]byte{Ss2})
 }
+
+//
+// BELL
+//
+
+func (m *Minitel) Bell() {
+	m.Send([]byte{Bel})
+}

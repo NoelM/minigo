@@ -44,6 +44,7 @@ func (i *Input) Init() {
 // AppendKey appends a new Rune to the Value array
 func (i *Input) AppendKey(r rune) {
 	if utf8.RuneCount(i.Value) == i.width*i.height {
+		i.m.Bell()
 		return
 	}
 
@@ -52,6 +53,10 @@ func (i *Input) AppendKey(r rune) {
 	i.m.Send(command)
 
 	i.Value = utf8.AppendRune(i.Value, r)
+
+	if utf8.RuneCount(i.Value) == i.width*i.height {
+		i.m.MoveCursorAt(i.getCursorPos())
+	}
 }
 
 // Correction removes the last key, on screen and within Value

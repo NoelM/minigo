@@ -30,6 +30,8 @@ const (
 	Date  = -1
 )
 
+const NoLimit = -1
+
 type ChatLayout struct {
 	mntl *minigo.Minitel
 
@@ -141,7 +143,7 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
 	lines, vdt := FormatMessage(c.messages[msgId], dir)
 
-	if limit < 1 || limit > lines {
+	if limit < 0 || limit > lines {
 		limit = lines
 	}
 
@@ -159,13 +161,12 @@ func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
 }
 
 func (c *ChatLayout) Init() {
-	c.mntl.CursorOff()
-
 	// Load the last messages from DB
 	if !c.getLastMessages() {
 		return
 	}
 
+	c.mntl.CursorOff()
 	c.mntl.MoveCursorAt(1, 1)
 
 	curLine := 0
@@ -184,4 +185,33 @@ func (c *ChatLayout) Init() {
 
 	c.printFooter()
 	c.printHeader()
+}
+
+func (c *ChatLayout) Update() {
+	if !c.getLastMessages() {
+		return
+	}
+
+	c.mntl.CursorOff()
+	c.cleanFooter()
+
+	c.mntl.MoveCursorAt(rowMsgZoneEnd, 1)
+
+	curLine := rowMsgZoneEnd
+	for msgId := c.maxId; msgId < len(c.messages); msgId += 1 {
+		curLine += c.printDate(msgId, NoLimit, Down)
+		curLine += c.printMessage(msgId, NoLimit, Down)
+	}
+	c.maxId = len(c.messages) - 1
+
+	if curLine < 24 {
+		c.mntl.MoveCursorAt(24, 1)
+	}
+
+	for ; curLine <= rowMsgZoneEnd; curLine -= 1 {
+		c.mntl.Return(1)
+	}
+
+	c.printHeader()
+	c.printFooter()
 }

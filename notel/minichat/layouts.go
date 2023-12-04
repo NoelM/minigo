@@ -42,10 +42,10 @@ type ChatLayout struct {
 	navMode bool
 	cache   *Cache
 
-	cntd *atomic.Int64
+	cntd *atomic.Int32
 }
 
-func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atomic.Int64, nick string, inputLine, inputHeight int) *ChatLayout {
+func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atomic.Int32, nick string) *ChatLayout {
 	return &ChatLayout{
 		mntl:  mntl,
 		msgDB: msgDB,
@@ -105,7 +105,7 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 		lastDate = c.messages[msgId-1].Time
 	}
 
-	dateString := getDateString(lastDate, c.messages[msgId].Time)
+	dateString := GetDateString(lastDate, c.messages[msgId].Time)
 	if dateString == "" {
 		return 0
 	}

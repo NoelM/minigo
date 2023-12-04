@@ -52,7 +52,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 
 		switch serviceId {
 		case chatId:
-			op = minichat.ServiceMiniChat(m, MessageDb, nick, promMsgNb)
+			op = minichat.RunChatPage(m, MessageDb, &NbConnectedUsers, nick, promMsgNb)
 		case meteoId:
 			op = ServiceMeteo(m)
 		case infoId:

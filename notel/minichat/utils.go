@@ -56,7 +56,7 @@ func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt [][]by
 	// the first line to be printed is the last one
 	var lineId int
 	if dir == Up {
-		lineId = len(wrapped)
+		lineId = len(wrapped) - 1
 	}
 
 	for {

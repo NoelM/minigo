@@ -12,6 +12,9 @@ import (
 func GetDateString(lastMsg, newMsg time.Time) (str string) {
 	sinceLastMsg := newMsg.Sub(lastMsg)
 
+	location, _ := time.LoadLocation("Europe/Paris")
+	newMsg = newMsg.In(location)
+
 	if sinceLastMsg >= 365*24*time.Hour {
 		// More than a YEAR
 		//

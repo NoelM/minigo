@@ -88,7 +88,7 @@ func (c *ChatLayout) printHeader() {
 }
 
 func (c *ChatLayout) getLastMessages() bool {
-	if last := c.msgDB.GetMessages(c.nick); last == nil {
+	if last := c.msgDB.GetMessages(c.nick); len(last) == 0 {
 		return false
 
 	} else {

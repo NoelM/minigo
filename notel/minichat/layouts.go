@@ -171,7 +171,7 @@ func (c *ChatLayout) Init() {
 	curLine := 0
 	limit := rowMsgZoneEnd - curLine
 	for msgId := len(c.messages) - 1; msgId >= 0; msgId -= 1 {
-		curLine += c.printMessage(msgId, limit, Down)
+		curLine += c.printMessage(msgId, limit, Up)
 
 		limit = rowMsgZoneEnd - curLine
 		curLine += c.printDate(msgId, limit, Up)

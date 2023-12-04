@@ -357,6 +357,10 @@ func (m *Minitel) Return(n int) error {
 	return m.Send(GetMoveCursorReturn(n))
 }
 
+func (m *Minitel) ReturnUp(n int) error {
+	return m.Send(GetMoveCursorReturnUp(n))
+}
+
 func (m *Minitel) MoveCursorDown(n int) error {
 	return m.Send(GetMoveCursorDown(n))
 }

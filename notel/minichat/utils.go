@@ -64,7 +64,7 @@ func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt [][]by
 
 		buf := make([]byte, 0)
 		if dir == Up {
-			buf = append(buf, minigo.GetMoveCursorUp(1)...)
+			buf = append(buf, minigo.GetMoveCursorReturnUp(1)...)
 		} else if dir == Down {
 			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 		}

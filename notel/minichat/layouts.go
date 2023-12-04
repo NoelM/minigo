@@ -118,7 +118,7 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 		c.cache.Bottom(Date)
 
 	} else if dir == Up {
-		c.mntl.MoveCursorUp(1)
+		c.mntl.ReturnUp(1)
 		c.cache.Top(Date)
 	}
 
@@ -131,7 +131,7 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 	c.mntl.WriteAttributes(minigo.CaractereBlanc)
 
 	if dir == Up {
-		c.mntl.MoveCursorUp(1)
+		c.mntl.ReturnUp(1)
 		c.cache.Top(Blank)
 	}
 

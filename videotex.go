@@ -97,6 +97,12 @@ func GetMoveCursorReturn(n int) (buf []byte) {
 	return
 }
 
+func GetMoveCursorReturnUp(n int) (buf []byte) {
+	buf = append(buf, Cr)
+	buf = append(buf, GetMoveCursorUp(n)...)
+	return
+}
+
 func GetCleanScreen() (buf []byte) {
 	buf = GetWord(Csi)
 	buf = append(buf, 0x32, 0x4A)

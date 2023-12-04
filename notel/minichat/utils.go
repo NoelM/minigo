@@ -44,14 +44,28 @@ func GetDateString(lastMsg, newMsg time.Time) (str string) {
 	return
 }
 
-func FormatMessage(msg databases.Message) (lines int, vdt []byte) {
+func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt []byte) {
 	// Message Format
 	// [nick]_[msg]
 	formated := msg.Nick + " " + msg.Text
+
+	// Wraps the message to 40 chars
 	wrapped := minigo.WrapperLargeurNormale(formated)
 
-	// One line of 40 runes max
-	for lineId, lineMsg := range wrapped {
+	var lineId int
+	if dir == Up {
+		lineId = len(wrapped)
+	}
+
+	for {
+		lineMsg := wrapped[lineId]
+
+		if dir == Up {
+			vdt = append(vdt, minigo.GetMoveCursorUp(1)...)
+		} else if dir == Down {
+			vdt = append(vdt, minigo.GetMoveCursorReturn(1)...)
+		}
+
 		if lineId == 0 {
 			vdt = append(vdt, minigo.EncodeAttributes(minigo.CaractereRouge)...)
 			vdt = append(vdt, minigo.EncodeString(lineMsg[:len(msg.Nick)])...)
@@ -62,7 +76,16 @@ func FormatMessage(msg databases.Message) (lines int, vdt []byte) {
 			vdt = append(vdt, minigo.EncodeString(lineMsg)...)
 		}
 
-		vdt = append(vdt, minigo.GetMoveCursorDown(1)...)
+		if dir == Up {
+			if lineId -= 1; lineId < 0 {
+				break
+			}
+
+		} else if dir == Down {
+			if lineId += 1; lineId == len(wrapped) {
+				break
+			}
+		}
 	}
 
 	return len(wrapped), vdt

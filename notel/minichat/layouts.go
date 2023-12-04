@@ -8,35 +8,45 @@ import (
 	"github.com/NoelM/minigo/notel/databases"
 )
 
+type RouleauDir uint
+
+const (
+	Up   RouleauDir = 0
+	Down RouleauDir = 1
+)
+
 type ChatLayout struct {
 	mntl *minigo.Minitel
 
 	msgDB    *databases.MessageDatabase
 	messages []databases.Message
+	maxId    int
 
 	nick string
 
-	inputLine   int
-	inputHeight int
+	rowEndMsgZone int
+	rowHLine      int
+	rowInput      int
 
-	minId int
-	maxId int
+	navMode bool
+	cache   *Cache
 }
 
 func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, nick string, inputLine, inputHeight int) *ChatLayout {
 	return &ChatLayout{
-		mntl:        mntl,
-		msgDB:       msgDB,
-		nick:        nick,
-		inputLine:   InputLine,
-		inputHeight: inputHeight,
-		minId:       -1,
-		maxId:       -1,
+		mntl:          mntl,
+		msgDB:         msgDB,
+		maxId:         -1,
+		nick:          nick,
+		rowEndMsgZone: 20,
+		rowHLine:      21,
+		rowInput:      22,
+		cache:         NewCache(),
 	}
 }
 
 func (c *ChatLayout) cleanHelpers() {
-	c.mntl.MoveCursorAt(c.inputLine-1, 1)
+	c.mntl.MoveCursorAt(c.rowHLine, 1)
 	c.mntl.CleanLine()
 
 	c.mntl.MoveCursorAt(24, 1)
@@ -44,7 +54,7 @@ func (c *ChatLayout) cleanHelpers() {
 }
 
 func (c *ChatLayout) printHelpers() {
-	c.mntl.HLine(c.inputLine-1, 1, 40, minigo.HCenter)
+	c.mntl.HLine(c.rowHLine, 1, 40, minigo.HCenter)
 
 	c.mntl.WriteHelperLeft(24, "Màj. écran", "REPET.")
 	c.mntl.WriteHelperRight(24, "Message +", "ENVOI")
@@ -60,13 +70,20 @@ func (c *ChatLayout) getLastMessages() bool {
 	}
 }
 
-func (c *ChatLayout) printDate(lastDate, curDate time.Time) int {
-	dateString := getDateString(lastDate, curDate)
+func (c *ChatLayout) printDate(msgId int) int {
+	var lastDate time.Time
+	if msgId > 0 {
+		lastDate = c.messages[msgId].Time
+	}
+
+	dateString := getDateString(lastDate, c.messages[msgId].Time)
 	if dateString == "" {
 		return 0
 	}
 
 	c.mntl.Return(1)
+	c.mntl.Return(1)
+
 	c.mntl.WriteAttributes(minigo.CaractereBleu)
 
 	length := utf8.RuneCountInString(dateString)
@@ -74,54 +91,33 @@ func (c *ChatLayout) printDate(lastDate, curDate time.Time) int {
 	c.mntl.WriteString(dateString)
 
 	c.mntl.WriteAttributes(minigo.CaractereBlanc)
-	c.mntl.Return(1)
 
+	c.cache.MultBottom(-1, 2)
 	return 2
 }
 
-func (c *ChatLayout) printMessage(msg databases.Message) int {
-	lines, vdt := FormatMessage(msg)
+func (c *ChatLayout) printMessage(msgId int) int {
+	lines, vdt := FormatMessage(c.messages[msgId])
 	c.mntl.Send(vdt)
+
+	c.cache.MultBottom(msgId, lines)
 
 	return lines
 }
 
-func (c *ChatLayout) Full() {
+func (c *ChatLayout) Init() {
 	c.mntl.CursorOff()
-	c.cleanHelpers()
 
 	// Load the last messages from DB
 	if !c.getLastMessages() {
 		return
 	}
-	if len(c.messages) == 0 {
-		return
-	}
 
-	// LINE        | CONTENT
-	// ------------|------------------------
-	// 1           | Message Zone
-	// ...         | ...
-	// InputLine-2 | Last message line
-	// InputLine-1 | HLine <-- restart HERE
-	// InputLine   | Input
-	curLine := c.inputLine - 1
-	c.mntl.MoveCursorAt(curLine, 1)
+	c.mntl.MoveCursorAt(0, 1)
 
-	// Not message displayed yet
-	if c.maxId < 0 {
-		if c.maxId = len(c.messages) - 10; c.maxId < 0 {
-			c.maxId = 0
-		}
-	}
-
-	var lastDate time.Time
-
-	for _, msg := range c.messages[c.maxId:] {
-		curLine += c.printDate(lastDate, msg.Time)
-		curLine += c.printMessage(msg)
-
-		lastDate = msg.Time
+	for msgId := c.maxId; msgId < len(c.messages); msgId += 1 {
+		curLine += c.printDate(msgId)
+		curLine += c.printMessage(msgId)
 	}
 	c.maxId = len(c.messages) - 1
 
@@ -131,6 +127,7 @@ func (c *ChatLayout) Full() {
 	}
 	for ; curLine <= c.inputLine-2; curLine -= 1 {
 		c.mntl.Return(1)
+		c.cache.Bottom(-1)
 	}
 
 	c.printHelpers()

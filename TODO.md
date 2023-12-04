@@ -22,9 +22,11 @@
 
 * [ ] Si pcePending et 5 NACK 0x40, alors PCE is ON
 
-## MML
+## VML
 
-* [ ] Implémenter un premier format .mml basé sur .xml
+Videotex Markup Language
+
+* [ ] Implémenter un premier format .vml basé sur .xml
 
 ## Grafana
 

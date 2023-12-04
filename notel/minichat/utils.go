@@ -44,7 +44,7 @@ func GetDateString(lastMsg, newMsg time.Time) (str string) {
 	return
 }
 
-func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt []byte) {
+func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt [][]byte) {
 	// Message Format
 	// [nick]_[msg]
 	formated := msg.Nick + " " + msg.Text
@@ -52,6 +52,8 @@ func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt []byte
 	// Wraps the message to 40 chars
 	wrapped := minigo.WrapperLargeurNormale(formated)
 
+	// If the direction is UP (up direction top of screen)
+	// the first line to be printed is the last one
 	var lineId int
 	if dir == Up {
 		lineId = len(wrapped)
@@ -60,21 +62,24 @@ func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt []byte
 	for {
 		lineMsg := wrapped[lineId]
 
+		buf := make([]byte, 0)
 		if dir == Up {
-			vdt = append(vdt, minigo.GetMoveCursorUp(1)...)
+			buf = append(buf, minigo.GetMoveCursorUp(1)...)
 		} else if dir == Down {
-			vdt = append(vdt, minigo.GetMoveCursorReturn(1)...)
+			buf = append(buf, minigo.GetMoveCursorReturn(1)...)
 		}
 
 		if lineId == 0 {
-			vdt = append(vdt, minigo.EncodeAttributes(minigo.CaractereRouge)...)
-			vdt = append(vdt, minigo.EncodeString(lineMsg[:len(msg.Nick)])...)
-			vdt = append(vdt, minigo.EncodeAttribute(minigo.CaractereBlanc)...)
+			buf = append(buf, minigo.EncodeAttributes(minigo.CaractereRouge)...)
+			buf = append(buf, minigo.EncodeString(lineMsg[:len(msg.Nick)])...)
+			buf = append(buf, minigo.EncodeAttribute(minigo.CaractereBlanc)...)
 
-			vdt = append(vdt, minigo.EncodeString(lineMsg[len(msg.Nick):])...)
+			buf = append(buf, minigo.EncodeString(lineMsg[len(msg.Nick):])...)
 		} else {
-			vdt = append(vdt, minigo.EncodeString(lineMsg)...)
+			buf = append(buf, minigo.EncodeString(lineMsg)...)
 		}
+
+		vdt = append(vdt, buf)
 
 		if dir == Up {
 			if lineId -= 1; lineId < 0 {

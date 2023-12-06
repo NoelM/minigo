@@ -163,14 +163,22 @@ func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
 func (c *ChatLayout) Init() {
 	// Load the last messages from DB
 	if !c.getLastMessages() {
+		// No message, we quit!
 		return
 	}
 
+	// No cursor and go to the origin
 	c.mntl.CursorOff()
 	c.mntl.MoveCursorAt(1, 1)
 
+	// We'll use the rouleau mode from the TOP
+	// Until one reaches the `rowMsgZoneEnd`
 	curLine := 0
+
+	// Limit means the number of avail lines until rowMsgZoneEnd
 	limit := rowMsgZoneEnd - curLine
+
+	// One start from the last message recvd.
 	for msgId := len(c.messages) - 1; msgId >= 0; msgId -= 1 {
 		curLine += c.printMessage(msgId, limit, Up)
 
@@ -192,11 +200,14 @@ func (c *ChatLayout) Update() {
 		return
 	}
 
+	// Clean screen before the update
 	c.mntl.CursorOff()
 	c.cleanFooter()
 
+	// Go to the last line of the MSG Zone
 	c.mntl.MoveCursorAt(rowMsgZoneEnd, 1)
 
+	// We print on the DOWN direction all the new messages, no limits here!
 	curLine := rowMsgZoneEnd
 	for msgId := c.maxId + 1; msgId < len(c.messages); msgId += 1 {
 		curLine += c.printDate(msgId, NoLimit, Down)
@@ -204,10 +215,17 @@ func (c *ChatLayout) Update() {
 	}
 	c.maxId = len(c.messages) - 1
 
+	// If the new line is below 24 (the last on screen)
+	// Move the cursor there, otherwise, the rouleau mode
+	// will not push blank lines to `endMsgZone`
 	if curLine < 24 {
 		c.mntl.MoveCursorAt(24, 1)
 	}
 
+	// Now push curLine to rowMsgZoneEng
+	// this is a > not a >= because
+	// with an equal at curLine == rowMsgZoneEnd
+	// if will return another time
 	for ; curLine > rowMsgZoneEnd; curLine -= 1 {
 		c.mntl.Return(1)
 	}

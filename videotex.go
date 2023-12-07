@@ -8,14 +8,14 @@ import (
 	"strings"
 )
 
-func GetProCode(pro byte) ([]byte, error) {
+func ProCode(pro byte) ([]byte, error) {
 	if pro < Pro1 || pro > Pro3 {
 		return nil, errors.New("pro argument beyond bound [0x39;0x3B]")
 	}
 	return []byte{Esc, pro}, nil
 }
 
-func GetPCode(i int) []byte {
+func PCode(i int) []byte {
 	if i < 10 {
 		return []byte{0x30 + byte(i)}
 	} else {
@@ -23,11 +23,11 @@ func GetPCode(i int) []byte {
 	}
 }
 
-func GetWord(word int) []byte {
+func Word(word int) []byte {
 	return []byte{GetByteHigh(word), GetByteLow(word)}
 }
 
-func IsPosInBounds(x, y int, resolution uint) (bool, error) {
+func CursorInScreen(x, y int, resolution uint) (bool, error) {
 	switch resolution {
 	case ResolutionSimple:
 		return x > 0 && x <= ColonnesSimple && y > 0 && y <= LignesSimple, nil
@@ -38,127 +38,127 @@ func IsPosInBounds(x, y int, resolution uint) (bool, error) {
 	}
 }
 
-func GetMoveCursorAt(row, col int) (buf []byte) {
+func MoveAt(row, col int) (buf []byte) {
 	if row == 1 && col == 1 {
 		buf = []byte{Rs}
 	} else {
-		buf = GetWord(Csi)
-		buf = append(buf, GetPCode(row)...)
+		buf = Word(Csi)
+		buf = append(buf, PCode(row)...)
 		buf = append(buf, 0x3B)
-		buf = append(buf, GetPCode(col)...)
+		buf = append(buf, PCode(col)...)
 		buf = append(buf, 0x48)
 	}
 
 	return
 }
 
-func GetMoveCursorLeft(n int) (buf []byte) {
+func MoveLeft(n int) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Bs)
 	} else {
-		buf = GetWord(Csi)
-		buf = append(buf, GetPCode(n)...)
+		buf = Word(Csi)
+		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x44)
 	}
 	return
 }
 
-func GetMoveCursorRight(n int) (buf []byte) {
+func MoveRight(n int) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Ht)
 	} else {
-		buf = GetWord(Csi)
-		buf = append(buf, GetPCode(n)...)
+		buf = Word(Csi)
+		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x43)
 	}
 	return
 }
 
-func GetMoveCursorDown(n int) (buf []byte) {
+func MoveDown(n int) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Lf)
 	} else {
-		buf = GetWord(Csi)
-		buf = append(buf, GetPCode(n)...)
+		buf = Word(Csi)
+		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x42)
 	}
 	return
 }
 
-func GetMoveCursorUp(n int) (buf []byte) {
+func MoveUp(n int) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Vt)
 	} else {
-		buf = GetWord(Csi)
-		buf = append(buf, GetPCode(n)...)
+		buf = Word(Csi)
+		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x41)
 	}
 	return
 }
 
-func GetMoveCursorReturn(n int) (buf []byte) {
+func Return(n int) (buf []byte) {
 	buf = append(buf, Cr)
-	buf = append(buf, GetMoveCursorDown(n)...)
+	buf = append(buf, MoveDown(n)...)
 	return
 }
 
-func GetMoveCursorReturnUp(n int) (buf []byte) {
+func ReturnUp(n int) (buf []byte) {
 	buf = append(buf, Cr)
-	buf = append(buf, GetMoveCursorUp(n)...)
+	buf = append(buf, MoveUp(n)...)
 	return
 }
 
-func GetCleanScreen() (buf []byte) {
-	buf = GetWord(Csi)
+func CleanScreen() (buf []byte) {
+	buf = Word(Csi)
 	buf = append(buf, 0x32, 0x4A)
 	return
 }
 
-func GetCleanScreenFromCursor() (buf []byte) {
-	buf = GetWord(Csi)
+func CleanScreenFromCursor() (buf []byte) {
+	buf = Word(Csi)
 	buf = append(buf, 0x4A)
 	return
 }
 
-func GetCleanScreenToCursor() (buf []byte) {
-	buf = GetWord(Csi)
+func CleanScreenToCursor() (buf []byte) {
+	buf = Word(Csi)
 	buf = append(buf, 0x31, 0x4A)
 	return
 }
 
-func GetCleanLine() (buf []byte) {
-	buf = GetWord(Csi)
+func CleanLine() (buf []byte) {
+	buf = Word(Csi)
 	buf = append(buf, 0x32, 0x4B)
 	return buf
 }
 
-func GetCleanLineFromCursor() (buf []byte) {
-	buf = GetWord(Csi)
+func CleanLineFromCursor() (buf []byte) {
+	buf = Word(Csi)
 	buf = append(buf, 0x4B)
 	return
 }
 
-func GetCleanLineToCursor() (buf []byte) {
-	buf = GetWord(Csi)
+func CleanLineToCursor() (buf []byte) {
+	buf = Word(Csi)
 	buf = append(buf, 0x31, 0x4B)
 	return
 }
 
-func GetCleanNItemsFromCursor(n int) (buf []byte) {
-	buf = GetWord(Csi)
-	buf = append(buf, GetPCode(n)...)
+func CleanNItemsFromCursor(n int) (buf []byte) {
+	buf = Word(Csi)
+	buf = append(buf, PCode(n)...)
 	buf = append(buf, 0x50)
 	return
 }
 
-func GetCleanNRowsFromCursor(n int) (buf []byte) {
-	buf = GetWord(Csi)
-	buf = append(buf, GetPCode(n)...)
+func CleanNRowsFromCursor(n int) (buf []byte) {
+	buf = Word(Csi)
+	buf = append(buf, PCode(n)...)
 	buf = append(buf, 0x4D)
 	return
 }
 
-func GetTextZone(text string, attributes ...byte) (buf []byte) {
+func TextZone(text string, attributes ...byte) (buf []byte) {
 	buf = append(buf, Sp)
 
 	for _, atb := range attributes {
@@ -170,12 +170,12 @@ func GetTextZone(text string, attributes ...byte) (buf []byte) {
 	return
 }
 
-func GetSubArticle(content []byte, x, y int, res uint) (buf []byte) {
-	inBound, err := IsPosInBounds(x, y, res)
+func SubArticle(content []byte, x, y int, res uint) (buf []byte) {
+	inScreen, err := CursorInScreen(x, y, res)
 	if err != nil {
 		log.Printf("unable to create sub-article: %s", err.Error())
 	}
-	if !inBound {
+	if !inScreen {
 		log.Printf("positon (x=%d ; y=%d) out-of-bounds", x, y)
 	}
 
@@ -370,7 +370,7 @@ func ValidRune(r rune) bool {
 	return EncodeRune(r) != nil
 }
 
-func GetRepeatRune(r rune, n int) (buf []byte) {
+func RepeatRune(r rune, n int) (buf []byte) {
 	if n > 40 {
 		return
 	}
@@ -381,14 +381,14 @@ func GetRepeatRune(r rune, n int) (buf []byte) {
 	return
 }
 
-func GetHLine(row, col, len int, t LineType) (buf []byte) {
-	buf = GetMoveCursorAt(row, col)
+func HLine(row, col, len int, t LineType) (buf []byte) {
+	buf = MoveAt(row, col)
 	buf = append(buf, byte(t), Rep, 0x40+byte(len-1))
 	return
 }
 
-func GetVLine(row, col, len int, t LineType) (buf []byte) {
-	buf = GetMoveCursorAt(row, col)
+func VLine(row, col, len int, t LineType) (buf []byte) {
+	buf = MoveAt(row, col)
 
 	for i := 0; i < len; i += 1 {
 		// BS = moves cursor left
@@ -398,11 +398,11 @@ func GetVLine(row, col, len int, t LineType) (buf []byte) {
 	return
 }
 
-func GetRect(row, col, width, height int) (buf []byte) {
-	buf = GetHLine(row, col, width, Bottom)
-	buf = append(buf, GetVLine(row+1, col, height-2, Left)...)
-	buf = append(buf, GetVLine(row+1, col+width, height-2, Left)...)
-	buf = append(buf, GetHLine(row+height-1, col, width, Top)...)
+func Rectangle(row, col, width, height int) (buf []byte) {
+	buf = HLine(row, col, width, Bottom)
+	buf = append(buf, VLine(row+1, col, height-2, Left)...)
+	buf = append(buf, VLine(row+1, col+width, height-2, Left)...)
+	buf = append(buf, HLine(row+height-1, col, width, Top)...)
 	return
 }
 

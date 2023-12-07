@@ -86,7 +86,7 @@ func ApplyPCE(in []byte) (out [][]byte) {
 }
 
 func GetRequestPCE() []byte {
-	buf, _ := GetProCode(Pro2)
+	buf, _ := ProCode(Pro2)
 	buf = append(buf, Start, PCE)
 
 	return ApplyParity(buf)

@@ -48,7 +48,7 @@ func (i *Input) AppendKey(r rune) {
 		return
 	}
 
-	command := GetMoveCursorAt(i.getCursorPos())
+	command := MoveAt(i.getCursorPos())
 	command = append(command, EncodeRune(r)...)
 	i.m.Send(command)
 
@@ -71,13 +71,13 @@ func (i *Input) Correction() {
 	}
 	i.Value = i.Value[:len(i.Value)-shift]
 
-	command := GetMoveCursorAt(i.getCursorPos())
+	command := MoveAt(i.getCursorPos())
 	if i.dots {
 		command = append(command, EncodeString(".")...)
 	} else {
 		command = append(command, EncodeString(" ")...)
 	}
-	command = append(command, GetMoveCursorAt(i.getCursorPos())...)
+	command = append(command, MoveAt(i.getCursorPos())...)
 	i.m.Send(command)
 }
 
@@ -86,15 +86,15 @@ func (i *Input) UnHide() {
 	command := []byte{}
 
 	for row := i.refRow; row < i.refRow+i.height; row += 1 {
-		command = append(command, GetMoveCursorAt(row, i.refCol)...)
+		command = append(command, MoveAt(row, i.refCol)...)
 
 		if i.dots {
-			command = append(command, GetRepeatRune('.', i.width-1)...)
+			command = append(command, RepeatRune('.', i.width-1)...)
 		} else {
-			command = append(command, GetRepeatRune(' ', i.width-1)...)
+			command = append(command, RepeatRune(' ', i.width-1)...)
 		}
 	}
-	command = append(command, GetMoveCursorAt(i.refRow, i.refCol)...)
+	command = append(command, MoveAt(i.refRow, i.refCol)...)
 
 	if len(i.Value) > 0 {
 		command = append(command, EncodeBytes(i.Value)...)
@@ -110,8 +110,8 @@ func (i *Input) Hide() {
 
 	command := []byte{}
 	for row := 0; row < i.height; row += 1 {
-		command = append(command, GetMoveCursorAt(i.refRow+row, i.refCol)...)
-		command = append(command, GetCleanNItemsFromCursor(i.width)...)
+		command = append(command, MoveAt(i.refRow+row, i.refCol)...)
+		command = append(command, CleanNItemsFromCursor(i.width)...)
 	}
 	i.m.Send(command)
 }

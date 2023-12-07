@@ -55,7 +55,7 @@ func (i *Input) AppendKey(r rune) {
 	i.Value = utf8.AppendRune(i.Value, r)
 
 	if utf8.RuneCount(i.Value) == i.width*i.height {
-		i.m.MoveCursorAt(i.getCursorPos())
+		i.m.MoveAt(i.getCursorPos())
 	}
 }
 
@@ -124,7 +124,7 @@ func (i *Input) Reset() {
 
 // Activate moves the cursor to its actual position and let it on
 func (i *Input) Activate() {
-	i.m.MoveCursorAt(i.getCursorPos())
+	i.m.MoveAt(i.getCursorPos())
 	i.m.CursorOn()
 }
 

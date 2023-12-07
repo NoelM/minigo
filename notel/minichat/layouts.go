@@ -59,13 +59,13 @@ func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, cntd 
 }
 
 func (c *ChatLayout) cleanFooter() {
-	c.mntl.MoveCursorAt(rowHLine, 1)
+	c.mntl.MoveAt(rowHLine, 1)
 	c.mntl.CleanLine()
 
-	c.mntl.MoveCursorAt(rowHelpers-1, 1)
+	c.mntl.MoveAt(rowHelpers-1, 1)
 	c.mntl.CleanLine()
 
-	c.mntl.MoveCursorAt(24, 1)
+	c.mntl.MoveAt(24, 1)
 	c.mntl.CleanLine()
 }
 
@@ -169,7 +169,7 @@ func (c *ChatLayout) Init() {
 
 	// No cursor and go to the origin
 	c.mntl.CursorOff()
-	c.mntl.MoveCursorAt(1, 1)
+	c.mntl.MoveAt(1, 1)
 
 	// We'll use the rouleau mode from the TOP
 	// Until one reaches the `rowMsgZoneEnd`
@@ -205,7 +205,7 @@ func (c *ChatLayout) Update() {
 	c.cleanFooter()
 
 	// Go to the last line of the MSG Zone
-	c.mntl.MoveCursorAt(rowMsgZoneEnd, 1)
+	c.mntl.MoveAt(rowMsgZoneEnd, 1)
 
 	// We print on the DOWN direction all the new messages, no limits here!
 	curLine := rowMsgZoneEnd
@@ -219,7 +219,7 @@ func (c *ChatLayout) Update() {
 	// Move the cursor there, otherwise, the rouleau mode
 	// will not push blank lines to `endMsgZone`
 	if curLine < 24 {
-		c.mntl.MoveCursorAt(24, 1)
+		c.mntl.MoveAt(24, 1)
 	}
 
 	// Now push curLine to rowMsgZoneEng

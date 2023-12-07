@@ -349,7 +349,7 @@ func (m *Minitel) WriteHelperRight(lineId int, helpText, button string) error {
 // MOVES
 //
 
-func (m *Minitel) MoveCursorAt(lineId, colId int) error {
+func (m *Minitel) MoveAt(lineId, colId int) error {
 	return m.Send(MoveAt(lineId, colId))
 }
 

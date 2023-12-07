@@ -88,7 +88,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 }
 
 func printSignUpError(mntl *minigo.Minitel, errorMsg string) {
-	mntl.MoveCursorAt(11, 1)
+	mntl.MoveAt(11, 1)
 	mntl.CleanLine()
 	mntl.WriteStringAtWithAttributes(11, 1, errorMsg, minigo.InversionFond)
 }

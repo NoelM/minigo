@@ -85,7 +85,7 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 			break
 		}
 		mntl.ModeG2()
-		mntl.MoveCursorAt(line, 1)
+		mntl.MoveAt(line, 1)
 		mntl.WriteAttributes(minigo.FondJaune)
 		mntl.WriteNRunes(minigo.Sp, 40)
 
@@ -103,7 +103,7 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 
 		for _, l := range title {
 			mntl.ModeG2()
-			mntl.MoveCursorAt(line, 1)
+			mntl.MoveAt(line, 1)
 			mntl.WriteAttributes(minigo.FondBleu)
 			mntl.WriteNRunes(minigo.Sp, 40)
 

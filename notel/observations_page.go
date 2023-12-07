@@ -79,9 +79,9 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pageId, reportsPerPage, maxPageId int) {
 	mntl.CleanScreen()
 
-	mntl.MoveCursorAt(1, 1)
+	mntl.MoveAt(1, 1)
 	mntl.WriteStringLeft(1, fmt.Sprintf("Mise à jour le: %s UTC", reps["07149"][0].date.Format("02/01/2006 15:04")))
-	mntl.MoveCursorAt(3, 1)
+	mntl.MoveAt(3, 1)
 
 	for reportId := pageId * reportsPerPage; reportId < len(reps) && reportId < (pageId+1)*reportsPerPage; reportId += 1 {
 		if rep, ok := reps[OrderedStationId[reportId]]; ok {

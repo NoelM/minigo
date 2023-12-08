@@ -120,7 +120,13 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 		return false
 	}
 
-	return user.PwdHash == u.getHashB64(pwd)
+	if user.PwdHash == u.getHashB64(pwd) {
+		user.LastConnect = time.Now()
+		u.setUser(user)
+		return true
+	} else {
+		return false
+	}
 }
 
 func (u *UsersDatabase) ChangePassword(nick string, pwd string) bool {

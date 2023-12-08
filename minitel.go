@@ -261,11 +261,17 @@ func (m *Minitel) WriteString(s string) {
 }
 
 func (m *Minitel) WriteStatusLine(s string) error {
+	// Enters row 0
 	buf := []byte{Us, 0x40, 0x41}
+	// Clean curent value
 	buf = append(buf, RepeatRune(' ', 34)...)
+	// Return carriage to the begining of row 0
 	buf = append(buf, Us, 0x40, 0x41)
+	// Encode string to VDT format
 	buf = append(buf, EncodeString(s)...)
+	// Quit the row 0 with LF
 	buf = append(buf, Lf)
+
 	return m.Send(buf)
 }
 

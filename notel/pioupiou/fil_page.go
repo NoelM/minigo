@@ -24,12 +24,12 @@ func NewPageFil(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 
 		pageStart = append(pageStart, printPosts(mntl, posts[pageStart[pageId]:]))
 
-		mntl.WriteHelperLeft(23, "Naviguez", "SUITE/RETOUR")
-		mntl.WriteHelperRight(23, "Rafraichir", "REPET")
+		mntl.WriteHelperLeftAt(23, "Naviguez", "SUITE/RETOUR")
+		mntl.WriteHelperRightAt(23, "Rafraichir", "REPET")
 
-		mntl.WriteHelperLeft(24, "Menu", "SOMMAIRE")
+		mntl.WriteHelperLeftAt(24, "Menu", "SOMMAIRE")
 		inputs.AppendInput("command", minigo.NewInput(mntl, 24, 29, 4, 1, true))
-		mntl.WriteHelperRight(24, ".... +", "ENVOI")
+		mntl.WriteHelperRightAt(24, ".... +", "ENVOI")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -114,8 +114,8 @@ func printPosts(mntl *minigo.Minitel, posts []*PPPost) int {
 	var p *PPPost
 	for pId, p = range posts {
 		mntl.WriteAttributes(minigo.InversionFond)
-		mntl.WriteStringLeft(line, p.Pseudo)
-		mntl.WriteStringRight(line, p.Date.Format("02/01/06 15:04"))
+		mntl.WriteStringLeftAt(line, p.Pseudo)
+		mntl.WriteStringRightAt(line, p.Date.Format("02/01/06 15:04"))
 		mntl.WriteAttributes(minigo.FondNormal)
 
 		line += 1
@@ -128,7 +128,7 @@ func printPosts(mntl *minigo.Minitel, posts []*PPPost) int {
 		words := []string{}
 		for _, s := range strings.Split(p.Content, " ") {
 			if length+utf8.RuneCountInString(s)+1 >= 40 {
-				mntl.WriteStringLeft(line, strings.Join(words, " "))
+				mntl.WriteStringLeftAt(line, strings.Join(words, " "))
 
 				length = 0
 				words = []string{}

@@ -275,22 +275,22 @@ func (m *Minitel) WriteBytesAt(lineId, colId int, inBuf []byte) error {
 	return m.Send(buf)
 }
 
-func (m *Minitel) WriteStringLeft(lineId int, s string) error {
+func (m *Minitel) WriteStringLeftAt(lineId int, s string) error {
 	return m.WriteStringAt(lineId, 1, s)
 }
 
-func (m *Minitel) WriteNRunes(r rune, n int) error {
+func (m *Minitel) WriteRepeat(r rune, n int) error {
 	return m.Send(RepeatRune(r, n))
 }
 
-func (m *Minitel) WriteStringRight(lineId int, s string) error {
+func (m *Minitel) WriteStringRightAt(lineId int, s string) error {
 	msgLen := utf8.RuneCountInString(s) * m.charWidth()
 	colId := maxInt(ColonnesSimple-msgLen+1, 0)
 
 	return m.WriteStringAt(lineId, colId, s)
 }
 
-func (m *Minitel) WriteStringCenter(lineId int, s string) error {
+func (m *Minitel) WriteStringCenterAt(lineId int, s string) error {
 	msgLen := len(s) * m.charWidth()
 	colId := maxInt((ColonnesSimple-msgLen)/2+1, 0)
 
@@ -327,15 +327,15 @@ func (m *Minitel) WriteHelperAt(lineId, colId int, helpText, button string) erro
 	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
 }
 
-func (m *Minitel) WriteHelperLeft(lineId int, helpText, button string) error {
-	m.WriteStringLeft(lineId, helpText)
+func (m *Minitel) WriteHelperLeftAt(lineId int, helpText, button string) error {
+	m.WriteStringLeftAt(lineId, helpText)
 
 	helpMsgLen := (utf8.RuneCountInString(helpText) + 2) * m.charWidth()
 	buttonCol := minInt(helpMsgLen, ColonnesSimple)
 	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
 }
 
-func (m *Minitel) WriteHelperRight(lineId int, helpText, button string) error {
+func (m *Minitel) WriteHelperRightAt(lineId int, helpText, button string) error {
 	startCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+len(button)+1) // free space
 	startCol = maxInt(startCol, 0)
 
@@ -375,6 +375,10 @@ func (m *Minitel) MoveCursorLeft(n int) error {
 
 func (m *Minitel) MoveCursorUp(n int) error {
 	return m.Send(MoveUp(n))
+}
+
+func (m *Minitel) MoveLineStart() error {
+	return m.Send([]byte{Cr})
 }
 
 //

@@ -26,14 +26,14 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 		communes = CommuneDb.GetCommunesFromCodePostal(codePostal)
 		if communes == nil {
 			mntl.CleanScreen()
-			mntl.WriteStringLeft(1, "IMPOSSIBLE DE TROUVER UNE COMMUNE")
-			mntl.WriteStringLeft(2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
+			mntl.WriteStringLeftAt(1, "IMPOSSIBLE DE TROUVER UNE COMMUNE")
+			mntl.WriteStringLeftAt(2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
 			time.Sleep(5 * time.Second)
 			return sommaireId
 		}
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeft(2, "CHOISISSEZ UNE COMMUNE:")
+		mntl.WriteStringLeftAt(2, "CHOISISSEZ UNE COMMUNE:")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
 		communeList := minigo.NewListEnum(mntl, nil)
@@ -45,9 +45,9 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 		}
 		communeList.Display()
 
-		mntl.WriteHelperLeft(len(communes)+5, "CHOIX: .. +", "ENVOI")
+		mntl.WriteHelperLeftAt(len(communes)+5, "CHOIX: .. +", "ENVOI")
 
-		mntl.WriteHelperLeft(24, "CHOIX CODE POSTAL", "SOMMAIRE")
+		mntl.WriteHelperLeftAt(24, "CHOIX CODE POSTAL", "SOMMAIRE")
 
 		inputs.AppendInput("commune_id", minigo.NewInput(mntl, len(communes)+5, 8, 2, 1, true))
 		inputs.ActivateFirst()

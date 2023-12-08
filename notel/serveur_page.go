@@ -12,11 +12,11 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.CursorOff()
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeft(2, "Infos de")
+		mntl.WriteStringLeftAt(2, "Infos de")
 		mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
 		mntl.WriteStringAt(2, 10, "NOTEL")
 		mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-		mntl.WriteStringLeft(3, "Lundi 27 Novembre 2023")
+		mntl.WriteStringLeftAt(3, "Lundi 27 Novembre 2023")
 
 		messages := []string{
 			"* Ca y est ! La PCE est complète, si votre Minitel reporte plus de 5 erreurs de parités par minute, la PCE s'active automatiquement",
@@ -27,13 +27,13 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		line := 5
 		for _, msg := range messages {
 			for _, l := range minigo.WrapperLargeurNormale(msg) {
-				mntl.WriteStringLeft(line, l)
+				mntl.WriteStringLeftAt(line, l)
 				line += 1
 			}
 			line += 1
 		}
 
-		mntl.WriteHelperLeft(24, "Menu NOTEL", "SOMMAIRE")
+		mntl.WriteHelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
 		return minigo.NoOp
 	})
 

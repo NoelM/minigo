@@ -102,19 +102,19 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	listRight.Display()
 
 	mntl.WriteAttributes(minigo.Clignotement, minigo.DoubleHauteur)
-	mntl.WriteStringCenter(19, "→ Rendez-vous ←")
+	mntl.WriteStringCenterAt(19, "→ Rendez-vous ←")
 	mntl.WriteAttributes(minigo.Fixe, minigo.GrandeurNormale)
 
-	mntl.WriteStringCenter(20, "Dimanche 3 Déc. à 20h")
+	mntl.WriteStringCenterAt(20, "Dimanche 3 Déc. à 20h")
 
 	cntd := NbConnectedUsers.Load()
 	if cntd < 2 {
-		mntl.WriteStringLeft(24, fmt.Sprintf("> Connecté: %d", cntd))
+		mntl.WriteStringLeftAt(24, fmt.Sprintf("> Connecté: %d", cntd))
 	} else {
-		mntl.WriteStringLeft(24, fmt.Sprintf("> Connectés: %d", cntd))
+		mntl.WriteStringLeftAt(24, fmt.Sprintf("> Connectés: %d", cntd))
 	}
 
-	mntl.WriteHelperRight(24, "CODE ....", "ENVOI")
+	mntl.WriteHelperRightAt(24, "CODE ....", "ENVOI")
 	form.AppendInput("choice", minigo.NewInput(mntl, 24, 30, 4, 1, true))
 
 	form.InitAll()

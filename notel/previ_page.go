@@ -107,12 +107,12 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 
 func printPreviHelpers(mntl *minigo.Minitel, forecastDate, firstForecastDate, lastForecastDate time.Time) {
 	if forecastDate.After(firstForecastDate) {
-		mntl.WriteHelperLeft(23, forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR")
+		mntl.WriteHelperLeftAt(23, forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR")
 	}
 	if forecastDate.Before(lastForecastDate) {
-		mntl.WriteHelperRight(23, forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE")
+		mntl.WriteHelperRightAt(23, forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE")
 	}
-	mntl.WriteHelperLeft(24, "Menu INFOMETEO", "SOMMAIRE")
+	mntl.WriteHelperLeftAt(24, "Menu INFOMETEO", "SOMMAIRE")
 }
 
 func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c Commune) {
@@ -122,14 +122,14 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 	// City name
 	mntl.WriteAttributes(minigo.DoubleHauteur)
 	if len(c.NomCommune) >= minigo.ColonnesSimple {
-		mntl.WriteStringLeft(2, c.NomCommune[:minigo.ColonnesSimple-1])
+		mntl.WriteStringLeftAt(2, c.NomCommune[:minigo.ColonnesSimple-1])
 	} else {
-		mntl.WriteStringLeft(2, c.NomCommune)
+		mntl.WriteStringLeftAt(2, c.NomCommune)
 	}
 	mntl.WriteAttributes(minigo.GrandeurNormale)
 
 	// Date of the forecast
-	mntl.WriteStringLeft(3, fmt.Sprintf("%s %d %s",
+	mntl.WriteStringLeftAt(3, fmt.Sprintf("%s %d %s",
 		utils.WeekdayIdToString(forecastDate.Weekday()),
 		forecastDate.Day(),
 		utils.MonthIdToString(forecastDate.Month()),
@@ -155,7 +155,7 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 					fct.Main.Temp,
 					weatherConditionCodeToString(fct.Weather[0].ID, fDate.In(location)))
 
-				mntl.WriteStringLeft(lineId, previsionString)
+				mntl.WriteStringLeftAt(lineId, previsionString)
 				lineId += 2
 
 				if fct.Main.Temp < minTemp {

@@ -205,7 +205,7 @@ func NotelHandler(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup) {
 
 	promConnNb.With(prometheus.Labels{"source": sourceTag}).Inc()
 	active := NbConnectedUsers.Add(1)
-	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
+	promConnActive.With(prometheus.Labels{"source": sourceTag}).Inc()
 
 	logs.InfoLog("[%s] notel-handler: start handler, connected=%d\n", sourceTag, active)
 	startConn := time.Now()
@@ -228,7 +228,7 @@ SIGNIN:
 	promConnDur.With(prometheus.Labels{"source": sourceTag}).Add(time.Since(startConn).Seconds())
 
 	active = NbConnectedUsers.Add(-1)
-	promConnActive.With(prometheus.Labels{"source": sourceTag}).Set(float64(active))
+	promConnActive.With(prometheus.Labels{"source": sourceTag}).Dec()
 
 	logs.InfoLog("[%s] notel-handler: quit handler, connected=%d\n", sourceTag, active)
 

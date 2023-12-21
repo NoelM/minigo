@@ -176,16 +176,17 @@ func (c *ChatLayout) Init() {
 	curLine := 0
 
 	// Limit means the number of avail lines until rowMsgZoneEnd
-	limit := rowMsgZoneEnd - curLine
+	limit := 0
 
 	// One start from the last message recvd.
 	for msgId := len(c.messages) - 1; msgId >= 0; msgId -= 1 {
+		limit = rowMsgZoneEnd - curLine
 		curLine += c.printMessage(msgId, limit, Up)
 
 		limit = rowMsgZoneEnd - curLine
 		curLine += c.printDate(msgId, limit, Up)
 
-		if curLine == rowMsgZoneEnd {
+		if curLine >= rowMsgZoneEnd {
 			break
 		}
 	}

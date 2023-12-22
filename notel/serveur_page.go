@@ -16,15 +16,15 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
 		mntl.WriteStringAt(2, 10, "NOTEL")
 		mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-		mntl.WriteStringLeftAt(3, "Lundi 27 Novembre 2023")
+		mntl.WriteStringLeftAt(4, "Vendredi 22 Décembre 2023")
 
 		messages := []string{
-			"* Ca y est ! La PCE est complète, si votre Minitel reporte plus de 5 erreurs de parités par minute, la PCE s'active automatiquement",
-			"* Bug connu: pour l'instant il faut se déconnecter avec deux appuis sur Connexion/Fin",
-			"* Le reste: pour la PCE j'avais mis en pause les statistiques d'usage du serveur, la modification de se compte et un service de micro-blog",
+			"- Beaucoup de nouveautés sur le serveur : un sudoku, un nouvel affichage des messages sur le chat, et beaucoup de travail caché dans le code",
+			"- Encore quelques bugs connus : avec la PCE la gestion des déconnexions est plus complexe, parfois le compteur de connectés est faux :(",
+			"- Toujours en plans : le service de micro blog, c'est pas simple à faire ! Et la navigation dans les message du chat avec Retour/Suite",
 		}
 
-		line := 5
+		line := 6
 		for _, msg := range messages {
 			for _, l := range minigo.WrapperLargeurNormale(msg) {
 				mntl.WriteStringLeftAt(line, l)

@@ -102,10 +102,10 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	listRight.Display()
 
 	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteStringCenterAt(19, ".*° Joyeuses Fêtes °*.")
+	mntl.WriteStringCenterAt(19, "! NOTEL est de retour !")
 	mntl.WriteAttributes(minigo.GrandeurNormale)
 
-	//mntl.WriteStringCenterAt(20, "Dimanche 3 Déc. à 20h")
+	mntl.WriteStringCenterAt(20, "RDV Dim. 3 Mars à 20h")
 
 	cntd := NbConnectedUsers.Load()
 	if cntd < 2 {

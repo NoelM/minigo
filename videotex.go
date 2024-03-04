@@ -49,8 +49,12 @@ func MoveAt(row, col int, csi bool) (buf []byte) {
 		buf = append(buf, 0x48)
 	} else {
 		buf = []byte{Rs}
-		buf = append(buf, RepeatRune(Lf, row)...)
-		buf = append(buf, RepeatRune(Bs, col)...)
+		for i := 0; i < row; i += 1 {
+			buf = append(buf, Lf)
+		}
+		for i := 0; i < col; i += 1 {
+			buf = append(buf, Bs)
+		}
 	}
 
 	return
@@ -64,7 +68,9 @@ func MoveLeft(n int, csi bool) (buf []byte) {
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x44)
 	} else {
-		buf = RepeatRune(Bs, n)
+		for i := 0; i < n; i += 1 {
+			buf = append(buf, Bs)
+		}
 	}
 	return
 }
@@ -77,7 +83,9 @@ func MoveRight(n int, csi bool) (buf []byte) {
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x43)
 	} else {
-		buf = RepeatRune(Ht, n)
+		for i := 0; i < n; i += 1 {
+			buf = append(buf, Ht)
+		}
 	}
 	return
 }
@@ -90,7 +98,9 @@ func MoveDown(n int, csi bool) (buf []byte) {
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x42)
 	} else {
-		buf = RepeatRune(Lf, n)
+		for i := 0; i < n; i += 1 {
+			buf = append(buf, Lf)
+		}
 	}
 	return
 }
@@ -103,7 +113,9 @@ func MoveUp(n int, csi bool) (buf []byte) {
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x41)
 	} else {
-		buf = RepeatRune(Vt, n)
+		for i := 0; i < n; i += 1 {
+			buf = append(buf, Vt)
+		}
 	}
 	return
 }

@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
+	"github.com/NoelM/minigo/notel/utils"
 )
 
 func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minigo.Page {
@@ -33,31 +35,31 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 
 		communeJSON, ok := initData["commune"]
 		if !ok {
-			errorLog.Println("no commune data")
+			logs.ErrorLog("no commune data\n")
 			return sommaireId
 		}
 
 		if err := json.Unmarshal([]byte(communeJSON), &commune); err != nil {
-			errorLog.Printf("unable to parse the commune JSON: %s\n", err.Error())
+			logs.ErrorLog("unable to parse the commune JSON: %s\n", err.Error())
 			return sommaireId
 		}
 
 		OWApiKey := os.Getenv("OWAPIKEY")
 		body, err := getRequestBody(fmt.Sprintf(OWApiUrlFormat, commune.Latitude, commune.Longitude, OWApiKey))
 		if err != nil {
-			errorLog.Printf("unable to get forecasts: %s\n", err.Error())
+			logs.ErrorLog("unable to get forecasts: %s\n", err.Error())
 			return sommaireId
 		}
 		defer body.Close()
 
 		data, err := io.ReadAll(body)
 		if err != nil {
-			errorLog.Printf("unable to get API response: %s\n", err.Error())
+			logs.ErrorLog("unable to get API response: %s\n", err.Error())
 			return sommaireId
 		}
 
 		if err := json.Unmarshal(data, &forecast); err != nil {
-			errorLog.Printf("unable to parse JSON: %s\n", err.Error())
+			logs.ErrorLog("unable to parse JSON: %s\n", err.Error())
 			return sommaireId
 		}
 		printForecast(mntl, forecast, forecastDate, commune)
@@ -105,12 +107,12 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 
 func printPreviHelpers(mntl *minigo.Minitel, forecastDate, firstForecastDate, lastForecastDate time.Time) {
 	if forecastDate.After(firstForecastDate) {
-		mntl.WriteHelperLeft(23, forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR")
+		mntl.WriteHelperLeftAt(23, forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR")
 	}
 	if forecastDate.Before(lastForecastDate) {
-		mntl.WriteHelperRight(23, forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE")
+		mntl.WriteHelperRightAt(23, forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE")
 	}
-	mntl.WriteHelperLeft(24, "Menu INFOMETEO", "SOMMAIRE")
+	mntl.WriteHelperLeftAt(24, "Menu INFOMETEO", "SOMMAIRE")
 }
 
 func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c Commune) {
@@ -120,17 +122,17 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 	// City name
 	mntl.WriteAttributes(minigo.DoubleHauteur)
 	if len(c.NomCommune) >= minigo.ColonnesSimple {
-		mntl.WriteStringLeft(2, c.NomCommune[:minigo.ColonnesSimple-1])
+		mntl.WriteStringLeftAt(2, c.NomCommune[:minigo.ColonnesSimple-1])
 	} else {
-		mntl.WriteStringLeft(2, c.NomCommune)
+		mntl.WriteStringLeftAt(2, c.NomCommune)
 	}
 	mntl.WriteAttributes(minigo.GrandeurNormale)
 
 	// Date of the forecast
-	mntl.WriteStringLeft(3, fmt.Sprintf("%s %d %s",
-		weekdayIdToString(forecastDate.Weekday()),
+	mntl.WriteStringLeftAt(3, fmt.Sprintf("%s %d %s",
+		utils.WeekdayIdToString(forecastDate.Weekday()),
 		forecastDate.Day(),
-		monthIdToString(forecastDate.Month()),
+		utils.MonthIdToString(forecastDate.Month()),
 	))
 
 	maxTemp := 0.
@@ -153,7 +155,7 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 					fct.Main.Temp,
 					weatherConditionCodeToString(fct.Weather[0].ID, fDate.In(location)))
 
-				mntl.WriteStringLeft(lineId, previsionString)
+				mntl.WriteStringLeftAt(lineId, previsionString)
 				lineId += 2
 
 				if fct.Main.Temp < minTemp {

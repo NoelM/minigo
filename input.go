@@ -44,14 +44,19 @@ func (i *Input) Init() {
 // AppendKey appends a new Rune to the Value array
 func (i *Input) AppendKey(r rune) {
 	if utf8.RuneCount(i.Value) == i.width*i.height {
+		i.m.Bell()
 		return
 	}
 
-	command := GetMoveCursorAt(i.getCursorPos())
+	command := MoveAt(i.getCursorPos())
 	command = append(command, EncodeRune(r)...)
 	i.m.Send(command)
 
 	i.Value = utf8.AppendRune(i.Value, r)
+
+	if utf8.RuneCount(i.Value) == i.width*i.height {
+		i.m.MoveAt(i.getCursorPos())
+	}
 }
 
 // Correction removes the last key, on screen and within Value
@@ -66,38 +71,33 @@ func (i *Input) Correction() {
 	}
 	i.Value = i.Value[:len(i.Value)-shift]
 
-	command := GetMoveCursorAt(i.getCursorPos())
+	command := MoveAt(i.getCursorPos())
 	if i.dots {
-		command = append(command, EncodeMessage(".")...)
+		command = append(command, EncodeString(".")...)
 	} else {
-		command = append(command, EncodeMessage(" ")...)
+		command = append(command, EncodeString(" ")...)
 	}
-	command = append(command, GetMoveCursorAt(i.getCursorPos())...)
+	command = append(command, MoveAt(i.getCursorPos())...)
 	i.m.Send(command)
 }
 
 // UnHide reveals the input on screen
 func (i *Input) UnHide() {
-	command := GetMoveCursorAt(i.refRow, i.refCol)
+	command := []byte{}
 
-	if len(i.Value) > 0 {
-		command = append(command, i.Value...)
-	}
-
-	rowAbs, colAbs := i.getCursorPos()
-	for row := rowAbs; row < i.refRow+i.height; row += 1 {
-		command = append(command, GetMoveCursorAt(row, i.refCol)...)
-
-		paddingZone := i.width
-		if row == rowAbs {
-			paddingZone = (i.refCol + i.width) - colAbs
-		}
+	for row := i.refRow; row < i.refRow+i.height; row += 1 {
+		command = append(command, MoveAt(row, i.refCol)...)
 
 		if i.dots {
-			command = append(command, GetRepeatRune('.', paddingZone-1)...)
+			command = append(command, RepeatRune('.', i.width-1)...)
 		} else {
-			command = append(command, GetRepeatRune(' ', paddingZone-1)...)
+			command = append(command, RepeatRune(' ', i.width-1)...)
 		}
+	}
+	command = append(command, MoveAt(i.refRow, i.refCol)...)
+
+	if len(i.Value) > 0 {
+		command = append(command, EncodeBytes(i.Value)...)
 	}
 
 	i.m.Send(command)
@@ -110,8 +110,8 @@ func (i *Input) Hide() {
 
 	command := []byte{}
 	for row := 0; row < i.height; row += 1 {
-		command = append(command, GetMoveCursorAt(i.refRow+row, i.refCol)...)
-		command = append(command, GetCleanNItemsFromCursor(i.width)...)
+		command = append(command, MoveAt(i.refRow+row, i.refCol)...)
+		command = append(command, CleanNItemsFromCursor(i.width)...)
 	}
 	i.m.Send(command)
 }
@@ -124,7 +124,7 @@ func (i *Input) Reset() {
 
 // Activate moves the cursor to its actual position and let it on
 func (i *Input) Activate() {
-	i.m.MoveCursorAt(i.getCursorPos())
+	i.m.MoveAt(i.getCursorPos())
 	i.m.CursorOn()
 }
 

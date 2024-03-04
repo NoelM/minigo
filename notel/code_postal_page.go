@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
@@ -14,19 +15,19 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ModeG0()
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeft(10, "Prévisions Météo")
+		mntl.WriteStringLeftAt(10, "Prévisions Météo")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		mntl.WriteHelperLeft(12, "CODE POSTAL:       +", "ENVOI")
+		mntl.WriteHelperLeftAt(12, "CODE POSTAL:       +", "ENVOI")
 		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 12, 14, 5, 1, true))
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeft(16, "Observations en Direct")
+		mntl.WriteStringLeftAt(16, "Observations en Direct")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
-		mntl.WriteStringLeft(18, "Avec variations sur 24h")
+		mntl.WriteStringLeftAt(18, "Avec variations sur 24h")
 
-		mntl.WriteHelperLeft(20, "APPUYEZ SUR", "SUITE")
-		mntl.WriteHelperLeft(24, "Menu NOTEL", "SOMMAIRE")
+		mntl.WriteHelperLeftAt(20, "APPUYEZ SUR", "SUITE")
+		mntl.WriteHelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -34,10 +35,11 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 
 	codePostalPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		if len(inputs.ValueActive()) != 0 {
-			infoLog.Printf("chosen code postal: %s\n", inputs.ValueActive())
+			logs.InfoLog("chosen code postal: %s\n", inputs.ValueActive())
 			return inputs.ToMap(), minigo.QuitOp
 		}
-		warnLog.Println("empty code postal")
+
+		logs.WarnLog("empty code postal\n")
 		return nil, minigo.NoOp
 	})
 

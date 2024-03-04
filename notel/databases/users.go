@@ -1,14 +1,20 @@
-package main
+package databases
 
 import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"time"
 
 	"github.com/cockroachdb/pebble"
 )
+
+var infoLog = log.New(os.Stdout, "[notel] info:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var warnLog = log.New(os.Stdout, "[notel] warn:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+var errorLog = log.New(os.Stdout, "[notel] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 type User struct {
 	Nick        string    `json:"nick"`
@@ -114,7 +120,13 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 		return false
 	}
 
-	return user.PwdHash == u.getHashB64(pwd)
+	if user.PwdHash == u.getHashB64(pwd) {
+		user.LastConnect = time.Now()
+		u.setUser(user)
+		return true
+	} else {
+		return false
+	}
 }
 
 func (u *UsersDatabase) ChangePassword(nick string, pwd string) bool {

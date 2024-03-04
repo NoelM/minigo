@@ -11,8 +11,8 @@ func NewPageMessage(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 		mntl.WriteStringAtWithAttributes(10, 1, "Publiez un message", minigo.DoubleHauteur)
 		inputs.AppendInput("message", minigo.NewInput(mntl, 12, 1, 40, 5, true))
 
-		mntl.WriteHelperRight(18, "Publiez avec", "ENVOI")
-		mntl.WriteHelperLeft(24, "Menu", "SOMMAIRE")
+		mntl.WriteHelperRightAt(18, "Publiez avec", "ENVOI")
+		mntl.WriteHelperLeftAt(24, "Menu", "SOMMAIRE")
 
 		inputs.InitAll()
 		return minigo.NoOp

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
@@ -13,17 +14,17 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ModeG0()
 
 		mntl.WriteStringAtWithAttributes(10, 1, "Inscrivez vous !", minigo.FondNormal, minigo.DoubleHauteur)
-		mntl.WriteStringLeft(11, "Compte supprimé si")
-		mntl.WriteStringLeft(12, "30j sans connexion")
+		mntl.WriteStringLeftAt(11, "Compte supprimé si")
+		mntl.WriteStringLeftAt(12, "30j sans connexion")
 
-		mntl.WriteStringLeft(15, "PSEUDO:")
+		mntl.WriteStringLeftAt(15, "PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
-		mntl.WriteStringLeft(16, "MOT DE PASSE:")
+		mntl.WriteStringLeftAt(16, "MOT DE PASSE:")
 		inputs.AppendInput("pwd", minigo.NewInput(mntl, 16, 15, 10, 1, true))
-		mntl.WriteStringLeft(17, "MOT DE PASSE:")
+		mntl.WriteStringLeftAt(17, "MOT DE PASSE:")
 		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 17, 15, 10, 1, true))
 
-		mntl.WriteHelperLeft(19, "Validez avec", "ENVOI")
+		mntl.WriteHelperLeftAt(19, "Validez avec", "ENVOI")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -61,7 +62,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		delete(creds, "pwdRepeat")
 
 		if err == nil {
-			infoLog.Printf("new signup for user=%s\n", creds["login"])
+			logs.InfoLog("new signup for user=%s\n", creds["login"])
 			return creds, minigo.EnvoiOp
 		} else {
 			printSignUpError(mntl, "Erreur serveur")
@@ -87,7 +88,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 }
 
 func printSignUpError(mntl *minigo.Minitel, errorMsg string) {
-	mntl.MoveCursorAt(11, 1)
+	mntl.MoveAt(11, 1)
 	mntl.CleanLine()
 	mntl.WriteStringAtWithAttributes(11, 1, errorMsg, minigo.InversionFond)
 }

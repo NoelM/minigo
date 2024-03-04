@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 type Commune struct {
@@ -55,7 +57,7 @@ func (c *CommuneDatabase) LoadCommuneDatabase(filePath string) error {
 
 	communesFile, err := os.Open(filePath)
 	if err != nil {
-		errorLog.Printf("unable to open file at: %s\n", filePath)
+		logs.ErrorLog("unable to open file at: %s\n", filePath)
 		return err
 	}
 	defer communesFile.Close()
@@ -65,7 +67,7 @@ func (c *CommuneDatabase) LoadCommuneDatabase(filePath string) error {
 
 	communeRecords, err := fileReader.ReadAll()
 	if err != nil {
-		errorLog.Printf("unable to read commune CSV records: %s\n", err.Error())
+		logs.ErrorLog("unable to read commune CSV records: %s\n", err.Error())
 		return err
 	}
 
@@ -79,22 +81,22 @@ func (c *CommuneDatabase) LoadCommuneDatabase(filePath string) error {
 
 		parsedDepCode, err := strconv.ParseInt(codeDepartement, 10, 32)
 		if err != nil && codeDepartement != "2A" && codeDepartement != "2B" {
-			warnLog.Printf("unable to parse code departement for commune %s: %s\n", communeName, err.Error())
+			logs.WarnLog("unable to parse code departement for commune %s: %s\n", communeName, err.Error())
 			continue
 		} else if parsedDepCode > 95 {
-			//infoLog.Printf("ignore commune %s because out of metropole\n", communeName)
+			//logs.InfoLog("ignore commune %s because out of metropole\n", communeName)
 			continue
 		}
 
 		lat, err := strconv.ParseFloat(record[latitudeColId], 32)
 		if err != nil {
-			warnLog.Printf("unable to parse latitude for commune %s: %s\n", communeName, err.Error())
+			logs.WarnLog("unable to parse latitude for commune %s: %s\n", communeName, err.Error())
 			continue
 		}
 
 		lon, err := strconv.ParseFloat(record[longitudeColId], 32)
 		if err != nil {
-			warnLog.Printf("unable to parse longitude for commune %s: %s\n", communeName, err.Error())
+			logs.WarnLog("unable to parse longitude for commune %s: %s\n", communeName, err.Error())
 			continue
 		}
 

@@ -40,8 +40,8 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			d = difficulty.Insane
 			dName = "EXTREME"
 		}
-		mntl.WriteStringLeft(2, "Niveau:")
-		mntl.WriteStringLeft(3, dName)
+		mntl.WriteStringLeftAt(2, "Niveau:")
+		mntl.WriteStringLeftAt(3, dName)
 
 		gen := generator.BackTrackingGenerator(generator.WithRNG(rand.New(rand.NewSource(time.Now().UnixNano()))))
 
@@ -85,8 +85,8 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		}
 		mntl.WriteAttributes(minigo.FondNormal)
 
-		mntl.WriteStringLeft(24, "Naviguez ←↑→↓")
-		mntl.WriteHelperRight(24, "Vérif. grille", "ENVOI")
+		mntl.WriteStringLeftAt(24, "Naviguez ←↑→↓")
+		mntl.WriteHelperRightAt(24, "Vérif. grille", "ENVOI")
 		matrix.InitAll()
 
 		return minigo.NoOp
@@ -111,7 +111,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			row := id / 9
 			col := id - 9*row
 			if !grid.Set(row, col, int(val)) {
-				mntl.WriteStringLeft(1, fmt.Sprintf("Element invalide: ligne: %d, col: %d", row+1, col+1))
+				mntl.WriteStringLeftAt(1, fmt.Sprintf("Element invalide: ligne: %d, col: %d", row+1, col+1))
 				time.Sleep(2 * time.Second)
 				mntl.CleanLine()
 
@@ -121,7 +121,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		}
 
 		if !grid.Done() {
-			mntl.WriteStringLeft(1, "Grille incomplète")
+			mntl.WriteStringLeftAt(1, "Grille incomplète")
 			time.Sleep(2 * time.Second)
 			mntl.CleanLine()
 
@@ -131,7 +131,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		}
 
 		if ok, err := grid.Validate(); err != nil || !ok {
-			mntl.WriteStringLeft(1, "Grille invalide")
+			mntl.WriteStringLeftAt(1, "Grille invalide")
 			time.Sleep(2 * time.Second)
 			mntl.CleanLine()
 
@@ -139,7 +139,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			return nil, minigo.NoOp
 
 		} else {
-			mntl.WriteStringLeft(1, fmt.Sprintf("Bravo %s ! C'est réussi en %s", login, time.Since(start).Round(time.Second).String()))
+			mntl.WriteStringLeftAt(1, fmt.Sprintf("Bravo %s ! C'est réussi en %s", login, time.Since(start).Round(time.Second).String()))
 			time.Sleep(2 * time.Second)
 		}
 

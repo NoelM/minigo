@@ -4,30 +4,31 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/databases"
 )
 
-func RunPageProfil(mntl *minigo.Minitel, userDB *UsersDatabase, pseudo string) (op int) {
+func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo string) (op int) {
 	profilPage := minigo.NewPage("pioupiou:profil", mntl, nil)
 
 	profilPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeft(2, "Mon compte")
+		mntl.WriteStringLeftAt(2, "Mon compte")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
 		mntl.HLine(3, 1, 40, minigo.HCenter)
 
-		mntl.WriteStringLeft(5, "PSEUDO: "+pseudo)
+		mntl.WriteStringLeftAt(5, "PSEUDO: "+pseudo)
 
-		mntl.WriteStringLeft(7, "CHANGER MOT DE PASSE")
-		mntl.WriteStringLeft(9, "Actuel:")
+		mntl.WriteStringLeftAt(7, "CHANGER MOT DE PASSE")
+		mntl.WriteStringLeftAt(9, "Actuel:")
 		inputs.AppendInput("now", minigo.NewInput(mntl, 9, 10, 10, 1, true))
-		mntl.WriteStringLeft(10, "Nouveau:")
+		mntl.WriteStringLeftAt(10, "Nouveau:")
 		inputs.AppendInput("new", minigo.NewInput(mntl, 10, 10, 10, 1, true))
-		mntl.WriteStringLeft(11, "Nouveau:")
+		mntl.WriteStringLeftAt(11, "Nouveau:")
 		inputs.AppendInput("newRep", minigo.NewInput(mntl, 11, 10, 10, 1, true))
 
-		mntl.WriteHelperLeft(24, "Validez avec", "ENVOI")
+		mntl.WriteHelperLeftAt(24, "Validez avec", "ENVOI")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -85,7 +86,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *UsersDatabase, pseudo string) (
 }
 
 func printPseudoMsg(mntl *minigo.Minitel, inputs *minigo.Form, msg string) {
-	mntl.WriteStringLeft(12, msg)
+	mntl.WriteStringLeftAt(12, msg)
 	time.Sleep(2 * time.Second)
 	mntl.CleanLine()
 

@@ -61,6 +61,11 @@ func (n *Network) listenLoop() {
 		inBytes, readErr := n.conn.Read()
 		if readErr != nil {
 			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", n.source, readErr.Error())
+
+			// Connexion/Fin
+			n.In <- 0x13
+			n.In <- 0x49
+
 			break
 		} else if len(inBytes) == 0 {
 			continue

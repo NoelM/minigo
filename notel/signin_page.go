@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
@@ -14,13 +15,13 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 
 		mntl.WriteStringAtWithAttributes(10, 1, "Connectez vous au serveur", minigo.FondNormal, minigo.DoubleHauteur)
 
-		mntl.WriteStringLeft(13, "PSEUDO:")
+		mntl.WriteStringLeftAt(13, "PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 13, 15, 10, 1, true))
-		mntl.WriteStringLeft(14, "MOT DE PASSE:")
+		mntl.WriteStringLeftAt(14, "MOT DE PASSE:")
 		inputs.AppendInput("pwd", minigo.NewInput(mntl, 14, 15, 10, 1, true))
 
-		mntl.WriteHelperLeft(16, "Validez avec", "ENVOI")
-		mntl.WriteHelperLeft(20, "Nouveau ici ? Appuyez sur", "GUIDE")
+		mntl.WriteHelperLeftAt(16, "Validez avec", "ENVOI")
+		mntl.WriteHelperLeftAt(20, "Nouveau ici ? Appuyez sur", "GUIDE")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -44,7 +45,7 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		delete(creds, "pwd")
 
 		if logged {
-			infoLog.Printf("sign-in: logged as user=%s\n", creds["login"])
+			logs.InfoLog("sign-in: logged as user=%s\n", creds["login"])
 			return creds, minigo.EnvoiOp
 		} else {
 			mntl.WriteStringAtWithAttributes(11, 1, "Pseudo ou MDP invalides", minigo.InversionFond)

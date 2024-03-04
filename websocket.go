@@ -26,7 +26,8 @@ func (ws *Websocket) Init() error {
 }
 
 func (ws *Websocket) Write(b []byte) error {
-	err := ws.conn.Write(ws.ctx, websocket.MessageBinary, b)
+	//err := ws.conn.Write(ws.ctx, websocket.MessageBinary, b)
+	err := ws.conn.Write(ws.ctx, websocket.MessageText, b)
 
 	if err != nil {
 		if websocket.CloseStatus(err) == websocket.StatusAbnormalClosure ||

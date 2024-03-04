@@ -109,7 +109,7 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	buf := minigo.EncodeAttributes(minigo.InversionFond)
 	buf = append(buf, minigo.EncodeString(newestReport.stationName)...)
 	buf = append(buf, minigo.EncodeAttributes(minigo.FondNormal)...)
-	buf = append(buf, minigo.Return(1)...)
+	buf = append(buf, minigo.Return(1, mntl.SupportCSI())...)
 
 	// Temperature
 	newTemp := newestReport.temperature - 275.
@@ -121,7 +121,7 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 	difPres := (newestReport.pressure - oldestReport.pressure) / 100.
 	buf = append(buf, minigo.EncodeSprintf("%s%4.f hPa (%+5.f hPa)", utils.GetArrow(difPres), newPres, difPres)...)
 
-	buf = append(buf, minigo.Return(1)...)
+	buf = append(buf, minigo.Return(1, mntl.SupportCSI())...)
 
 	// Wind
 	arrow := utils.GetArrow(newestReport.windSpeed - oldestReport.windSpeed)
@@ -132,7 +132,7 @@ func printWeatherReport(mntl *minigo.Minitel, reps []WeatherReport) {
 		newestReport.windSpeed*3.6,
 		(newestReport.windSpeed-oldestReport.windSpeed)*3.6)...)
 
-	buf = append(buf, minigo.Return(2)...)
+	buf = append(buf, minigo.Return(2, mntl.SupportCSI())...)
 
 	mntl.Send(buf)
 }

@@ -138,6 +138,7 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		innerWg.Add(2)
 
 		m := minigo.NewMinitel(ws, false, WSTag, promConnLostNb, &innerWg)
+		m.NoCSI()
 		go m.Serve()
 
 		NotelHandler(m, WSTag, &innerWg)

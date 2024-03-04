@@ -48,7 +48,8 @@ func (i *Input) AppendKey(r rune) {
 		return
 	}
 
-	command := MoveAt(i.getCursorPos())
+	row, col := i.getCursorPos()
+	command := MoveAt(row, col, i.m.supportCSI)
 	command = append(command, EncodeRune(r)...)
 	i.m.Send(command)
 
@@ -71,13 +72,16 @@ func (i *Input) Correction() {
 	}
 	i.Value = i.Value[:len(i.Value)-shift]
 
-	command := MoveAt(i.getCursorPos())
+	row, col := i.getCursorPos()
+	command := MoveAt(row, col, i.m.supportCSI)
 	if i.dots {
 		command = append(command, EncodeString(".")...)
 	} else {
 		command = append(command, EncodeString(" ")...)
 	}
-	command = append(command, MoveAt(i.getCursorPos())...)
+
+	row, col = i.getCursorPos()
+	command = append(command, MoveAt(row, col, i.m.supportCSI)...)
 	i.m.Send(command)
 }
 
@@ -86,7 +90,7 @@ func (i *Input) UnHide() {
 	command := []byte{}
 
 	for row := i.refRow; row < i.refRow+i.height; row += 1 {
-		command = append(command, MoveAt(row, i.refCol)...)
+		command = append(command, MoveAt(row, i.refCol, i.m.supportCSI)...)
 
 		if i.dots {
 			command = append(command, RepeatRune('.', i.width-1)...)
@@ -94,7 +98,7 @@ func (i *Input) UnHide() {
 			command = append(command, RepeatRune(' ', i.width-1)...)
 		}
 	}
-	command = append(command, MoveAt(i.refRow, i.refCol)...)
+	command = append(command, MoveAt(i.refRow, i.refCol, i.m.supportCSI)...)
 
 	if len(i.Value) > 0 {
 		command = append(command, EncodeBytes(i.Value)...)
@@ -110,7 +114,7 @@ func (i *Input) Hide() {
 
 	command := []byte{}
 	for row := 0; row < i.height; row += 1 {
-		command = append(command, MoveAt(i.refRow+row, i.refCol)...)
+		command = append(command, MoveAt(i.refRow+row, i.refCol, i.m.supportCSI)...)
 		command = append(command, CleanNItemsFromCursor(i.width)...)
 	}
 	i.m.Send(command)

@@ -141,7 +141,7 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 }
 
 func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
-	lines, vdt := FormatMessage(c.messages[msgId], dir)
+	lines, vdt := FormatMessage(c.messages[msgId], dir, c.mntl.SupportCSI())
 
 	if limit < 0 || limit > lines {
 		limit = lines

@@ -13,24 +13,34 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		mntl.SendVDT("static/connect.vdt")
 		mntl.ModeG0()
 
-		mntl.MoveAt(10, 1)
+		mntl.MoveAt(12, 1)
 		mntl.WriteAttributes(minigo.FondNormal, minigo.DoubleHauteur)
 		mntl.WriteString("Connectez vous au serveur")
+
+		mntl.WriteAttributes(minigo.GrandeurNormale)
 
 		mntl.Return(3)
 		mntl.MoveRight(1)
 		mntl.WriteString("PSEUDO:")
-		inputs.AppendInput("login", minigo.NewInput(mntl, 13, 15, 10, 1, true))
+		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
+
+		mntl.MoveRight(18)
+		mntl.WriteString("+")
+		mntl.MoveRight(1)
+		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 
 		mntl.Return(1)
 		mntl.MoveRight(1)
 		mntl.WriteString("MOT DE PASSE:")
-		inputs.AppendInput("pwd", minigo.NewInput(mntl, 14, 15, 10, 1, true))
+		inputs.AppendInput("pwd", minigo.NewInput(mntl, 16, 15, 10, 1, true))
 
 		mntl.Return(2)
 		mntl.MoveRight(1)
-		mntl.PrintHelperLeftAt(16, "Validez avec", "ENVOI")
-		mntl.PrintHelperLeftAt(20, "Nouveau ici ? Appuyez sur", "GUIDE")
+		mntl.PrintHelper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
+
+		mntl.Return(4)
+		mntl.MoveRight(1)
+		mntl.PrintHelper("Première visite →", "GUIDE", minigo.FondVert, minigo.CaractereNoir)
 
 		inputs.InitAll()
 		return minigo.NoOp

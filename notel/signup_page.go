@@ -13,18 +13,40 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.SendVDT("static/connect.vdt")
 		mntl.ModeG0()
 
-		mntl.WriteStringAtWithAttributes(10, 1, "Inscrivez vous !", minigo.FondNormal, minigo.DoubleHauteur)
-		mntl.WriteStringLeftAt(11, "Compte supprimé si")
-		mntl.WriteStringLeftAt(12, "30j sans connexion")
+		mntl.MoveAt(12, 1)
+		mntl.WriteAttributes(minigo.FondNormal, minigo.DoubleHauteur)
+		mntl.WriteString("Inscrivez vous !")
 
-		mntl.WriteStringLeftAt(15, "PSEUDO:")
+		mntl.WriteAttributes(minigo.GrandeurNormale)
+
+		mntl.Return(3)
+		mntl.MoveRight(1)
+		mntl.WriteString("PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
-		mntl.WriteStringLeftAt(16, "MOT DE PASSE:")
-		inputs.AppendInput("pwd", minigo.NewInput(mntl, 16, 15, 10, 1, true))
-		mntl.WriteStringLeftAt(17, "MOT DE PASSE:")
-		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 17, 15, 10, 1, true))
 
-		mntl.PrintHelperLeftAt(19, "Validez avec", "ENVOI")
+		mntl.MoveRight(18)
+		mntl.WriteString("+")
+		mntl.MoveRight(1)
+		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+
+		mntl.Return(2)
+		mntl.MoveRight(1)
+		mntl.WriteString("MOT DE PASSE:")
+		inputs.AppendInput("pwd", minigo.NewInput(mntl, 17, 15, 10, 1, true))
+
+		mntl.MoveRight(12)
+		mntl.WriteString("+")
+		mntl.MoveRight(1)
+		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+
+		mntl.Return(1)
+		mntl.MoveRight(1)
+		mntl.WriteString("CONFIRMEZ:")
+		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 18, 15, 10, 1, true))
+
+		mntl.Return(2)
+		mntl.MoveRight(1)
+		mntl.PrintHelper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
 		inputs.InitAll()
 		return minigo.NoOp

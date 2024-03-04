@@ -275,6 +275,17 @@ func (m *Minitel) WriteString(s string) {
 	m.Send(EncodeString(s))
 }
 
+func (m *Minitel) WriteButton(s string, back, front byte) {
+	m.WriteAttributes(back, front)
+	m.WriteString(" ")
+
+	m.WriteString(s)
+
+	m.WriteAttributes(byte(m.defaultFond), byte(m.defaultCouleur))
+	m.WriteString(" ")
+
+}
+
 func (m *Minitel) WriteStatusLine(s string) error {
 	// Enters row 0
 	buf := []byte{Us, 0x40, 0x41}
@@ -342,6 +353,8 @@ func (m *Minitel) WriteAttributes(attributes ...byte) error {
 
 func (m *Minitel) PrintHelper(helpText, button string, back, front byte) {
 	m.WriteString(helpText)
+
+	m.MoveRight(1)
 
 	m.WriteAttributes(back, front)
 	m.WriteString(" ")

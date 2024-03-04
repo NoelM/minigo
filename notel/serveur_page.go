@@ -11,17 +11,23 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.CleanScreen()
 		mntl.CursorOff()
 
+		mntl.MoveAt(2, 1)
 		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeftAt(2, "Infos de")
+		mntl.WriteString("Infos de")
 		mntl.WriteAttributes(minigo.DoubleGrandeur, minigo.InversionFond)
-		mntl.WriteStringAt(2, 10, "NOTEL")
+
+		mntl.MoveRight(1)
+		mntl.WriteString("NOTEL")
 		mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
-		mntl.WriteStringLeftAt(4, "Vendredi 22 Décembre 2023")
+
+		mntl.Return(2)
+		mntl.MoveRight(1)
+		mntl.WriteString("Lundi 4 mars 2024")
 
 		messages := []string{
-			"- Beaucoup de nouveautés sur le serveur : un sudoku, un nouvel affichage des messages sur le chat, et beaucoup de travail caché dans le code",
-			"- Encore quelques bugs connus : avec la PCE la gestion des déconnexions est plus complexe, parfois le compteur de connectés est faux :(",
-			"- Toujours en plans : le service de micro blog, c'est pas simple à faire ! Et la navigation dans les message du chat avec Retour/Suite",
+			"* Refacto du code pour mieux utiliser le positionnement et les attribus de couleurs et fonds. Rendre compatible avec Minitel JS sur le web",
+			"* Travail pour rendre les pages avec texte basées sur DB",
+			"* Fichiers de configuration pour simplifier l'exécution du serveur",
 		}
 
 		line := 6

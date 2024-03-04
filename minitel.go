@@ -243,8 +243,8 @@ func (m *Minitel) Reset() error {
 // CLEANS
 //
 
-func (m *Minitel) CleanLine() error {
-	return m.Send(CleanLine())
+func (m *Minitel) CleanLine() {
+	m.Send(CleanLine())
 }
 
 func (m *Minitel) CleanScreen() error {
@@ -521,16 +521,24 @@ func (m *Minitel) MinusculeOff() error {
 // LINES
 //
 
-func (m *Minitel) HLine(row, col, len int, t LineType) {
-	m.Send(HLine(row, col, len, t, m.supportCSI))
+func (m *Minitel) HLine(len int, t LineType) {
+	m.Send(HLine(len, t))
 }
 
-func (m *Minitel) VLine(row, col, len int, t LineType) {
-	m.Send(VLine(row, col, len, t, m.supportCSI))
+func (m *Minitel) VLine(len int, t LineType) {
+	m.Send(VLine(len, t))
 }
 
-func (m *Minitel) Rect(row, col, width, height int) {
-	m.Send(Rectangle(row, col, width, height, m.supportCSI))
+func (m *Minitel) HLineAt(row, col, len int, t LineType) {
+	m.Send(HLineAt(row, col, len, t, m.supportCSI))
+}
+
+func (m *Minitel) VLineAt(row, col, len int, t LineType) {
+	m.Send(VLineAt(row, col, len, t, m.supportCSI))
+}
+
+func (m *Minitel) RectAt(row, col, width, height int) {
+	m.Send(RectangleAt(row, col, width, height, m.supportCSI))
 }
 
 //

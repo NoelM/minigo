@@ -107,13 +107,18 @@ func (i *Input) UnHide() {
 // but it keeps the Value member complete
 func (i *Input) Hide() {
 	i.m.CursorOff()
+	i.m.MoveAt(i.refRow, i.refCol)
 
-	command := []byte{}
 	for row := 0; row < i.height; row += 1 {
-		command = append(command, MoveAt(i.refRow+row, i.refCol, i.m.supportCSI)...)
-		command = append(command, CleanNItemsFromCursor(i.width)...)
+		i.m.WriteRepeat(Sp, i.width)
+		if i.refCol+i.width < 39 {
+			i.m.Return(1)
+			i.m.MoveRight(i.refCol)
+		} else {
+			i.m.MoveLineStart()
+			i.m.MoveRight(i.refCol)
+		}
 	}
-	i.m.Send(command)
 }
 
 // Reset clears both the input on screen and Value

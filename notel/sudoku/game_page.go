@@ -55,11 +55,11 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		padding := 2
 
 		// Grid
-		mntl.Rect(lineRef, colRef, 9*padding+3, 9*padding+3)
-		mntl.VLine(lineRef+1, colRef+3*padding+1, 9*padding+1, minigo.VCenter)
-		mntl.VLine(lineRef+1, colRef+6*padding+2, 9*padding+1, minigo.VCenter)
-		mntl.HLine(lineRef+3*padding+1, colRef+1, 9*padding+2, minigo.HCenter)
-		mntl.HLine(lineRef+6*padding+2, colRef+1, 9*padding+2, minigo.HCenter)
+		mntl.RectAt(lineRef, colRef, 9*padding+3, 9*padding+3)
+		mntl.VLineAt(lineRef+1, colRef+3*padding+1, 9*padding+1, minigo.VCenter)
+		mntl.VLineAt(lineRef+1, colRef+6*padding+2, 9*padding+1, minigo.VCenter)
+		mntl.HLineAt(lineRef+3*padding+1, colRef+1, 9*padding+2, minigo.HCenter)
+		mntl.HLineAt(lineRef+6*padding+2, colRef+1, 9*padding+2, minigo.HCenter)
 
 		// Numbers
 		mntl.WriteAttributes(minigo.InversionFond)

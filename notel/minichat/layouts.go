@@ -59,31 +59,36 @@ func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, cntd 
 }
 
 func (c *ChatLayout) cleanFooter() {
-	c.mntl.MoveAt(rowHLine, 1)
+	c.mntl.MoveAt(rowHLine, 0)
 	c.mntl.CleanLine()
 
-	c.mntl.MoveAt(rowHelpers-1, 1)
+	c.mntl.Return(rowHelpers - 1 - rowHLine)
 	c.mntl.CleanLine()
 
-	c.mntl.MoveAt(24, 1)
+	c.mntl.Return(1)
 	c.mntl.CleanLine()
 }
 
 func (c *ChatLayout) printFooter() {
-	c.mntl.HLine(rowHLine, 0, 40, minigo.HCenter)
+	c.mntl.MoveAt(rowHLine, 0)
+	c.mntl.HLine(40, minigo.HCenter)
+	// It already went to the next line!
 
-	c.mntl.HLine(rowHelpers-1, 0, 40, minigo.HCenter)
-	c.mntl.PrintHelperLeftAt(rowHelpers, "Màj. écran", "REPET.")
-	c.mntl.PrintHelperRightAt(rowHelpers, "Message +", "ENVOI")
+	c.mntl.Return(rowHelpers - 1 - rowHLine - 1)
+	c.mntl.HLine(40, minigo.HCenter)
+	// It already went to the next line!
+
+	c.mntl.PrintHelper("Nouveaux Msg", "REPET", minigo.FondBleu, minigo.CaractereBlanc)
+	c.mntl.PrintHelperRight("→", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 }
 
 func (c *ChatLayout) printHeader() {
 	cntd := c.cntd.Load()
 
 	if cntd < 2 {
-		c.mntl.WriteStatusLine(fmt.Sprintf("> Connecté: %d", cntd))
+		c.mntl.WriteStatusLine(fmt.Sprintf("→ Connecté: %d", cntd))
 	} else {
-		c.mntl.WriteStatusLine(fmt.Sprintf("> Connectés: %d", cntd))
+		c.mntl.WriteStatusLine(fmt.Sprintf("→ Connectés: %d", cntd))
 	}
 }
 
@@ -169,7 +174,7 @@ func (c *ChatLayout) Init() {
 
 	// No cursor and go to the origin
 	c.mntl.CursorOff()
-	c.mntl.MoveAt(1, 1)
+	c.mntl.MoveAt(1, 0)
 
 	// We'll use the rouleau mode from the TOP
 	// Until one reaches the `rowMsgZoneEnd`
@@ -220,7 +225,7 @@ func (c *ChatLayout) Update() {
 	// Move the cursor there, otherwise, the rouleau mode
 	// will not push blank lines to `endMsgZone`
 	if curLine < 24 {
-		c.mntl.MoveAt(24, 1)
+		c.mntl.MoveAt(24, 0)
 	}
 
 	// Now push curLine to rowMsgZoneEng

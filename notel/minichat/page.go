@@ -19,7 +19,7 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atom
 		m.MinusculeOn()
 
 		msgDB.Subscribe(nick)
-		inputs.AppendInput("messages", minigo.NewInput(m, rowInput, 1, 40, 2, false))
+		inputs.AppendInput("messages", minigo.NewInput(m, rowInput, 0, 39, 2, false))
 
 		chatLayout.Init()
 		inputs.InitAll()

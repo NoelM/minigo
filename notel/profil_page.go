@@ -16,7 +16,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 		mntl.WriteStringLeftAt(2, "Mon compte")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		mntl.HLine(3, 1, 40, minigo.HCenter)
+		mntl.HLineAt(3, 1, 40, minigo.HCenter)
 
 		mntl.WriteStringLeftAt(5, "PSEUDO: "+pseudo)
 

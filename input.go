@@ -48,8 +48,7 @@ func (i *Input) AppendKey(r rune) {
 		return
 	}
 
-	command := MoveRight(1, i.m.SupportCSI())
-	command = append(command, EncodeRune(r)...)
+	command := EncodeRune(r)
 	i.m.Send(command)
 
 	i.Value = utf8.AppendRune(i.Value, r)
@@ -71,7 +70,7 @@ func (i *Input) Correction() {
 	}
 	i.Value = i.Value[:len(i.Value)-shift]
 
-	command := []byte{}
+	command := MoveLeft(1, i.m.supportCSI)
 	if i.dots {
 		command = append(command, EncodeString(".")...)
 	} else {

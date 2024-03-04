@@ -13,15 +13,24 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		mntl.SendVDT("static/connect.vdt")
 		mntl.ModeG0()
 
-		mntl.WriteStringAtWithAttributes(10, 1, "Connectez vous au serveur", minigo.FondNormal, minigo.DoubleHauteur)
+		mntl.MoveAt(10, 1)
+		mntl.WriteAttributes(minigo.FondNormal, minigo.DoubleHauteur)
+		mntl.WriteString("Connectez vous au serveur")
 
-		mntl.WriteStringLeftAt(13, "PSEUDO:")
+		mntl.Return(3)
+		mntl.MoveRight(1)
+		mntl.WriteString("PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 13, 15, 10, 1, true))
-		mntl.WriteStringLeftAt(14, "MOT DE PASSE:")
+
+		mntl.Return(1)
+		mntl.MoveRight(1)
+		mntl.WriteString("MOT DE PASSE:")
 		inputs.AppendInput("pwd", minigo.NewInput(mntl, 14, 15, 10, 1, true))
 
-		mntl.WriteHelperLeftAt(16, "Validez avec", "ENVOI")
-		mntl.WriteHelperLeftAt(20, "Nouveau ici ? Appuyez sur", "GUIDE")
+		mntl.Return(2)
+		mntl.MoveRight(1)
+		mntl.PrintHelperLeftAt(16, "Validez avec", "ENVOI")
+		mntl.PrintHelperLeftAt(20, "Nouveau ici ? Appuyez sur", "GUIDE")
 
 		inputs.InitAll()
 		return minigo.NoOp

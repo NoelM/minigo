@@ -28,7 +28,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 		mntl.WriteStringLeftAt(11, "Nouveau:")
 		inputs.AppendInput("newRep", minigo.NewInput(mntl, 11, 10, 10, 1, true))
 
-		mntl.WriteHelperLeftAt(24, "Validez avec", "ENVOI")
+		mntl.PrintHelperLeftAt(24, "Validez avec", "ENVOI")
 
 		inputs.InitAll()
 		return minigo.NoOp

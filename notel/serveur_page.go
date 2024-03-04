@@ -33,7 +33,7 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 			line += 1
 		}
 
-		mntl.WriteHelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
+		mntl.PrintHelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
 		return minigo.NoOp
 	})
 

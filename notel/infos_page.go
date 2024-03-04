@@ -155,6 +155,6 @@ func printInfoHeader(mntl *minigo.Minitel) {
 }
 
 func printInfoHelpers(mntl *minigo.Minitel) {
-	mntl.WriteHelperLeftAt(24, "Menu", "SOMMAIRE")
-	mntl.WriteHelperRightAt(24, "Naviguez", "SUITE/RETOUR")
+	mntl.PrintHelperLeftAt(24, "Menu", "SOMMAIRE")
+	mntl.PrintHelperRightAt(24, "Naviguez", "SUITE/RETOUR")
 }

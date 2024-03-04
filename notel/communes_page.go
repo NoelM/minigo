@@ -36,18 +36,17 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 		mntl.WriteStringLeftAt(2, "CHOISISSEZ UNE COMMUNE:")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		communeList := minigo.NewListEnum(mntl, nil)
-		communeList.SetXY(1, 4)
-		communeList.SetEntryHeight(1)
-
+		var listItem []string
 		for _, c := range communes {
-			communeList.AppendItem(fmt.Sprintf("%s (%02s)", c.NomCommune, c.CodeDepartement))
+			listItem = append(listItem, fmt.Sprintf("%s (%02s)", c.NomCommune, c.CodeDepartement))
 		}
+		communeList := minigo.NewListEnum(mntl, listItem, 4, 1, 20, 1)
+
 		communeList.Display()
 
-		mntl.WriteHelperLeftAt(len(communes)+5, "CHOIX: .. +", "ENVOI")
+		mntl.PrintHelperLeftAt(len(communes)+5, "CHOIX: .. +", "ENVOI")
 
-		mntl.WriteHelperLeftAt(24, "CHOIX CODE POSTAL", "SOMMAIRE")
+		mntl.PrintHelperLeftAt(24, "CHOIX CODE POSTAL", "SOMMAIRE")
 
 		inputs.AppendInput("commune_id", minigo.NewInput(mntl, len(communes)+5, 8, 2, 1, true))
 		inputs.ActivateFirst()

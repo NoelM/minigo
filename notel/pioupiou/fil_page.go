@@ -24,12 +24,12 @@ func NewPageFil(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 
 		pageStart = append(pageStart, printPosts(mntl, posts[pageStart[pageId]:]))
 
-		mntl.WriteHelperLeftAt(23, "Naviguez", "SUITE/RETOUR")
-		mntl.WriteHelperRightAt(23, "Rafraichir", "REPET")
+		mntl.PrintHelperLeftAt(23, "Naviguez", "SUITE/RETOUR")
+		mntl.PrintHelperRightAt(23, "Rafraichir", "REPET")
 
-		mntl.WriteHelperLeftAt(24, "Menu", "SOMMAIRE")
+		mntl.PrintHelperLeftAt(24, "Menu", "SOMMAIRE")
 		inputs.AppendInput("command", minigo.NewInput(mntl, 24, 29, 4, 1, true))
-		mntl.WriteHelperRightAt(24, ".... +", "ENVOI")
+		mntl.PrintHelperRightAt(24, ".... +", "ENVOI")
 
 		inputs.InitAll()
 		return minigo.NoOp

@@ -73,8 +73,8 @@ func (c *ChatLayout) printFooter() {
 	c.mntl.HLine(rowHLine, 1, 40, minigo.HCenter)
 
 	c.mntl.HLine(rowHelpers-1, 1, 40, minigo.HCenter)
-	c.mntl.WriteHelperLeftAt(rowHelpers, "Màj. écran", "REPET.")
-	c.mntl.WriteHelperRightAt(rowHelpers, "Message +", "ENVOI")
+	c.mntl.PrintHelperLeftAt(rowHelpers, "Màj. écran", "REPET.")
+	c.mntl.PrintHelperRightAt(rowHelpers, "Message +", "ENVOI")
 }
 
 func (c *ChatLayout) printHeader() {
@@ -127,7 +127,7 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 	c.mntl.WriteAttributes(minigo.CaractereBleu)
 
 	length := utf8.RuneCountInString(dateString)
-	c.mntl.MoveCursorRight((minigo.ColonnesSimple - length) / 2)
+	c.mntl.MoveRight((minigo.ColonnesSimple - length) / 2)
 	c.mntl.WriteString(dateString)
 
 	c.mntl.WriteAttributes(minigo.CaractereBlanc)

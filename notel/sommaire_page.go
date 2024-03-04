@@ -114,7 +114,7 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 		mntl.WriteStringLeftAt(24, fmt.Sprintf("> Connectés: %d", cntd))
 	}
 
-	mntl.WriteHelperRightAt(24, "CODE ....", "ENVOI")
+	mntl.PrintHelperRightAt(24, "CODE ....", "ENVOI")
 	form.AppendInput("choice", minigo.NewInput(mntl, 24, 29, 4, 1, true))
 
 	form.InitAll()

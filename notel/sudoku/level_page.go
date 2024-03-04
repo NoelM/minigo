@@ -16,14 +16,12 @@ func RunPageLevel(mntl *minigo.Minitel) (level, op int) {
 
 		mntl.WriteAttributes(minigo.CaractereBlanc, minigo.FondNoir)
 
-		list := minigo.NewListEnum(mntl, []string{"Facile", "Moyen", "Difficile", "Extrême"})
-		list.SetXY(3, 8)
-		list.SetEntryHeight(1)
+		list := minigo.NewListEnum(mntl, []string{"Facile", "Moyen", "Difficile", "Extrême"}, 8, 3, 20, 1)
 		list.Display()
 
 		inputs.AppendInput("level", minigo.NewInput(mntl, 14, 10, 1, 1, true))
 
-		mntl.WriteHelperAt(14, 3, "NIVEAU . +", "ENVOI")
+		mntl.PrintHelperAt(14, 3, "NIVEAU . +", "ENVOI")
 		inputs.ActivateFirst()
 
 		return minigo.NoOp

@@ -340,30 +340,34 @@ func (m *Minitel) WriteAttributes(attributes ...byte) error {
 	return m.Send(EncodeAttributes(attributes...))
 }
 
-func (m *Minitel) WriteHelperAt(lineId, colId int, helpText, button string) error {
-	m.WriteStringAt(lineId, colId, helpText)
+func (m *Minitel) PrintHelper(helpText, button string, back, front byte) {
+	m.WriteString(helpText)
 
-	helpMsgLen := (utf8.RuneCountInString(helpText) + 1) * m.charWidth()
-	buttonCol := minInt(colId+helpMsgLen, ColonnesSimple)
-	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
+	m.WriteAttributes(back, front)
+	m.WriteString(" ")
+
+	m.WriteString(button)
+
+	m.WriteAttributes(byte(m.defaultFond), byte(m.defaultCouleur))
+	m.WriteString(" ")
 }
 
-func (m *Minitel) WriteHelperLeftAt(lineId int, helpText, button string) error {
-	m.WriteStringLeftAt(lineId, helpText)
-
-	helpMsgLen := (utf8.RuneCountInString(helpText) + 2) * m.charWidth()
-	buttonCol := minInt(helpMsgLen, ColonnesSimple)
-	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
+func (m *Minitel) PrintHelperAt(row, col int, helpText, button string) {
+	m.MoveAt(row, col)
+	m.PrintHelper(helpText, button, FondBlanc, CaractereNoir)
 }
 
-func (m *Minitel) WriteHelperRightAt(lineId int, helpText, button string) error {
-	startCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+len(button)+1) - 1 // free space
-	startCol = maxInt(startCol, 0)
+func (m *Minitel) PrintHelperLeftAt(row int, helpText, button string) {
+	m.MoveAt(row, 0)
+	m.PrintHelper(helpText, button, FondBlanc, CaractereNoir)
+}
 
-	m.WriteStringAt(lineId, startCol, helpText)
+func (m *Minitel) PrintHelperRightAt(row int, helpText, button string) {
+	refCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+len(button)+1) - 1 // free space
+	refCol = maxInt(refCol, 0)
 
-	buttonCol := minInt(startCol+(1+utf8.RuneCountInString(helpText))*m.charWidth(), ColonnesSimple)
-	return m.WriteStringAtWithAttributes(lineId, buttonCol, button, InversionFond)
+	m.MoveAt(row, refCol)
+	m.PrintHelper(helpText, button, FondBlanc, CaractereNoir)
 }
 
 //
@@ -382,19 +386,19 @@ func (m *Minitel) ReturnUp(n int) error {
 	return m.Send(ReturnUp(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveCursorDown(n int) error {
+func (m *Minitel) MoveDown(n int) error {
 	return m.Send(MoveDown(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveCursorRight(n int) error {
+func (m *Minitel) MoveRight(n int) error {
 	return m.Send(MoveRight(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveCursorLeft(n int) error {
+func (m *Minitel) MoveLeft(n int) error {
 	return m.Send(MoveLeft(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveCursorUp(n int) error {
+func (m *Minitel) MoveUp(n int) error {
 	return m.Send(MoveUp(n, m.supportCSI))
 }
 

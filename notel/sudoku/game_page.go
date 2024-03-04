@@ -86,7 +86,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		mntl.WriteAttributes(minigo.FondNormal)
 
 		mntl.WriteStringLeftAt(24, "Naviguez ←↑→↓")
-		mntl.WriteHelperRightAt(24, "Vérif. grille", "ENVOI")
+		mntl.PrintHelperRightAt(24, "Vérif. grille", "ENVOI")
 		matrix.InitAll()
 
 		return minigo.NoOp

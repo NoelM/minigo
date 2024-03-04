@@ -142,12 +142,12 @@ func printHelpers(mntl *minigo.Minitel, pageId, maxPageId int) {
 	// PreviousPageNumber = (PageId + 1) - 1
 	// NextPageNumber = (PageId + 1) + 1
 	if pageId > 0 {
-		mntl.WriteHelperLeftAt(23, fmt.Sprintf("Page %d/%d", pageId, maxPageId+1), "RETOUR")
+		mntl.PrintHelperLeftAt(23, fmt.Sprintf("Page %d/%d", pageId, maxPageId+1), "RETOUR")
 	}
 	if pageId < maxPageId {
-		mntl.WriteHelperRightAt(23, fmt.Sprintf("Page %d/%d", pageId+2, maxPageId+1), "SUITE")
+		mntl.PrintHelperRightAt(23, fmt.Sprintf("Page %d/%d", pageId+2, maxPageId+1), "SUITE")
 	}
-	mntl.WriteHelperLeftAt(24, "Menu INFOMETEO", "SOMMAIRE")
+	mntl.PrintHelperLeftAt(24, "Menu INFOMETEO", "SOMMAIRE")
 }
 
 func windDirToString(deg float64) string {

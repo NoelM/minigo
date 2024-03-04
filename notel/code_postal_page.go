@@ -18,7 +18,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteStringLeftAt(10, "Prévisions Météo")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		mntl.WriteHelperLeftAt(12, "CODE POSTAL:       +", "ENVOI")
+		mntl.PrintHelperLeftAt(12, "CODE POSTAL:       +", "ENVOI")
 		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 12, 14, 5, 1, true))
 
 		mntl.WriteAttributes(minigo.DoubleHauteur)
@@ -26,8 +26,8 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 		mntl.WriteStringLeftAt(18, "Avec variations sur 24h")
 
-		mntl.WriteHelperLeftAt(20, "APPUYEZ SUR", "SUITE")
-		mntl.WriteHelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
+		mntl.PrintHelperLeftAt(20, "APPUYEZ SUR", "SUITE")
+		mntl.PrintHelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
 
 		inputs.InitAll()
 		return minigo.NoOp

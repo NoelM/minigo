@@ -41,7 +41,7 @@ func CursorInScreen(x, y int, resolution uint) (bool, error) {
 func MoveAt(row, col int, csi bool) (buf []byte) {
 	if row == 1 && col == 1 {
 		buf = []byte{Rs}
-	} else if csi {
+	} else if csi && (row+col) > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(row)...)
 		buf = append(buf, 0x3B)
@@ -63,7 +63,7 @@ func MoveAt(row, col int, csi bool) (buf []byte) {
 func MoveLeft(n int, csi bool) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Bs)
-	} else if csi {
+	} else if csi && n > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x44)
@@ -78,7 +78,7 @@ func MoveLeft(n int, csi bool) (buf []byte) {
 func MoveRight(n int, csi bool) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Ht)
-	} else if csi {
+	} else if csi && n > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x43)
@@ -93,7 +93,7 @@ func MoveRight(n int, csi bool) (buf []byte) {
 func MoveDown(n int, csi bool) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Lf)
-	} else if csi {
+	} else if csi && n > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x42)
@@ -108,7 +108,7 @@ func MoveDown(n int, csi bool) (buf []byte) {
 func MoveUp(n int, csi bool) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Vt)
-	} else if csi {
+	} else if csi && n > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x41)

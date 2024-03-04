@@ -107,12 +107,12 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 
 func printPreviHelpers(mntl *minigo.Minitel, forecastDate, firstForecastDate, lastForecastDate time.Time) {
 	if forecastDate.After(firstForecastDate) {
-		mntl.WriteHelperLeftAt(23, forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR")
+		mntl.PrintHelperLeftAt(23, forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR")
 	}
 	if forecastDate.Before(lastForecastDate) {
-		mntl.WriteHelperRightAt(23, forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE")
+		mntl.PrintHelperRightAt(23, forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE")
 	}
-	mntl.WriteHelperLeftAt(24, "Menu INFOMETEO", "SOMMAIRE")
+	mntl.PrintHelperLeftAt(24, "Menu INFOMETEO", "SOMMAIRE")
 }
 
 func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c Commune) {

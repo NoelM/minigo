@@ -70,9 +70,9 @@ func (c *ChatLayout) cleanFooter() {
 }
 
 func (c *ChatLayout) printFooter() {
-	c.mntl.HLine(rowHLine, 1, 40, minigo.HCenter)
+	c.mntl.HLine(rowHLine, 0, 40, minigo.HCenter)
 
-	c.mntl.HLine(rowHelpers-1, 1, 40, minigo.HCenter)
+	c.mntl.HLine(rowHelpers-1, 0, 40, minigo.HCenter)
 	c.mntl.PrintHelperLeftAt(rowHelpers, "Màj. écran", "REPET.")
 	c.mntl.PrintHelperRightAt(rowHelpers, "Message +", "ENVOI")
 }

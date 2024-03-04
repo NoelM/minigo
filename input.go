@@ -48,8 +48,7 @@ func (i *Input) AppendKey(r rune) {
 		return
 	}
 
-	row, col := i.getCursorPos()
-	command := MoveAt(row, col, i.m.supportCSI)
+	command := MoveRight(1, i.m.SupportCSI())
 	command = append(command, EncodeRune(r)...)
 	i.m.Send(command)
 
@@ -72,16 +71,14 @@ func (i *Input) Correction() {
 	}
 	i.Value = i.Value[:len(i.Value)-shift]
 
-	row, col := i.getCursorPos()
-	command := MoveAt(row, col, i.m.supportCSI)
+	command := []byte{}
 	if i.dots {
 		command = append(command, EncodeString(".")...)
 	} else {
 		command = append(command, EncodeString(" ")...)
 	}
 
-	row, col = i.getCursorPos()
-	command = append(command, MoveAt(row, col, i.m.supportCSI)...)
+	command = append(command, MoveLeft(1, i.m.supportCSI)...)
 	i.m.Send(command)
 }
 

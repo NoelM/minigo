@@ -14,7 +14,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.SendVDT("static/meteo.vdt")
 		mntl.ModeG0()
 
-		mntl.MoveAt(8, 1)
+		mntl.MoveAt(9, 1)
 		mntl.WriteAttributes(minigo.DoubleHauteur)
 		mntl.WriteString("Prévisions Météo")
 		mntl.WriteAttributes(minigo.GrandeurNormale)
@@ -22,7 +22,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.Return(2)
 		mntl.MoveRight(1)
 		mntl.PrintHelper("CODE POSTAL:       →", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
-		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 12, 14, 5, 1, true))
+		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 11, 14, 5, 1, true))
 
 		mntl.Return(4)
 		mntl.MoveRight(1)
@@ -43,7 +43,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.MoveRight(1)
 		mntl.PrintHelper("Consulter →", "SUITE", minigo.FondRouge, minigo.CaractereBlanc)
 
-		mntl.Return(5)
+		mntl.Return(4)
 		mntl.MoveRight(1)
 		mntl.PrintHelper("Menu NOTEL", "SOMMAIRE", minigo.FondBleu, minigo.CaractereBlanc)
 

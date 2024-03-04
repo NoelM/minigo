@@ -115,7 +115,7 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	}
 
 	mntl.WriteHelperRightAt(24, "CODE ....", "ENVOI")
-	form.AppendInput("choice", minigo.NewInput(mntl, 24, 30, 4, 1, true))
+	form.AppendInput("choice", minigo.NewInput(mntl, 24, 29, 4, 1, true))
 
 	form.InitAll()
 

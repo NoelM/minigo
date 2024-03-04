@@ -89,33 +89,35 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.ModeG0()
 	mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
-	listLeft := minigo.NewList(mntl, 8, 1, 20, 2)
-	listLeft.AppendItem(chatKey, "MINICHAT")
-	listLeft.AppendItem(meteoKey, "METEO")
-	listLeft.AppendItem(infoKey, "INFOS")
-	listLeft.AppendItem(sudokuKey, "SUDOKU")
-	listLeft.AppendItem(serveurKey, "SERVEUR")
-	listLeft.Display()
+	list := minigo.NewList(mntl, 8, 1, 17, 2)
+	list.AppendItem(chatKey, "MINICHAT")
+	list.AppendItem(meteoKey, "METEO")
+	list.AppendItem(infoKey, "INFOS")
+	list.AppendItem(sudokuKey, "SUDOKU")
+	list.AppendItem(serveurKey, "SERVEUR")
+	list.AppendItem(profilKey, "PROFIL")
+	list.Display()
 
-	listRight := minigo.NewList(mntl, 8, 20, 20, 2)
-	listRight.AppendItem(profilKey, "PROFIL")
-	listRight.Display()
-
+	mntl.MoveAt(19, 0)
 	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteStringCenterAt(19, "! NOTEL est de retour !")
+	mntl.WriteStringCenter("! NOTEL est de retour !")
+
 	mntl.WriteAttributes(minigo.GrandeurNormale)
 
-	mntl.WriteStringCenterAt(20, "RDV Dim. 3 Mars à 20h")
+	mntl.Return(1)
+	mntl.WriteStringCenter("RDV Dim. 3 Mars à 20h")
 
+	mntl.Return(4)
+	mntl.MoveRight(1)
 	cntd := NbConnectedUsers.Load()
 	if cntd < 2 {
-		mntl.WriteStringLeftAt(24, fmt.Sprintf("> Connecté: %d", cntd))
+		mntl.WriteString(fmt.Sprintf("> Connecté: %d", cntd))
 	} else {
-		mntl.WriteStringLeftAt(24, fmt.Sprintf("> Connectés: %d", cntd))
+		mntl.WriteString(fmt.Sprintf("> Connectés: %d", cntd))
 	}
 
-	mntl.PrintHelperRightAt(24, "CODE ....", "ENVOI")
-	form.AppendInput("choice", minigo.NewInput(mntl, 24, 29, 4, 1, true))
+	mntl.PrintHelperRight("CODE .... +", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
+	form.AppendInput("choice", minigo.NewInput(mntl, 24, 25, 4, 1, true))
 
 	form.InitAll()
 

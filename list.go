@@ -49,12 +49,13 @@ func (l *List) Display() {
 		l.mntl.WriteString(value)
 
 		line += l.brk
-		if line >= l.maxRow {
+		if line >= l.maxRow && colAlign == 0 {
 			line = l.refRow
 			colAlign = 20
+			l.mntl.MoveAt(l.refRow, l.refCol+colAlign)
+		} else {
+			l.mntl.Return(l.brk)
+			l.mntl.MoveRight(l.refCol + colAlign)
 		}
-
-		l.mntl.Return(l.brk)
-		l.mntl.MoveRight(l.refCol + colAlign)
 	}
 }

@@ -322,6 +322,14 @@ func (m *Minitel) WriteStringRightAt(lineId int, s string) error {
 	return m.WriteStringAt(lineId, colId, s)
 }
 
+func (m *Minitel) WriteStringCenter(s string) {
+	msgLen := len(s) * m.charWidth()
+	colId := maxInt((ColonnesSimple-msgLen)/2+1, 0)
+
+	m.MoveRight(colId)
+	m.WriteString(s)
+}
+
 func (m *Minitel) WriteStringCenterAt(lineId int, s string) error {
 	msgLen := len(s) * m.charWidth()
 	colId := maxInt((ColonnesSimple-msgLen)/2+1, 0)
@@ -375,8 +383,20 @@ func (m *Minitel) PrintHelperLeftAt(row int, helpText, button string) {
 	m.PrintHelper(helpText, button, FondBlanc, CaractereNoir)
 }
 
+func (m *Minitel) PrintHelperRight(helpText, button string, back, front byte) {
+	// [HELP TEXT][BLANK=1][SPACE=1][BUTTON TEXT][SPACE=1]
+	refCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+1+len(button)+2) - 1
+	refCol = maxInt(refCol, 0)
+
+	m.MoveLineStart()
+	m.MoveRight(refCol)
+
+	m.PrintHelper(helpText, button, back, front)
+}
+
 func (m *Minitel) PrintHelperRightAt(row int, helpText, button string) {
-	refCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+len(button)+1) - 1 // free space
+	// [HELP TEXT][BLANK=1][SPACE=1][BUTTON TEXT][SPACE=1]
+	refCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+1+len(button)+2) - 1
 	refCol = maxInt(refCol, 0)
 
 	m.MoveAt(row, refCol)

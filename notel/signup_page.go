@@ -48,6 +48,14 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.MoveRight(1)
 		mntl.PrintHelper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
+		mntl.Return(3)
+		mntl.MoveRight(1)
+		mntl.WriteString("Compte supprimé après 30j")
+
+		mntl.Return(1)
+		mntl.MoveRight(1)
+		mntl.WriteString("sans connexion")
+
 		inputs.InitAll()
 		return minigo.NoOp
 	})

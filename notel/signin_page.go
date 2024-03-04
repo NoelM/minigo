@@ -43,6 +43,8 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		mntl.PrintHelper("Première visite →", "GUIDE", minigo.FondVert, minigo.CaractereNoir)
 
 		inputs.InitAll()
+
+		mntl.CursorOn()
 		return minigo.NoOp
 	})
 

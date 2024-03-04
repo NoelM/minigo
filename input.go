@@ -26,14 +26,26 @@ func NewInput(m *Minitel, refRow, refCol int, width, height int, dots bool) *Inp
 
 // getCursorPos returns the absolute position of the cursor
 func (i *Input) getCursorPos() (row, col int) {
-	totalLen := utf8.RuneCount(i.Value)
-	if totalLen == i.height*i.width {
-		totalLen -= 1 // do not move the cursor to the next pos
+	len := i.Len()
+	if len == i.height*i.width {
+		len -= 1 // do not move the cursor to the next pos
 	}
 
-	row = totalLen/i.width + i.refRow
-	col = totalLen%i.width + i.refCol
+	row = len/i.width + i.refRow
+	col = len%i.width + i.refCol
 	return
+}
+
+func (i *Input) Len() int {
+	return utf8.RuneCount(i.Value)
+}
+
+func (i *Input) isReturn() bool {
+	return i.Len() > 0 && i.Len()%i.width == 0
+}
+
+func (i *Input) isFull() bool {
+	return i.Len() == i.width*i.height
 }
 
 // Init displays the input empty
@@ -43,7 +55,7 @@ func (i *Input) Init() {
 
 // AppendKey appends a new Rune to the Value array
 func (i *Input) AppendKey(r rune) {
-	if utf8.RuneCount(i.Value) == i.width*i.height {
+	if i.isFull() {
 		i.m.Bell()
 		return
 	}
@@ -53,8 +65,12 @@ func (i *Input) AppendKey(r rune) {
 
 	i.Value = utf8.AppendRune(i.Value, r)
 
-	if utf8.RuneCount(i.Value) == i.width*i.height {
+	if i.isFull() {
 		i.m.MoveLeft(1)
+
+	} else if i.isReturn() {
+		i.m.Return(1)
+		i.m.MoveLeft(i.refCol)
 	}
 }
 
@@ -68,17 +84,23 @@ func (i *Input) Correction() {
 	if r == utf8.RuneError {
 		return
 	}
+
+	if !i.isFull() {
+		i.m.MoveLeft(1)
+	}
 	i.Value = i.Value[:len(i.Value)-shift]
 
-	command := MoveLeft(1, i.m.supportCSI)
 	if i.dots {
-		command = append(command, EncodeString(".")...)
+		i.m.WriteString(".")
 	} else {
-		command = append(command, EncodeString(" ")...)
+		i.m.WriteString(" ")
 	}
+	i.m.MoveLeft(1)
 
-	command = append(command, MoveLeft(1, i.m.supportCSI)...)
-	i.m.Send(command)
+	if i.isReturn() {
+		i.m.MoveUp(1)
+		i.m.MoveRight(i.width)
+	}
 }
 
 // UnHide reveals the input on screen
@@ -111,6 +133,7 @@ func (i *Input) Hide() {
 
 	for row := 0; row < i.height; row += 1 {
 		i.m.WriteRepeat(Sp, i.width)
+
 		if i.refCol+i.width < 39 {
 			i.m.Return(1)
 			i.m.MoveRight(i.refCol)

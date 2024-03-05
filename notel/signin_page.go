@@ -19,8 +19,7 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		mntl.Return(3)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(3, 1)
 		mntl.WriteString("PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
 
@@ -29,17 +28,14 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		mntl.MoveRight(1)
 		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 
-		mntl.Return(1)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(1, 1)
 		mntl.WriteString("MOT DE PASSE:")
 		inputs.AppendInput("pwd", minigo.NewInput(mntl, 16, 15, 10, 1, true))
 
-		mntl.Return(2)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(2, 1)
 		mntl.PrintHelper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
-		mntl.Return(4)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(4, 1)
 		mntl.PrintHelper("Première visite →", "GUIDE", minigo.FondVert, minigo.CaractereNoir)
 
 		inputs.InitAll()

@@ -19,8 +19,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 
 		mntl.WriteAttributes(minigo.GrandeurNormale)
 
-		mntl.Return(3)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(3, 1)
 		mntl.WriteString("PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
 
@@ -29,8 +28,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.MoveRight(1)
 		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 
-		mntl.Return(2)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(2, 1)
 		mntl.WriteString("MOT DE PASSE:")
 		inputs.AppendInput("pwd", minigo.NewInput(mntl, 17, 15, 10, 1, true))
 
@@ -39,21 +37,17 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.MoveRight(1)
 		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 
-		mntl.Return(1)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(1, 1)
 		mntl.WriteString("CONFIRMEZ:")
 		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 18, 15, 10, 1, true))
 
-		mntl.Return(2)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(2, 1)
 		mntl.PrintHelper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
-		mntl.Return(3)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(3, 1)
 		mntl.WriteString("Compte supprimé après 30j")
 
-		mntl.Return(1)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(1, 3)
 		mntl.WriteString("sans connexion")
 
 		inputs.InitAll()

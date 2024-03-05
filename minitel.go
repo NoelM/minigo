@@ -353,6 +353,12 @@ func (m *Minitel) WriteStringAtWithAttributes(lineId, colId int, s string, attri
 	return m.WriteAttributes(byte(m.defaultCouleur), byte(m.defaultFond), byte(m.defaultGrandeur))
 }
 
+func (m *Minitel) WriteStringWithAttributes(s string, attributes ...byte) error {
+	m.WriteAttributes(attributes...)
+	m.Send(EncodeString(s))
+	return m.WriteAttributes(byte(m.defaultCouleur), byte(m.defaultFond), byte(m.defaultGrandeur))
+}
+
 func (m *Minitel) WriteAttributes(attributes ...byte) error {
 	m.updateGrandeur(attributes...)
 
@@ -411,8 +417,19 @@ func (m *Minitel) MoveAt(lineId, colId int) error {
 	return m.Send(MoveAt(lineId, colId, m.supportCSI))
 }
 
+// MoveOf moves the cursor relatively from its current position
+// * row > 0, moves down
+// * col > 0, moves right
+func (m *Minitel) MoveOf(lineId, colId int) error {
+	return m.Send(MoveOf(lineId, colId, m.supportCSI))
+}
+
 func (m *Minitel) Return(n int) error {
 	return m.Send(Return(n, m.supportCSI))
+}
+
+func (m *Minitel) ReturnCol(n, col int) error {
+	return m.Send(ReturnCol(n, col, m.supportCSI))
 }
 
 func (m *Minitel) ReturnUp(n int) error {

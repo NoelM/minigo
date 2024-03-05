@@ -100,15 +100,14 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 
 	mntl.MoveAt(19, 0)
 	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteStringCenter("! NOTEL est de retour !")
+	mntl.WriteStringCenter("Prochaine soirée chat ?")
 
 	mntl.WriteAttributes(minigo.GrandeurNormale)
 
 	mntl.Return(1)
-	mntl.WriteStringCenter("RDV Dim. 3 Mars à 20h")
+	mntl.WriteStringCenter("A vous de choisir")
 
-	mntl.Return(4)
-	mntl.MoveRight(1)
+	mntl.ReturnCol(4, 1)
 	cntd := NbConnectedUsers.Load()
 	if cntd < 2 {
 		mntl.WriteString(fmt.Sprintf("> Connecté: %d", cntd))

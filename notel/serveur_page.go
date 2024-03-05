@@ -20,8 +20,7 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.WriteString("NOTEL")
 		mntl.WriteAttributes(minigo.GrandeurNormale, minigo.FondNormal)
 
-		mntl.Return(2)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(2, 1)
 		mntl.WriteString("Lundi 4 mars 2024")
 
 		messages := []string{

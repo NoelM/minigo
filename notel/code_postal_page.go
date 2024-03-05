@@ -15,36 +15,25 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ModeG0()
 
 		mntl.MoveAt(9, 1)
-		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteString("Prévisions Météo")
-		mntl.WriteAttributes(minigo.GrandeurNormale)
+		mntl.WriteStringWithAttributes("Prévisions Météo", minigo.DoubleHauteur)
 
-		mntl.Return(2)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(2, 1)
 		mntl.PrintHelper("CODE POSTAL:       →", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 11, 14, 5, 1, true))
 
-		mntl.Return(4)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(4, 1)
+		mntl.WriteStringWithAttributes("Observations en Direct", minigo.DoubleHauteur)
 
-		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteString("Observations en Direct")
-		mntl.WriteAttributes(minigo.GrandeurNormale)
-
-		mntl.Return(2)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(2, 1)
 		mntl.WriteString("(Parfois panne Météo France...)")
 
-		mntl.Return(1)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(1, 1)
 		mntl.WriteString("Avec variations sur 24h")
 
-		mntl.Return(2)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(2, 1)
 		mntl.PrintHelper("Consulter →", "SUITE", minigo.FondRouge, minigo.CaractereBlanc)
 
-		mntl.Return(4)
-		mntl.MoveRight(1)
+		mntl.ReturnCol(4, 1)
 		mntl.PrintHelper("Menu NOTEL", "SOMMAIRE", minigo.FondBleu, minigo.CaractereBlanc)
 
 		inputs.InitAll()

@@ -38,6 +38,7 @@ func CursorInScreen(x, y int, resolution uint) (bool, error) {
 	}
 }
 
+// MoveAt moves the cursor ton an absolute position
 func MoveAt(row, col int, csi bool) (buf []byte) {
 	if row == 1 && col == 1 {
 		buf = []byte{Rs}
@@ -57,6 +58,24 @@ func MoveAt(row, col int, csi bool) (buf []byte) {
 		}
 	}
 
+	return
+}
+
+// MoveOf moves the cursor relatively from its current position
+// * row > 0, moves down
+// * col > 0, moves right
+func MoveOf(row, col int, csi bool) (buf []byte) {
+	if row > 0 {
+		buf = append(buf, MoveDown(row, csi)...)
+	} else if row < 0 {
+		buf = append(buf, MoveUp(-row, csi)...)
+	}
+
+	if col > 0 {
+		buf = append(buf, MoveRight(col, csi)...)
+	} else if col < 0 {
+		buf = append(buf, MoveLeft(-col, csi)...)
+	}
 	return
 }
 
@@ -123,6 +142,13 @@ func MoveUp(n int, csi bool) (buf []byte) {
 func Return(n int, csi bool) (buf []byte) {
 	buf = append(buf, Cr)
 	buf = append(buf, MoveDown(n, csi)...)
+	return
+}
+
+func ReturnCol(n, col int, csi bool) (buf []byte) {
+	buf = append(buf, Cr)
+	buf = append(buf, MoveDown(n, csi)...)
+	buf = append(buf, MoveRight(col, csi)...)
 	return
 }
 

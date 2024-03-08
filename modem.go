@@ -195,8 +195,7 @@ func (m *Modem) Serve(forceRing bool) {
 func (m *Modem) Connect() {
 	rep := strings.NewReplacer("\n", " ", "\r", " ")
 
-	//isAck, result, err := m.sendCommandAndWait(ATCommand{Command: "ATA", Reply: "CONNECT 1200/75/NONE"})
-	isAck, result, err := m.sendCommandAndWait(ATCommand{Command: "ATA", Reply: "CONNECT"})
+	isAck, result, err := m.sendCommandAndWait(ATCommand{Command: "ATA", Reply: "CONNECT 1200/75/NONE"})
 	if err != nil {
 		errorLog.Printf("unable to send and ack command: %s\n", err.Error())
 		return

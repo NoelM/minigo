@@ -48,8 +48,11 @@ func NewModem(portName string, baud int, init []ATCommand, tag string, connAttem
 func (m *Modem) Init() error {
 	rep := strings.NewReplacer("\n", " ", "\r", " ")
 
+	infoLog.Println("modem init sequence")
 	m.port.SetReadTimeout(serial.NoTimeout)
 	for _, at := range m.init {
+		infoLog.Printf("send to modem '%s'\n", at)
+
 		isAck, result, err := m.sendCommandAndWait(at)
 		if err != nil {
 			return err

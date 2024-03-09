@@ -24,6 +24,18 @@ func NewInput(m *Minitel, refRow, refCol int, width, height int, dots bool) *Inp
 	}
 }
 
+func NewInputWithValue(m *Minitel, value string, refRow, refCol int, width, height int, dots bool) *Input {
+	return &Input{
+		m:      m,
+		Value:  []byte(value),
+		refRow: refRow,
+		width:  width,
+		refCol: refCol,
+		height: height,
+		dots:   dots,
+	}
+}
+
 // getCursorPos returns the absolute position of the cursor
 func (i *Input) getCursorPos() (row, col int) {
 	len := i.Len()

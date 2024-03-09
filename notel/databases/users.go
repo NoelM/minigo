@@ -23,6 +23,7 @@ type User struct {
 	Tel         string    `json:"tel"`
 	Location    string    `json:"location"`
 	LastConnect time.Time `json:"last_connect"`
+	AppAnnuaire bool      `json:"annu,omitempty"`
 }
 
 type UsersDatabase struct {
@@ -39,7 +40,7 @@ func (u *UsersDatabase) getHashB64(pwd string) (hashB64 string) {
 	return
 }
 
-func (u *UsersDatabase) loadUser(nick string) (user User, err error) {
+func (u *UsersDatabase) LoadUser(nick string) (user User, err error) {
 	val, closer, err := u.DB.Get([]byte(nick))
 	if err != nil {
 		return User{}, fmt.Errorf("login error: nick=%s: %s", nick, err.Error())
@@ -53,7 +54,7 @@ func (u *UsersDatabase) loadUser(nick string) (user User, err error) {
 	return
 }
 
-func (u *UsersDatabase) setUser(user User) (err error) {
+func (u *UsersDatabase) SetUser(user User) (err error) {
 	val, err := json.Marshal(user)
 	if err != nil {
 		return fmt.Errorf("unable to marshall user nick=%s: %s", user.Nick, err.Error())
@@ -96,7 +97,7 @@ func (u *UsersDatabase) AddUser(nick, pwd string) error {
 		LastConnect: time.Now(),
 	}
 
-	if err := u.setUser(usr); err != nil {
+	if err := u.SetUser(usr); err != nil {
 		return fmt.Errorf("unable to add user nick=%s: %s", nick, err.Error())
 	}
 
@@ -106,7 +107,7 @@ func (u *UsersDatabase) AddUser(nick, pwd string) error {
 func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 	infoLog.Printf("attempt to log=%s\n", nick)
 
-	user, err := u.loadUser(nick)
+	user, err := u.LoadUser(nick)
 	if err != nil {
 		errorLog.Printf("login error: nick=%s: %s\n", nick, err.Error())
 		return false
@@ -122,7 +123,7 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 
 	if user.PwdHash == u.getHashB64(pwd) {
 		user.LastConnect = time.Now()
-		u.setUser(user)
+		u.SetUser(user)
 		return true
 	} else {
 		return false
@@ -130,7 +131,7 @@ func (u *UsersDatabase) LogUser(nick, pwd string) bool {
 }
 
 func (u *UsersDatabase) ChangePassword(nick string, pwd string) bool {
-	user, err := u.loadUser(nick)
+	user, err := u.LoadUser(nick)
 	if err != nil {
 		errorLog.Printf("change pwd error: nick=%s: %s\n", nick, err.Error())
 		return false
@@ -138,13 +139,22 @@ func (u *UsersDatabase) ChangePassword(nick string, pwd string) bool {
 
 	user.PwdHash = u.getHashB64(pwd)
 
-	if err = u.setUser(user); err != nil {
+	if err = u.SetUser(user); err != nil {
 		errorLog.Printf("change pwd error: nick=%s: %s\n", nick, err.Error())
 		return false
 	}
 
 	infoLog.Printf("password changed for: nick=%s\n", nick)
 	return true
+}
+
+func (u *UsersDatabase) DeleteUser(pseudo string) (err error) {
+	if err = u.DB.Delete([]byte(pseudo), pebble.Sync); err != nil {
+		errorLog.Printf("cannot delete user=%s: %s\n", pseudo, err.Error())
+	}
+
+	errorLog.Printf("deleted user=%s\n", pseudo)
+	return
 }
 
 func (u *UsersDatabase) Quit() {

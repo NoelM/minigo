@@ -6,6 +6,7 @@ import (
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/logs"
 	"github.com/NoelM/minigo/notel/minichat"
+	"github.com/NoelM/minigo/notel/profil"
 	"github.com/NoelM/minigo/notel/sudoku"
 )
 
@@ -62,7 +63,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 		case sudokuId:
 			op = sudoku.SudokuService(m, nick)
 		case profilId:
-			op = RunPageProfil(m, UsersDb, nick)
+			op = profil.ProfilService(m, UsersDb, nick)
 		}
 	}
 	logs.InfoLog("quits sommaire handler\n")

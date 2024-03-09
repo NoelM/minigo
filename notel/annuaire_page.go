@@ -85,17 +85,21 @@ func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *min
 
 func displayUser(mntl *minigo.Minitel, user databases.User) {
 	mntl.MoveAt(5, 0)
+	mntl.WriteAttributes(minigo.FondBleu)
+	mntl.WriteString(" PSEUDO")
+	mntl.SendCAN()
 
-	mntl.WriteStringWithAttributes(user.Nick, minigo.InversionFond, minigo.DoubleGrandeur)
+	mntl.Return(2)
+	mntl.WriteAttributes(minigo.FondNoir)
+	mntl.WriteString(" ")
+	mntl.MoveLeft(1)
 
-	mntl.Return(1)
-	mntl.HLine(40, minigo.HCenter)
+	mntl.WriteStringWithAttributes(user.Nick, minigo.DoubleLargeur)
 
-	mntl.Return(1) // Row 6
-	mntl.WriteAttributes(minigo.FondRouge)
-	mntl.WriteRepeat(' ', 40)
-	mntl.MoveUp(1)
-	mntl.WriteStringCenter("=== Bio ===")
+	mntl.Return(2) // Row 6
+	mntl.WriteAttributes(minigo.FondBleu)
+	mntl.WriteString(" BIO")
+	mntl.SendCAN()
 
 	mntl.Return(1)
 	mntl.WriteAttributes(minigo.FondNoir)
@@ -109,9 +113,8 @@ func displayUser(mntl *minigo.Minitel, user databases.User) {
 
 	mntl.Return(2)
 	mntl.WriteAttributes(minigo.FondBleu)
-	mntl.WriteRepeat(' ', 40)
-	mntl.MoveUp(1)
-	mntl.WriteStringCenter("=== Serveur Minitel ===")
+	mntl.WriteString(" TÉLÉPHONE")
+	mntl.SendCAN()
 
 	mntl.Return(2)
 	mntl.WriteAttributes(minigo.FondNoir)
@@ -121,13 +124,12 @@ func displayUser(mntl *minigo.Minitel, user databases.User) {
 	mntl.WriteString(user.Tel)
 
 	mntl.Return(2) // Row 13
-	mntl.WriteAttributes(minigo.FondJaune, minigo.CaractereNoir)
-	mntl.WriteRepeat(' ', 40)
-	mntl.MoveUp(1)
-	mntl.WriteStringCenter("=== Lieu ===")
+	mntl.WriteAttributes(minigo.FondBleu)
+	mntl.WriteString(" LIEU")
+	mntl.SendCAN()
 
 	mntl.Return(2)
-	mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
+	mntl.WriteAttributes(minigo.FondNoir)
 	mntl.WriteString(" ")
 	mntl.MoveLeft(1)
 

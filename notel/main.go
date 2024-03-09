@@ -65,7 +65,7 @@ var (
 const (
 	ServeWS              = true
 	ServeUSR56FaxModem1  = true
-	ServeUSR56KFaxModem2 = false
+	ServeUSR56KFaxModem2 = true
 )
 
 const (

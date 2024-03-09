@@ -49,7 +49,13 @@ func MoveAt(row, col int, csi bool) (buf []byte) {
 		buf = append(buf, PCode(col)...)
 		buf = append(buf, 0x48)
 	} else {
-		return []byte{Rs, byte(col) + 0x40, byte(row) + 0x40}
+		buf = []byte{Rs}
+		for i := 1; i < row; i += 1 {
+			buf = append(buf, Lf)
+		}
+		for i := 0; i < col; i += 1 {
+			buf = append(buf, Ht)
+		}
 	}
 	return
 }

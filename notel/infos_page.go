@@ -87,9 +87,10 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 		}
 
 		mntl.ModeG0()
-		mntl.WriteAttributes(minigo.FondJaune, minigo.CaractereNoir)
+		mntl.WriteAttributes(minigo.FondBleu, minigo.CaractereBlanc)
 		mntl.WriteString(" " + d.Date.Format("02/01/2006 15:04"))
-		mntl.WriteRepeat(minigo.Sp, 22)
+		mntl.SendCAN()
+		mntl.Return(1)
 		line += 1
 
 		// Display Title
@@ -100,8 +101,9 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 		}
 
 		for _, l := range title {
-			mntl.WriteAttributes(minigo.FondBleu, minigo.CaractereBlanc)
+			mntl.WriteAttributes(minigo.FondCyan, minigo.CaractereNoir)
 			mntl.WriteString(" " + l)
+			mntl.SendCAN()
 			mntl.Return(1)
 
 			line += 1

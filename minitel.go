@@ -592,6 +592,10 @@ func (m *Minitel) ModeG2() error {
 	return m.Send([]byte{Ss2})
 }
 
+func (m *Minitel) SendCAN() error {
+	return m.Send([]byte{Can})
+}
+
 //
 // BELL
 //

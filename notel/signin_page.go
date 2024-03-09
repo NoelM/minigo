@@ -35,7 +35,12 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ReturnCol(2, 1)
 		mntl.PrintHelper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
-		mntl.ReturnCol(4, 1)
+		mntl.ReturnCol(2, 1)
+		mntl.WriteString("Si déconnexions, 2nde ligne:")
+		mntl.ReturnCol(1, 1)
+		mntl.WriteStringWithAttributes("01.83.64.51.44", minigo.InversionFond)
+
+		mntl.ReturnCol(3, 1)
 		mntl.PrintHelper("Première visite →", "GUIDE", minigo.FondVert, minigo.CaractereNoir)
 
 		inputs.InitAll()

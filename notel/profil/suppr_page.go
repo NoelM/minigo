@@ -70,7 +70,8 @@ func RunSupprPage(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo 
 		}
 
 		printErrorMsg(mntl, inputs, "Compte supprimé, au revoir !")
-		return nil, minigo.DisconnectOp
+		mntl.In <- minigo.ConnexionFin
+		return nil, minigo.NoOp
 	})
 
 	_, op = supprPage.Run()

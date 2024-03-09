@@ -54,6 +54,27 @@ func (u *UsersDatabase) LoadUser(nick string) (user User, err error) {
 	return
 }
 
+func (u *UsersDatabase) LoadAnnuaireUsers() (users []User, err error) {
+	iter, _ := u.DB.NewIter(nil)
+	for iter.First(); iter.Valid(); iter.Next() {
+		var user User
+
+		if err = json.Unmarshal(iter.Value(), &user); err != nil {
+			fmt.Errorf("login error: nick=%s: %s", iter.Key(), err.Error())
+			continue
+		}
+
+		if !user.AppAnnuaire {
+			continue
+		}
+
+		user.PwdHash = ""
+		users = append(users, user)
+	}
+
+	return users, err
+}
+
 func (u *UsersDatabase) SetUser(user User) (err error) {
 	val, err := json.Marshal(user)
 	if err != nil {

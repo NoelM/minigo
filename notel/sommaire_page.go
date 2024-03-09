@@ -18,24 +18,27 @@ const (
 	serveurId
 	sudokuId
 	profilId
+	annuaireId
 )
 
 const (
-	chatKey    = "*CHA"
-	meteoKey   = "*MTO"
-	infoKey    = "*INF"
-	serveurKey = "*SRV"
-	sudokuKey  = "*SDK"
-	profilKey  = "*PRO"
+	chatKey     = "*CHA"
+	meteoKey    = "*MTO"
+	infoKey     = "*INF"
+	serveurKey  = "*SRV"
+	sudokuKey   = "*SDK"
+	profilKey   = "*PRO"
+	annuaireKey = "*ANU"
 )
 
 var ServIdMap = map[string]int{
-	chatKey:    chatId,
-	meteoKey:   meteoId,
-	infoKey:    infoId,
-	serveurKey: serveurId,
-	sudokuKey:  sudokuId,
-	profilKey:  profilId,
+	chatKey:     chatId,
+	meteoKey:    meteoId,
+	infoKey:     infoId,
+	serveurKey:  serveurId,
+	sudokuKey:   sudokuId,
+	profilKey:   profilId,
+	annuaireKey: annuaireId,
 }
 
 func SommaireHandler(m *minigo.Minitel, nick string) {
@@ -64,6 +67,8 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 			op = sudoku.SudokuService(m, nick)
 		case profilId:
 			op = profil.ProfilService(m, UsersDb, nick)
+		case annuaireId:
+			_, op = NewPageAnnuaire(m, UsersDb).Run()
 		}
 	}
 	logs.InfoLog("quits sommaire handler\n")
@@ -97,16 +102,17 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	list.AppendItem(sudokuKey, "SUDOKU")
 	list.AppendItem(serveurKey, "SERVEUR")
 	list.AppendItem(profilKey, "PROFIL")
+	list.AppendItem(annuaireKey, "ANNUAIRE")
 	list.Display()
 
 	mntl.MoveAt(19, 0)
 	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteStringCenter("Prochaine soirée chat ?")
+	mntl.WriteStringCenter("Allez faire un tour dans PROFIL")
 
 	mntl.WriteAttributes(minigo.GrandeurNormale)
 
 	mntl.Return(1)
-	mntl.WriteStringCenter("A vous de choisir")
+	mntl.WriteStringCenter("Y'a du nouveau !")
 
 	mntl.ReturnCol(4, 1)
 	cntd := NbConnectedUsers.Load()

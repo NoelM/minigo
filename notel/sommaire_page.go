@@ -5,6 +5,7 @@ import (
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/logs"
+	"github.com/NoelM/minigo/notel/meteo"
 	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/profil"
 	"github.com/NoelM/minigo/notel/sudoku"
@@ -58,7 +59,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 		case chatId:
 			op = minichat.RunChatPage(m, MessageDb, &NbConnectedUsers, nick, promMsgNb)
 		case meteoId:
-			op = ServiceMeteo(m)
+			op = meteo.ServiceMeteo(m, CommuneDb)
 		case infoId:
 			_, op = NewPageInfo(m).Run()
 		case serveurId:

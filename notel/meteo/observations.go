@@ -1,4 +1,4 @@
-package main
+package meteo
 
 import (
 	"encoding/csv"

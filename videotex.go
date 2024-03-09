@@ -41,7 +41,7 @@ func CursorInScreen(x, y int, resolution uint) (bool, error) {
 // MoveAt moves the cursor ton an absolute position
 func MoveAt(row, col int, csi bool) (buf []byte) {
 	if row == 1 && col == 1 {
-		buf = []byte{Rs}
+		return []byte{Rs}
 	} else if csi && (row+col) > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(row)...)
@@ -49,15 +49,8 @@ func MoveAt(row, col int, csi bool) (buf []byte) {
 		buf = append(buf, PCode(col)...)
 		buf = append(buf, 0x48)
 	} else {
-		buf = []byte{Rs}
-		for i := 1; i < row; i += 1 {
-			buf = append(buf, Lf)
-		}
-		for i := 0; i < col; i += 1 {
-			buf = append(buf, Ht)
-		}
+		return []byte{Rs, byte(col) + 0x40, byte(row) + 0x40}
 	}
-
 	return
 }
 

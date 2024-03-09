@@ -1,4 +1,4 @@
-package main
+package meteo
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/databases"
 	"github.com/NoelM/minigo/notel/logs"
 	"github.com/NoelM/minigo/notel/utils"
 )
@@ -16,7 +17,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 	previPage := minigo.NewPage("previsions", mntl, communeMap)
 
 	var forecast OpenWeatherApiResponse
-	var commune Commune
+	var commune databases.Commune
 
 	// Setups the range of forecasts now -> now + 8 days
 	now := time.Now()
@@ -36,31 +37,31 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 		communeJSON, ok := initData["commune"]
 		if !ok {
 			logs.ErrorLog("no commune data\n")
-			return sommaireId
+			return minigo.SommaireOp
 		}
 
 		if err := json.Unmarshal([]byte(communeJSON), &commune); err != nil {
 			logs.ErrorLog("unable to parse the commune JSON: %s\n", err.Error())
-			return sommaireId
+			return minigo.SommaireOp
 		}
 
 		OWApiKey := os.Getenv("OWAPIKEY")
 		body, err := getRequestBody(fmt.Sprintf(OWApiUrlFormat, commune.Latitude, commune.Longitude, OWApiKey))
 		if err != nil {
 			logs.ErrorLog("unable to get forecasts: %s\n", err.Error())
-			return sommaireId
+			return minigo.SommaireOp
 		}
 		defer body.Close()
 
 		data, err := io.ReadAll(body)
 		if err != nil {
 			logs.ErrorLog("unable to get API response: %s\n", err.Error())
-			return sommaireId
+			return minigo.SommaireOp
 		}
 
 		if err := json.Unmarshal(data, &forecast); err != nil {
 			logs.ErrorLog("unable to parse JSON: %s\n", err.Error())
-			return sommaireId
+			return minigo.SommaireOp
 		}
 		printForecast(mntl, forecast, forecastDate, commune)
 		printPreviHelpers(mntl, forecastDate, firstForecastDate, lastForecastDate)
@@ -99,23 +100,26 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 	})
 
 	previPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		return nil, sommaireId
+		return nil, minigo.SommaireOp
 	})
 
 	return previPage
 }
 
 func printPreviHelpers(mntl *minigo.Minitel, forecastDate, firstForecastDate, lastForecastDate time.Time) {
+	mntl.MoveAt(23, 0)
+
 	if forecastDate.After(firstForecastDate) {
-		mntl.PrintHelperLeftAt(23, forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR")
+		mntl.PrintHelper(forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR", minigo.FondBleu, minigo.CaractereBlanc)
 	}
 	if forecastDate.Before(lastForecastDate) {
-		mntl.PrintHelperRightAt(23, forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE")
+		mntl.PrintHelperRight(forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 	}
-	mntl.PrintHelperLeftAt(24, "Menu INFOMETEO", "SOMMAIRE")
+	mntl.Return(1)
+	mntl.PrintHelperRight("Menu InfoMétéo", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
 }
 
-func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c Commune) {
+func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c databases.Commune) {
 	mntl.CleanScreen()
 	location, _ := time.LoadLocation("Europe/Paris")
 

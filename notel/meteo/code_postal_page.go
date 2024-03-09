@@ -1,4 +1,4 @@
-package main
+package meteo
 
 import (
 	"github.com/NoelM/minigo"
@@ -60,7 +60,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 	})
 
 	codePostalPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		return nil, sommaireId
+		return nil, minigo.SommaireOp
 	})
 
 	codePostalPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

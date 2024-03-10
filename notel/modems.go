@@ -2,27 +2,33 @@ package main
 
 import "github.com/NoelM/minigo"
 
-/*
 var ConfUSR56KFaxModem = []minigo.ATCommand{
+	// Z0: Reset configuration
 	{
 		Command: "ATZ0",
 		Reply:   "OK",
 	},
+	// X4:  Full length modem reply
+	// M0:  Speaker OFF
+	// L0:  Speaker volume LOW
+	// E0:  No command echo
 	{
-		Command: "ATL0M0",
+		Command: "ATE0L0M0X4",
 		Reply:   "OK",
 	},
+	// &N2:    1200 bps connection default
 	{
 		Command: "AT&N2",
 		Reply:   "OK",
 	},
+	// S27=16: V23 mode enabled
 	{
 		Command: "ATS27=16",
 		Reply:   "OK",
 	},
 }
-*/
 
+/*
 var ConfUSR56KFaxModem = []minigo.ATCommand{
 	// Z0: Reset configuration
 	{
@@ -50,3 +56,4 @@ var ConfUSR56KFaxModem = []minigo.ATCommand{
 		Reply:   "OK",
 	},
 }
+*/

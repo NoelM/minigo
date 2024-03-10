@@ -27,32 +27,50 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 		mntl.HLine(40, minigo.HCenter)
 
 		mntl.Return(1) // Row 5
-		mntl.WriteString("Pseudo: " + pseudo)
+		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.WriteString(" PSEUDO")
+		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.WriteString(" " + pseudo)
 
 		mntl.Return(1) // Row 6
-		mntl.WriteString("Bio:")
+		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.WriteString(" BIO")
+		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.WriteString(" ")
 		inputs.AppendInput("bio", minigo.NewInputWithValue(mntl, usr.Bio, 7, 0, 39, 2, true))
 
 		mntl.Return(4) // Row 10
-		mntl.WriteString("Serveur(s) Minitel (n° tel):")
+		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.WriteString(" TÉLÉPHONE")
+		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.WriteString(" ")
 		inputs.AppendInput("tel", minigo.NewInputWithValue(mntl, usr.Tel, 11, 0, 39, 1, true))
 
 		mntl.Return(3) // Row 13
-		mntl.WriteString("Lieu:")
+		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.WriteString(" LIEU")
+		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.WriteString(" ")
 		inputs.AppendInput("loc", minigo.NewInputWithValue(mntl, usr.Location, 14, 0, 39, 1, true))
 
 		mntl.Return(3) // Row 16
-		mntl.WriteString("Affichage Annuaire (OUI/NON):")
+		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.WriteString(" AFFICHAGE ANNUAIRE (OUI/NON)")
+		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.WriteString(" ")
 		appAnnuString := "NON"
 		if usr.AppAnnuaire {
 			appAnnuString = "OUI"
 		}
 		inputs.AppendInput("annu", minigo.NewInputWithValue(mntl, appAnnuString, 16, 30, 3, 1, true))
 
-		mntl.Return(2) // Row 19
-		mntl.PrintHelper("Naviguer", "RETOUR | SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Return(2)
+		mntl.PrintHelper("Nav.", "RETOUR/SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 		mntl.MoveRight(5)
-		mntl.PrintHelperRight("Enrg.", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+		mntl.PrintHelperRight("Sauver", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+
+		mntl.Return(1)
+		mntl.HLine(40, minigo.HCenter)
 
 		list := minigo.NewList(mntl, 21, 1, 25, 1)
 		list.AppendItem(mdpKey, "Changer mot de passe")
@@ -60,8 +78,8 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 		list.Display()
 
 		mntl.MoveAt(23, 1)
-		mntl.PrintHelper("CODE: .... +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
-		inputs.AppendInput("code", minigo.NewInput(mntl, 23, 7, 4, 1, true))
+		mntl.PrintHelper("CODE .... +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+		inputs.AppendInput("code", minigo.NewInput(mntl, 23, 6, 4, 1, true))
 
 		inputs.InitAll()
 		return minigo.NoOp

@@ -8,6 +8,7 @@ import (
 	"github.com/NoelM/minigo/notel/meteo"
 	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/profil"
+	"github.com/NoelM/minigo/notel/serveur"
 	"github.com/NoelM/minigo/notel/sudoku"
 )
 
@@ -63,7 +64,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 		case infoId:
 			_, op = NewPageInfo(m).Run()
 		case serveurId:
-			_, op = NewServeurPage(m).Run()
+			_, op = serveur.NewServeurPage(m).Run()
 		case sudokuId:
 			op = sudoku.SudokuService(m, nick)
 		case profilId:

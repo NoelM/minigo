@@ -32,9 +32,9 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 		var err error
 		reports, err = getLastWeatherData()
 		if err != nil {
-			mntl.WriteString("Connection à Météo-France echouée")
+			mntl.Print("Connection à Météo-France echouée")
 			mntl.Return(1)
-			mntl.WriteString("Retour au sommaire dans 5 sec.")
+			mntl.Print("Retour au sommaire dans 5 sec.")
 
 			time.Sleep(5 * time.Second)
 			return minigo.SommaireOp
@@ -82,7 +82,7 @@ func printReportsFrom(mntl *minigo.Minitel, reps map[string][]WeatherReport, pag
 	mntl.CleanScreen()
 
 	mntl.MoveAt(1, 1)
-	mntl.WriteString(fmt.Sprintf("Mise à jour le: %s UTC", reps["07149"][0].date.Format("02/01/2006 15:04")))
+	mntl.Print(fmt.Sprintf("Mise à jour le: %s UTC", reps["07149"][0].date.Format("02/01/2006 15:04")))
 
 	mntl.MoveAt(3, 1)
 	for reportId := pageId * reportsPerPage; reportId < len(reps) && reportId < (pageId+1)*reportsPerPage; reportId += 1 {
@@ -145,13 +145,13 @@ func printHelpers(mntl *minigo.Minitel, pageId, maxPageId int) {
 	// NextPageNumber = (PageId + 1) + 1
 	mntl.MoveAt(23, 0)
 	if pageId > 0 {
-		mntl.PrintHelper(fmt.Sprintf("Page %d/%d", pageId, maxPageId+1), "RETOUR", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Helper(fmt.Sprintf("Page %d/%d", pageId, maxPageId+1), "RETOUR", minigo.FondBleu, minigo.CaractereBlanc)
 	}
 	if pageId < maxPageId {
-		mntl.PrintHelperRight(fmt.Sprintf("Page %d/%d", pageId+2, maxPageId+1), "SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.HelperRight(fmt.Sprintf("Page %d/%d", pageId+2, maxPageId+1), "SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 	}
 	mntl.Return(1)
-	mntl.PrintHelperRight("Menu InfoMétéo", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
+	mntl.HelperRight("Menu InfoMétéo", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
 }
 
 func windDirToString(deg float64) string {

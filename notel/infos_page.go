@@ -87,8 +87,8 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 		}
 
 		mntl.ModeG0()
-		mntl.WriteAttributes(minigo.FondBleu, minigo.CaractereBlanc)
-		mntl.WriteString(" " + d.Date.Format("02/01/2006 15:04"))
+		mntl.Attributes(minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Print(" " + d.Date.Format("02/01/2006 15:04"))
 		mntl.SendCAN()
 		mntl.Return(1)
 		line += 1
@@ -101,8 +101,8 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 		}
 
 		for _, l := range title {
-			mntl.WriteAttributes(minigo.FondCyan, minigo.CaractereNoir)
-			mntl.WriteString(" " + l)
+			mntl.Attributes(minigo.FondCyan, minigo.CaractereNoir)
+			mntl.Print(" " + l)
 			mntl.SendCAN()
 			mntl.Return(1)
 
@@ -112,9 +112,9 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 		// Display Content
 		content := minigo.WrapperLargeurNormale(d.Content)
 
-		mntl.WriteAttributes(minigo.CaractereBlanc, minigo.FondNormal)
+		mntl.Attributes(minigo.CaractereBlanc, minigo.FondNormal)
 		for _, l := range content {
-			mntl.WriteString(l)
+			mntl.Print(l)
 			line += 1
 			if line > maxLine {
 				trunc = true
@@ -148,12 +148,12 @@ func printDepeche(mntl *minigo.Minitel, depeches []Depeche, startLine int) int {
 
 func printInfoHeader(mntl *minigo.Minitel) {
 	mntl.MoveAt(2, 1)
-	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteString("Dépèches France 24")
-	mntl.WriteAttributes(minigo.GrandeurNormale)
+	mntl.Attributes(minigo.DoubleHauteur)
+	mntl.Print("Dépèches France 24")
+	mntl.Attributes(minigo.GrandeurNormale)
 }
 
 func printInfoHelpers(mntl *minigo.Minitel) {
-	mntl.PrintHelperLeftAt(24, "Menu", "SOMMAIRE")
-	mntl.PrintHelperRightAt(24, "Naviguez", "SUITE/RETOUR")
+	mntl.HelperLeftAt(24, "Menu", "SOMMAIRE")
+	mntl.HelperRightAt(24, "Naviguez", "SUITE/RETOUR")
 }

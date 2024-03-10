@@ -67,7 +67,7 @@ func NewPage(name string, mntl *Minitel, initData map[string]string) *Page {
 
 func defaultConnexionFinHandlerFunc(mntl *Minitel) int {
 	mntl.CleanScreen()
-	mntl.WriteStringLeftAt(1, "→ Déconnexion demandée, à bientôt !")
+	mntl.PrintLeftAt(1, "→ Déconnexion demandée, à bientôt !")
 	return DisconnectOp
 }
 

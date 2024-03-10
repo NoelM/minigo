@@ -35,18 +35,18 @@ func (l *List) Display() {
 	for _, key := range l.orderedKeys {
 		value := l.items[key]
 
-		l.mntl.WriteAttributes(FondBlanc, CaractereNoir)
-		l.mntl.WriteString(" ")
+		l.mntl.Attributes(FondBlanc, CaractereNoir)
+		l.mntl.Print(" ")
 
-		l.mntl.WriteString(key)
+		l.mntl.Print(key)
 
-		l.mntl.WriteAttributes(FondNormal, CaractereBlanc)
-		l.mntl.WriteString(" ")
+		l.mntl.Attributes(FondNormal, CaractereBlanc)
+		l.mntl.Print(" ")
 
-		l.mntl.MoveRight(1)
+		l.mntl.Right(1)
 
-		l.mntl.WriteAttributes(FondNormal)
-		l.mntl.WriteString(value)
+		l.mntl.Attributes(FondNormal)
+		l.mntl.Print(value)
 
 		line += l.brk
 		if line >= l.maxRow && colAlign == 0 {
@@ -55,7 +55,7 @@ func (l *List) Display() {
 			l.mntl.MoveAt(l.refRow, l.refCol+colAlign)
 		} else {
 			l.mntl.Return(l.brk)
-			l.mntl.MoveRight(l.refCol + colAlign)
+			l.mntl.Right(l.refCol + colAlign)
 		}
 	}
 }

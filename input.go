@@ -78,11 +78,11 @@ func (i *Input) AppendKey(r rune) {
 	i.Value = utf8.AppendRune(i.Value, r)
 
 	if i.isFull() {
-		i.m.MoveLeft(1)
+		i.m.Left(1)
 
 	} else if i.isReturn() {
 		i.m.Return(1)
-		i.m.MoveLeft(i.refCol)
+		i.m.Left(i.refCol)
 	}
 }
 
@@ -98,20 +98,20 @@ func (i *Input) Correction() {
 	}
 
 	if !i.isFull() {
-		i.m.MoveLeft(1)
+		i.m.Left(1)
 	}
 	i.Value = i.Value[:len(i.Value)-shift]
 
 	if i.dots {
-		i.m.WriteString(".")
+		i.m.Print(".")
 	} else {
-		i.m.WriteString(" ")
+		i.m.Print(" ")
 	}
-	i.m.MoveLeft(1)
+	i.m.Left(1)
 
 	if i.isReturn() {
-		i.m.MoveUp(1)
-		i.m.MoveRight(i.width)
+		i.m.Up(1)
+		i.m.Right(i.width)
 	}
 }
 
@@ -144,14 +144,14 @@ func (i *Input) Hide() {
 	i.m.MoveAt(i.refRow, i.refCol)
 
 	for row := 0; row < i.height; row += 1 {
-		i.m.WriteRepeat(Sp, i.width)
+		i.m.Repeat(Sp, i.width)
 
 		if i.refCol+i.width < 39 {
 			i.m.Return(1)
-			i.m.MoveRight(i.refCol)
+			i.m.Right(i.refCol)
 		} else {
-			i.m.MoveLineStart()
-			i.m.MoveRight(i.refCol)
+			i.m.LineStart()
+			i.m.Right(i.refCol)
 		}
 	}
 }

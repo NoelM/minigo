@@ -271,22 +271,22 @@ func (m *Minitel) CleanNRowsFrom(row, col, n int) error {
 // WRITES
 //
 
-func (m *Minitel) WriteString(s string) {
+func (m *Minitel) Print(s string) {
 	m.Send(EncodeString(s))
 }
 
-func (m *Minitel) WriteButton(s string, back, front byte) {
-	m.WriteAttributes(back, front)
-	m.WriteString(" ")
+func (m *Minitel) Button(s string, back, front byte) {
+	m.Attributes(back, front)
+	m.Print(" ")
 
-	m.WriteString(s)
+	m.Print(s)
 
-	m.WriteAttributes(byte(m.defaultFond), byte(m.defaultCouleur))
-	m.WriteString(" ")
+	m.Attributes(byte(m.defaultFond), byte(m.defaultCouleur))
+	m.Print(" ")
 
 }
 
-func (m *Minitel) WriteStatusLine(s string) error {
+func (m *Minitel) PrintStatus(s string) error {
 	// Enters row 0
 	buf := []byte{Us, 0x40, 0x41}
 	// Clean curent value
@@ -301,112 +301,112 @@ func (m *Minitel) WriteStatusLine(s string) error {
 	return m.Send(buf)
 }
 
-func (m *Minitel) WriteBytesAt(lineId, colId int, inBuf []byte) error {
+func (m *Minitel) PrintBytesAt(lineId, colId int, inBuf []byte) error {
 	buf := MoveAt(lineId, colId, m.supportCSI)
 	buf = append(buf, inBuf...)
 	return m.Send(buf)
 }
 
-func (m *Minitel) WriteStringLeftAt(lineId int, s string) error {
-	return m.WriteStringAt(lineId, 1, s)
+func (m *Minitel) PrintLeftAt(lineId int, s string) error {
+	return m.PrintAt(lineId, 1, s)
 }
 
-func (m *Minitel) WriteRepeat(r rune, n int) error {
+func (m *Minitel) Repeat(r rune, n int) error {
 	return m.Send(RepeatRune(r, n))
 }
 
-func (m *Minitel) WriteStringRightAt(lineId int, s string) error {
+func (m *Minitel) PrintRightAt(lineId int, s string) error {
 	msgLen := utf8.RuneCountInString(s) * m.charWidth()
 	colId := maxInt(ColonnesSimple-msgLen+1, 0)
 
-	return m.WriteStringAt(lineId, colId, s)
+	return m.PrintAt(lineId, colId, s)
 }
 
-func (m *Minitel) WriteStringCenter(s string) {
+func (m *Minitel) PrintCenter(s string) {
 	msgLen := len(s) * m.charWidth()
 	colId := maxInt((ColonnesSimple-msgLen)/2+1, 0)
 
-	m.MoveRight(colId)
-	m.WriteString(s)
+	m.Right(colId)
+	m.Print(s)
 }
 
-func (m *Minitel) WriteStringCenterAt(lineId int, s string) error {
+func (m *Minitel) PrintCenterAt(lineId int, s string) error {
 	msgLen := len(s) * m.charWidth()
 	colId := maxInt((ColonnesSimple-msgLen)/2+1, 0)
 
-	return m.WriteStringAt(lineId, colId, s)
+	return m.PrintAt(lineId, colId, s)
 }
 
-func (m *Minitel) WriteStringAt(lineId, colId int, s string) error {
+func (m *Minitel) PrintAt(lineId, colId int, s string) error {
 	buf := MoveAt(lineId, colId, m.supportCSI)
 	buf = append(buf, EncodeString(s)...)
 	return m.Send(buf)
 }
 
-func (m *Minitel) WriteStringAtWithAttributes(lineId, colId int, s string, attributes ...byte) error {
-	m.WriteAttributes(attributes...)
+func (m *Minitel) PrintAttributesAt(lineId, colId int, s string, attributes ...byte) error {
+	m.Attributes(attributes...)
 
 	buf := MoveAt(lineId, colId, m.supportCSI)
 	buf = append(buf, EncodeString(s)...)
 	m.Send(buf)
 
-	return m.WriteAttributes(byte(m.defaultCouleur), byte(m.defaultFond), byte(m.defaultGrandeur))
+	return m.Attributes(byte(m.defaultCouleur), byte(m.defaultFond), byte(m.defaultGrandeur))
 }
 
-func (m *Minitel) WriteStringWithAttributes(s string, attributes ...byte) error {
-	m.WriteAttributes(attributes...)
+func (m *Minitel) PrintAttributes(s string, attributes ...byte) error {
+	m.Attributes(attributes...)
 	m.Send(EncodeString(s))
-	return m.WriteAttributes(byte(m.defaultCouleur), byte(m.defaultFond), byte(m.defaultGrandeur))
+	return m.Attributes(byte(m.defaultCouleur), byte(m.defaultFond), byte(m.defaultGrandeur))
 }
 
-func (m *Minitel) WriteAttributes(attributes ...byte) error {
+func (m *Minitel) Attributes(attributes ...byte) error {
 	m.updateGrandeur(attributes...)
 
 	return m.Send(EncodeAttributes(attributes...))
 }
 
-func (m *Minitel) PrintHelper(helpText, button string, back, front byte) {
-	m.WriteString(helpText)
+func (m *Minitel) Helper(helpText, button string, back, front byte) {
+	m.Print(helpText)
 
-	m.MoveRight(1)
+	m.Right(1)
 
-	m.WriteAttributes(back, front)
-	m.WriteString(" ")
+	m.Attributes(back, front)
+	m.Print(" ")
 
-	m.WriteString(button)
+	m.Print(button)
 
-	m.WriteAttributes(byte(m.defaultFond), byte(m.defaultCouleur))
-	m.WriteString(" ")
+	m.Attributes(byte(m.defaultFond), byte(m.defaultCouleur))
+	m.Print(" ")
 }
 
-func (m *Minitel) PrintHelperAt(row, col int, helpText, button string) {
+func (m *Minitel) HelperAt(row, col int, helpText, button string) {
 	m.MoveAt(row, col)
-	m.PrintHelper(helpText, button, FondBlanc, CaractereNoir)
+	m.Helper(helpText, button, FondBlanc, CaractereNoir)
 }
 
-func (m *Minitel) PrintHelperLeftAt(row int, helpText, button string) {
+func (m *Minitel) HelperLeftAt(row int, helpText, button string) {
 	m.MoveAt(row, 0)
-	m.PrintHelper(helpText, button, FondBlanc, CaractereNoir)
+	m.Helper(helpText, button, FondBlanc, CaractereNoir)
 }
 
-func (m *Minitel) PrintHelperRight(helpText, button string, back, front byte) {
+func (m *Minitel) HelperRight(helpText, button string, back, front byte) {
 	// [HELP TEXT][BLANK=1][SPACE=1][BUTTON TEXT][SPACE=1]
 	refCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+1+len(button)+2) - 1
 	refCol = maxInt(refCol, 0)
 
-	m.MoveLineStart()
-	m.MoveRight(refCol)
+	m.LineStart()
+	m.Right(refCol)
 
-	m.PrintHelper(helpText, button, back, front)
+	m.Helper(helpText, button, back, front)
 }
 
-func (m *Minitel) PrintHelperRightAt(row int, helpText, button string) {
+func (m *Minitel) HelperRightAt(row int, helpText, button string) {
 	// [HELP TEXT][BLANK=1][SPACE=1][BUTTON TEXT][SPACE=1]
 	refCol := ColonnesSimple - m.charWidth()*(utf8.RuneCountInString(helpText)+1+len(button)+2) - 1
 	refCol = maxInt(refCol, 0)
 
 	m.MoveAt(row, refCol)
-	m.PrintHelper(helpText, button, FondBlanc, CaractereNoir)
+	m.Helper(helpText, button, FondBlanc, CaractereNoir)
 }
 
 //
@@ -436,23 +436,23 @@ func (m *Minitel) ReturnUp(n int) error {
 	return m.Send(ReturnUp(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveDown(n int) error {
+func (m *Minitel) Down(n int) error {
 	return m.Send(MoveDown(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveRight(n int) error {
+func (m *Minitel) Right(n int) error {
 	return m.Send(MoveRight(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveLeft(n int) error {
+func (m *Minitel) Left(n int) error {
 	return m.Send(MoveLeft(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveUp(n int) error {
+func (m *Minitel) Up(n int) error {
 	return m.Send(MoveUp(n, m.supportCSI))
 }
 
-func (m *Minitel) MoveLineStart() error {
+func (m *Minitel) LineStart() error {
 	return m.Send([]byte{Cr})
 }
 
@@ -462,12 +462,6 @@ func (m *Minitel) MoveLineStart() error {
 
 func (m *Minitel) CursorOn() error {
 	return m.Send(EncodeAttribute(CursorOn))
-}
-
-func (m *Minitel) CursorOnXY(col, row int) error {
-	buf := MoveAt(row, col, m.supportCSI)
-	buf = append(buf, EncodeAttribute(CursorOn)...)
-	return m.Send(buf)
 }
 
 func (m *Minitel) CursorOff() error {

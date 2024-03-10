@@ -14,25 +14,25 @@ func RunMDPPage(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo st
 		mntl.CleanScreen()
 
 		mntl.MoveAt(2, 0)
-		mntl.WriteStringWithAttributes("Changer Mot de Passe", minigo.DoubleHauteur)
+		mntl.PrintAttributes("Changer Mot de Passe", minigo.DoubleHauteur)
 
 		mntl.Return(1)                 // Row 3
 		mntl.HLine(40, minigo.HCenter) // Returns Row 4
 
 		mntl.Return(1) // Row 5
-		mntl.WriteString("MDP Actuel:")
+		mntl.Print("MDP Actuel:")
 		inputs.AppendInput("now", minigo.NewInput(mntl, 5, 13, 10, 1, true))
 
 		mntl.Return(2) // Row 7
-		mntl.WriteString("Nouveau MDP:")
+		mntl.Print("Nouveau MDP:")
 		inputs.AppendInput("new", minigo.NewInput(mntl, 7, 13, 10, 1, true))
 
 		mntl.Return(1) // Row 8
-		mntl.WriteString("Confirmez:")
+		mntl.Print("Confirmez:")
 		inputs.AppendInput("newRep", minigo.NewInput(mntl, 8, 13, 10, 1, true))
 
 		mntl.Return(2) // Row 12
-		mntl.PrintHelper("Validez avec", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+		mntl.Helper("Validez avec", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -91,7 +91,7 @@ func RunMDPPage(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo st
 
 func printErrorMsg(mntl *minigo.Minitel, inputs *minigo.Form, msg string) {
 	mntl.MoveAt(12, 0)
-	mntl.WriteStringWithAttributes(msg, minigo.InversionFond)
+	mntl.PrintAttributes(msg, minigo.InversionFond)
 
 	time.Sleep(2 * time.Second)
 	mntl.CleanLine()

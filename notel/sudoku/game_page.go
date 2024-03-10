@@ -40,8 +40,8 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			d = difficulty.Insane
 			dName = "EXTREME"
 		}
-		mntl.WriteStringLeftAt(2, "Niveau:")
-		mntl.WriteStringLeftAt(3, dName)
+		mntl.PrintLeftAt(2, "Niveau:")
+		mntl.PrintLeftAt(3, dName)
 
 		gen := generator.BackTrackingGenerator(generator.WithRNG(rand.New(rand.NewSource(time.Now().UnixNano()))))
 
@@ -62,7 +62,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		mntl.HLineAt(lineRef+6*padding+2, colRef+1, 9*padding+2, minigo.HCenter)
 
 		// Numbers
-		mntl.WriteAttributes(minigo.InversionFond)
+		mntl.Attributes(minigo.InversionFond)
 		for line := range array {
 			if line%3 == 0 {
 				lineRef += 1
@@ -78,15 +78,15 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 				if val == 0 {
 					matrix.SetInput(line, col, minigo.NewInput(mntl, linePos, colPos, 1, 1, true))
 				} else {
-					mntl.WriteStringAt(linePos, colPos, fmt.Sprintf("%d", val))
+					mntl.PrintAt(linePos, colPos, fmt.Sprintf("%d", val))
 				}
 			}
 			colRef -= 3
 		}
-		mntl.WriteAttributes(minigo.FondNormal)
+		mntl.Attributes(minigo.FondNormal)
 
-		mntl.WriteStringLeftAt(24, "Naviguez ←↑→↓")
-		mntl.PrintHelperRightAt(24, "Vérif. grille", "ENVOI")
+		mntl.PrintLeftAt(24, "Naviguez ←↑→↓")
+		mntl.HelperRightAt(24, "Vérif. grille", "ENVOI")
 		matrix.InitAll()
 
 		return minigo.NoOp
@@ -111,7 +111,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			row := id / 9
 			col := id - 9*row
 			if !grid.Set(row, col, int(val)) {
-				mntl.WriteStringLeftAt(1, fmt.Sprintf("Element invalide: ligne: %d, col: %d", row+1, col+1))
+				mntl.PrintLeftAt(1, fmt.Sprintf("Element invalide: ligne: %d, col: %d", row+1, col+1))
 				time.Sleep(2 * time.Second)
 				mntl.CleanLine()
 
@@ -121,7 +121,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		}
 
 		if !grid.Done() {
-			mntl.WriteStringLeftAt(1, "Grille incomplète")
+			mntl.PrintLeftAt(1, "Grille incomplète")
 			time.Sleep(2 * time.Second)
 			mntl.CleanLine()
 
@@ -131,7 +131,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 		}
 
 		if ok, err := grid.Validate(); err != nil || !ok {
-			mntl.WriteStringLeftAt(1, "Grille invalide")
+			mntl.PrintLeftAt(1, "Grille invalide")
 			time.Sleep(2 * time.Second)
 			mntl.CleanLine()
 
@@ -139,7 +139,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 			return nil, minigo.NoOp
 
 		} else {
-			mntl.WriteStringLeftAt(1, fmt.Sprintf("Bravo %s ! C'est réussi en %s", login, time.Since(start).Round(time.Second).String()))
+			mntl.PrintLeftAt(1, fmt.Sprintf("Bravo %s ! C'est réussi en %s", login, time.Since(start).Round(time.Second).String()))
 			time.Sleep(2 * time.Second)
 		}
 

@@ -110,13 +110,13 @@ func printPreviHelpers(mntl *minigo.Minitel, forecastDate, firstForecastDate, la
 	mntl.MoveAt(23, 0)
 
 	if forecastDate.After(firstForecastDate) {
-		mntl.PrintHelper(forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Helper(forecastDate.Add(-24*time.Hour).Format("02/01"), "RETOUR", minigo.FondBleu, minigo.CaractereBlanc)
 	}
 	if forecastDate.Before(lastForecastDate) {
-		mntl.PrintHelperRight(forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.HelperRight(forecastDate.Add(24*time.Hour).Format("02/01"), "SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 	}
 	mntl.Return(1)
-	mntl.PrintHelperRight("Menu InfoMétéo", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
+	mntl.HelperRight("Menu InfoMétéo", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
 }
 
 func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, forecastDate time.Time, c databases.Commune) {
@@ -125,17 +125,17 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 
 	// City name
 	mntl.MoveAt(2, 1)
-	mntl.WriteAttributes(minigo.DoubleHauteur)
+	mntl.Attributes(minigo.DoubleHauteur)
 	if len(c.NomCommune) >= minigo.ColonnesSimple {
-		mntl.WriteString(c.NomCommune[:minigo.ColonnesSimple-1])
+		mntl.Print(c.NomCommune[:minigo.ColonnesSimple-1])
 	} else {
-		mntl.WriteString(c.NomCommune)
+		mntl.Print(c.NomCommune)
 	}
-	mntl.WriteAttributes(minigo.GrandeurNormale)
+	mntl.Attributes(minigo.GrandeurNormale)
 
 	// Date of the forecast
 	mntl.ReturnCol(1, 1)
-	mntl.WriteString(fmt.Sprintf("%s %d %s",
+	mntl.Print(fmt.Sprintf("%s %d %s",
 		utils.WeekdayIdToString(forecastDate.Weekday()),
 		forecastDate.Day(),
 		utils.MonthIdToString(forecastDate.Month()),
@@ -162,7 +162,7 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 					fct.Main.Temp,
 					weatherConditionCodeToString(fct.Weather[0].ID, fDate.In(location)))
 
-				mntl.WriteString(previsionString)
+				mntl.Print(previsionString)
 
 				mntl.ReturnCol(2, 1)
 				lineId += 2
@@ -194,32 +194,32 @@ func printForecast(mntl *minigo.Minitel, forecast OpenWeatherApiResponse, foreca
 
 	// TEMPERATURES
 	mntl.MoveAt(5, 25)
-	mntl.WriteStringWithAttributes("Températures", minigo.InversionFond)
+	mntl.PrintAttributes("Températures", minigo.InversionFond)
 	mntl.MoveOf(1, -12)
-	mntl.WriteString(fmt.Sprintf("Min: %2.f°C", minTemp))
+	mntl.Print(fmt.Sprintf("Min: %2.f°C", minTemp))
 	mntl.MoveOf(1, -9)
-	mntl.WriteString(fmt.Sprintf("Max: %2.f°C", maxTemp))
+	mntl.Print(fmt.Sprintf("Max: %2.f°C", maxTemp))
 
 	mntl.MoveOf(2, -9)
-	mntl.WriteStringWithAttributes("Vent", minigo.InversionFond)
+	mntl.PrintAttributes("Vent", minigo.InversionFond)
 	mntl.MoveOf(1, -4)
-	mntl.WriteString(fmt.Sprintf("Min: %2.f km/h", 3.6*minWind))
+	mntl.Print(fmt.Sprintf("Min: %2.f km/h", 3.6*minWind))
 	mntl.MoveOf(1, -12)
-	mntl.WriteString(fmt.Sprintf("Max: %2.f km/h", 3.6*maxWind))
+	mntl.Print(fmt.Sprintf("Max: %2.f km/h", 3.6*maxWind))
 
 	mntl.MoveOf(2, -12)
-	mntl.WriteStringWithAttributes("Pression", minigo.InversionFond)
+	mntl.PrintAttributes("Pression", minigo.InversionFond)
 	mntl.MoveOf(1, -8)
-	mntl.WriteString(fmt.Sprintf("Min: %4d hPa", minPress))
+	mntl.Print(fmt.Sprintf("Min: %4d hPa", minPress))
 	mntl.MoveOf(1, -13)
-	mntl.WriteString(fmt.Sprintf("Max: %4d hPa", maxPress))
+	mntl.Print(fmt.Sprintf("Max: %4d hPa", maxPress))
 
 	mntl.MoveOf(2, -13)
-	mntl.WriteStringWithAttributes("Ephéméride", minigo.InversionFond)
+	mntl.PrintAttributes("Ephéméride", minigo.InversionFond)
 	mntl.MoveOf(1, -10)
-	mntl.WriteString(fmt.Sprintf("Lev.: %s",
+	mntl.Print(fmt.Sprintf("Lev.: %s",
 		time.Unix(forecast.City.Sunrise, 0).In(location).Format("15:04")))
 	mntl.MoveOf(1, -11)
-	mntl.WriteString(fmt.Sprintf("Cou.: %s",
+	mntl.Print(fmt.Sprintf("Cou.: %s",
 		time.Unix(forecast.City.Sunset, 0).In(location).Format("15:04")))
 }

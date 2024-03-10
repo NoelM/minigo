@@ -14,41 +14,41 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ModeG0()
 
 		mntl.MoveAt(12, 1)
-		mntl.WriteAttributes(minigo.FondNormal, minigo.DoubleHauteur)
-		mntl.WriteString("Inscrivez vous !")
+		mntl.Attributes(minigo.FondNormal, minigo.DoubleHauteur)
+		mntl.Print("Inscrivez vous !")
 
-		mntl.WriteAttributes(minigo.GrandeurNormale)
+		mntl.Attributes(minigo.GrandeurNormale)
 
 		mntl.ReturnCol(3, 1)
-		mntl.WriteString("PSEUDO:")
+		mntl.Print("PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
 
-		mntl.MoveRight(18)
-		mntl.WriteString("+")
-		mntl.MoveRight(1)
-		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Right(18)
+		mntl.Print("+")
+		mntl.Right(1)
+		mntl.Button("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 
 		mntl.ReturnCol(2, 1)
-		mntl.WriteString("MOT DE PASSE:")
+		mntl.Print("MOT DE PASSE:")
 		inputs.AppendInput("pwd", minigo.NewInput(mntl, 17, 15, 10, 1, true))
 
-		mntl.MoveRight(12)
-		mntl.WriteString("+")
-		mntl.MoveRight(1)
-		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Right(12)
+		mntl.Print("+")
+		mntl.Right(1)
+		mntl.Button("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 
 		mntl.ReturnCol(1, 1)
-		mntl.WriteString("CONFIRMEZ:")
+		mntl.Print("CONFIRMEZ:")
 		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 18, 15, 10, 1, true))
 
 		mntl.ReturnCol(2, 1)
-		mntl.PrintHelper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
+		mntl.Helper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
 		mntl.ReturnCol(3, 1)
-		mntl.WriteString("Compte supprimé après 30j")
+		mntl.Print("Compte supprimé après 30j")
 
 		mntl.ReturnCol(1, 3)
-		mntl.WriteString("sans connexion")
+		mntl.Print("sans connexion")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -114,5 +114,5 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 func printSignUpError(mntl *minigo.Minitel, errorMsg string) {
 	mntl.MoveAt(11, 1)
 	mntl.CleanLine()
-	mntl.WriteStringAtWithAttributes(11, 1, errorMsg, minigo.InversionFond)
+	mntl.PrintAttributesAt(11, 1, errorMsg, minigo.InversionFond)
 }

@@ -94,7 +94,7 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.SendVDT("static/notel.vdt")
 
 	mntl.ModeG0()
-	mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
+	mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
 	list := minigo.NewList(mntl, 8, 1, 17, 2)
 	list.AppendItem(chatKey, "MINICHAT")
@@ -107,23 +107,23 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	list.Display()
 
 	mntl.MoveAt(19, 0)
-	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteStringCenter("Allez faire un tour dans PROFIL")
+	mntl.Attributes(minigo.DoubleHauteur)
+	mntl.PrintCenter("Allez faire un tour dans PROFIL")
 
-	mntl.WriteAttributes(minigo.GrandeurNormale)
+	mntl.Attributes(minigo.GrandeurNormale)
 
 	mntl.Return(1)
-	mntl.WriteStringCenter("Y'a du nouveau !")
+	mntl.PrintCenter("Y'a du nouveau !")
 
 	mntl.ReturnCol(4, 1)
 	cntd := NbConnectedUsers.Load()
 	if cntd < 2 {
-		mntl.WriteString(fmt.Sprintf("> Connecté: %d", cntd))
+		mntl.Print(fmt.Sprintf("> Connecté: %d", cntd))
 	} else {
-		mntl.WriteString(fmt.Sprintf("> Connectés: %d", cntd))
+		mntl.Print(fmt.Sprintf("> Connectés: %d", cntd))
 	}
 
-	mntl.PrintHelperRight("CODE .... +", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
+	mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
 	form.AppendInput("choice", minigo.NewInput(mntl, 24, 25, 4, 1, true))
 
 	form.InitAll()

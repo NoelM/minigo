@@ -19,13 +19,13 @@ func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *min
 
 		var err error
 		if users, err = userDB.LoadAnnuaireUsers(); err != nil {
-			mntl.WriteString("Impossible de charger les utilisateurs")
+			mntl.Print("Impossible de charger les utilisateurs")
 			time.Sleep(2 * time.Second)
 			return minigo.SommaireOp
 		}
 
 		mntl.MoveAt(2, 0)
-		mntl.WriteStringWithAttributes("Annuaire", minigo.DoubleHauteur)
+		mntl.PrintAttributes("Annuaire", minigo.DoubleHauteur)
 
 		mntl.Return(1)
 		mntl.HLine(40, minigo.HCenter)
@@ -48,7 +48,7 @@ func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *min
 		mntl.CleanScreen()
 
 		mntl.MoveAt(2, 0)
-		mntl.WriteStringWithAttributes("Annuaire", minigo.DoubleHauteur)
+		mntl.PrintAttributes("Annuaire", minigo.DoubleHauteur)
 
 		mntl.Return(1)
 		mntl.HLine(40, minigo.HCenter)
@@ -68,7 +68,7 @@ func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *min
 		mntl.CleanScreen()
 
 		mntl.MoveAt(2, 0)
-		mntl.WriteStringWithAttributes("Annuaire", minigo.DoubleHauteur)
+		mntl.PrintAttributes("Annuaire", minigo.DoubleHauteur)
 
 		mntl.Return(1)
 		mntl.HLine(40, minigo.HCenter)
@@ -85,64 +85,64 @@ func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *min
 
 func displayUser(mntl *minigo.Minitel, user databases.User) {
 	mntl.MoveAt(5, 0)
-	mntl.WriteAttributes(minigo.FondBleu)
-	mntl.WriteString(" PSEUDO")
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" PSEUDO")
 	mntl.SendCAN()
 
 	mntl.Return(2)
-	mntl.WriteAttributes(minigo.FondNoir)
-	mntl.WriteString(" ")
-	mntl.MoveLeft(1)
+	mntl.Attributes(minigo.FondNoir)
+	mntl.Print(" ")
+	mntl.Left(1)
 
-	mntl.WriteStringWithAttributes(user.Nick, minigo.DoubleLargeur)
+	mntl.PrintAttributes(user.Nick, minigo.DoubleLargeur)
 
 	mntl.Return(2) // Row 6
-	mntl.WriteAttributes(minigo.FondBleu)
-	mntl.WriteString(" BIO")
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" BIO")
 	mntl.SendCAN()
 
 	mntl.Return(1)
-	mntl.WriteAttributes(minigo.FondNoir)
-	mntl.WriteString(" ")
-	mntl.MoveLeft(1)
+	mntl.Attributes(minigo.FondNoir)
+	mntl.Print(" ")
+	mntl.Left(1)
 
 	for _, line := range minigo.WrapperLargeurNormale(user.Bio) {
 		mntl.Return(1)
-		mntl.WriteString(line)
+		mntl.Print(line)
 	}
 
 	mntl.Return(2)
-	mntl.WriteAttributes(minigo.FondBleu)
-	mntl.WriteString(" TÉLÉPHONE")
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" TÉLÉPHONE")
 	mntl.SendCAN()
 
 	mntl.Return(2)
-	mntl.WriteAttributes(minigo.FondNoir)
-	mntl.WriteString(" ")
-	mntl.MoveLeft(1)
+	mntl.Attributes(minigo.FondNoir)
+	mntl.Print(" ")
+	mntl.Left(1)
 
-	mntl.WriteString(user.Tel)
+	mntl.Print(user.Tel)
 
 	mntl.Return(2) // Row 13
-	mntl.WriteAttributes(minigo.FondBleu)
-	mntl.WriteString(" LIEU")
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" LIEU")
 	mntl.SendCAN()
 
 	mntl.Return(2)
-	mntl.WriteAttributes(minigo.FondNoir)
-	mntl.WriteString(" ")
-	mntl.MoveLeft(1)
+	mntl.Attributes(minigo.FondNoir)
+	mntl.Print(" ")
+	mntl.Left(1)
 
-	mntl.WriteString(user.Location)
+	mntl.Print(user.Location)
 }
 
 func displayHelpers(mntl *minigo.Minitel, pos, maxPos int) {
 	mntl.MoveAt(23, 0)
 
 	if pos != 0 {
-		mntl.PrintHelper(fmt.Sprintf("Page %d/%d", pos, maxPos), "RETOUR", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Helper(fmt.Sprintf("Page %d/%d", pos, maxPos), "RETOUR", minigo.FondBleu, minigo.CaractereBlanc)
 	}
 	if pos+1 != maxPos {
-		mntl.PrintHelperRight(fmt.Sprintf("Page %d/%d", pos+2, maxPos), "SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.HelperRight(fmt.Sprintf("Page %d/%d", pos+2, maxPos), "SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 	}
 }

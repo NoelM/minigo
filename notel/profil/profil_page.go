@@ -15,49 +15,49 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 
 		usr, err := userDB.LoadUser(pseudo)
 		if err != nil {
-			mntl.WriteString("Impossible de charger le profil")
+			mntl.Print("Impossible de charger le profil")
 			time.Sleep(2 * time.Second)
 			return minigo.SommaireOp
 		}
 
 		mntl.MoveAt(2, 0)
-		mntl.WriteStringWithAttributes("Profil", minigo.DoubleHauteur)
+		mntl.PrintAttributes("Profil", minigo.DoubleHauteur)
 
 		mntl.Return(1) // Row 3
 		mntl.HLine(40, minigo.HCenter)
 
 		mntl.Return(1) // Row 5
-		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.WriteString(" PSEUDO")
-		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
-		mntl.WriteString(" " + pseudo)
+		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.Print(" PSEUDO")
+		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.Print(" " + pseudo)
 
 		mntl.Return(1) // Row 6
-		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.WriteString(" BIO")
-		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
-		mntl.WriteString(" ")
+		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.Print(" BIO")
+		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.Print(" ")
 		inputs.AppendInput("bio", minigo.NewInputWithValue(mntl, usr.Bio, 7, 0, 39, 2, true))
 
 		mntl.Return(4) // Row 10
-		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.WriteString(" TÉLÉPHONE")
-		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
-		mntl.WriteString(" ")
+		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.Print(" TÉLÉPHONE")
+		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.Print(" ")
 		inputs.AppendInput("tel", minigo.NewInputWithValue(mntl, usr.Tel, 11, 0, 39, 1, true))
 
 		mntl.Return(3) // Row 13
-		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.WriteString(" LIEU")
-		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
-		mntl.WriteString(" ")
+		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.Print(" LIEU")
+		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.Print(" ")
 		inputs.AppendInput("loc", minigo.NewInputWithValue(mntl, usr.Location, 14, 0, 39, 1, true))
 
 		mntl.Return(3) // Row 16
-		mntl.WriteAttributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.WriteString(" AFFICHAGE ANNUAIRE (OUI/NON)")
-		mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc)
-		mntl.WriteString(" ")
+		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.Print(" AFFICHAGE ANNUAIRE (OUI/NON)")
+		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
+		mntl.Print(" ")
 		appAnnuString := "NON"
 		if usr.AppAnnuaire {
 			appAnnuString = "OUI"
@@ -65,9 +65,9 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 		inputs.AppendInput("annu", minigo.NewInputWithValue(mntl, appAnnuString, 16, 30, 3, 1, true))
 
 		mntl.Return(2)
-		mntl.PrintHelper("Nav.", "RETOUR/SUITE", minigo.FondBleu, minigo.CaractereBlanc)
-		mntl.MoveRight(5)
-		mntl.PrintHelperRight("Sauver", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+		mntl.Helper("Nav.", "RETOUR/SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Right(5)
+		mntl.HelperRight("Sauver", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 
 		mntl.Return(1)
 		mntl.HLine(40, minigo.HCenter)
@@ -78,7 +78,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 		list.Display()
 
 		mntl.MoveAt(23, 1)
-		mntl.PrintHelper("CODE .... +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+		mntl.Helper("CODE .... +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 		inputs.AppendInput("code", minigo.NewInput(mntl, 23, 6, 4, 1, true))
 
 		inputs.InitAll()
@@ -121,7 +121,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 
 		if data["annu"] != "OUI" && data["annu"] != "NON" {
 			mntl.MoveAt(4, 0)
-			mntl.WriteStringWithAttributes("Champ affichage annuaire faux", minigo.InversionFond)
+			mntl.PrintAttributes("Champ affichage annuaire faux", minigo.InversionFond)
 
 			time.Sleep(2 * time.Second)
 			return nil, minigo.SommaireOp
@@ -130,7 +130,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 		usr, err := userDB.LoadUser(pseudo)
 		if err != nil {
 			mntl.MoveAt(4, 0)
-			mntl.WriteString("Impossible de charger le profil")
+			mntl.Print("Impossible de charger le profil")
 
 			time.Sleep(2 * time.Second)
 			return nil, minigo.SommaireOp
@@ -144,14 +144,14 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 		err = userDB.SetUser(usr)
 		if err != nil {
 			mntl.MoveAt(4, 0)
-			mntl.WriteString("Impossible d'enregistrer le profil")
+			mntl.Print("Impossible d'enregistrer le profil")
 
 			time.Sleep(2 * time.Second)
 			return nil, minigo.SommaireOp
 		}
 
 		mntl.MoveAt(4, 0)
-		mntl.WriteString("Modifications effectuées avec succès !")
+		mntl.Print("Modifications effectuées avec succès !")
 
 		time.Sleep(2 * time.Second)
 		return nil, minigo.SommaireOp

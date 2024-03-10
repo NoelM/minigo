@@ -78,17 +78,17 @@ func (c *ChatLayout) printFooter() {
 	c.mntl.HLine(40, minigo.HCenter)
 	// It already went to the next line!
 
-	c.mntl.PrintHelper("Nouveaux Msg", "REPET", minigo.FondBleu, minigo.CaractereBlanc)
-	c.mntl.PrintHelperRight("→", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+	c.mntl.Helper("Nouveaux Msg", "REPET", minigo.FondBleu, minigo.CaractereBlanc)
+	c.mntl.HelperRight("→", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 }
 
 func (c *ChatLayout) printHeader() {
 	cntd := c.cntd.Load()
 
 	if cntd < 2 {
-		c.mntl.WriteStatusLine(fmt.Sprintf("→ Connecté: %d", cntd))
+		c.mntl.PrintStatus(fmt.Sprintf("→ Connecté: %d", cntd))
 	} else {
-		c.mntl.WriteStatusLine(fmt.Sprintf("→ Connectés: %d", cntd))
+		c.mntl.PrintStatus(fmt.Sprintf("→ Connectés: %d", cntd))
 	}
 }
 
@@ -129,13 +129,13 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 		c.cache.Top(Date)
 	}
 
-	c.mntl.WriteAttributes(minigo.CaractereBleu)
+	c.mntl.Attributes(minigo.CaractereBleu)
 
 	length := utf8.RuneCountInString(dateString)
-	c.mntl.MoveRight((minigo.ColonnesSimple - length) / 2)
-	c.mntl.WriteString(dateString)
+	c.mntl.Right((minigo.ColonnesSimple - length) / 2)
+	c.mntl.Print(dateString)
 
-	c.mntl.WriteAttributes(minigo.CaractereBlanc)
+	c.mntl.Attributes(minigo.CaractereBlanc)
 
 	if dir == Up {
 		c.mntl.ReturnUp(1)

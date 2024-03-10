@@ -26,18 +26,18 @@ func NewCommunesPage(mntl *minigo.Minitel, cDB *databases.CommuneDatabase, selec
 
 		communes = cDB.GetCommunesFromCodePostal(codePostal)
 		if communes == nil {
-			mntl.WriteString("Impossible de trouver une commune")
+			mntl.Print("Impossible de trouver une commune")
 			mntl.Return(1)
-			mntl.WriteString("Retour au sommaire dans 5 sec.")
+			mntl.Print("Retour au sommaire dans 5 sec.")
 
 			time.Sleep(5 * time.Second)
 			return minigo.SommaireOp
 		}
 
 		mntl.MoveAt(2, 0)
-		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteString("Choisissez une commune:")
-		mntl.WriteAttributes(minigo.GrandeurNormale)
+		mntl.Attributes(minigo.DoubleHauteur)
+		mntl.Print("Choisissez une commune:")
+		mntl.Attributes(minigo.GrandeurNormale)
 
 		var listItem []string
 		for _, c := range communes {
@@ -48,11 +48,11 @@ func NewCommunesPage(mntl *minigo.Minitel, cDB *databases.CommuneDatabase, selec
 		communeList.Display()
 
 		mntl.MoveAt(len(communes)+5, 1)
-		mntl.PrintHelper("CHOIX: .. +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+		mntl.Helper("CHOIX: .. +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 		inputs.AppendInput("commune_id", minigo.NewInput(mntl, len(communes)+5, 8, 2, 1, true))
 
 		mntl.MoveAt(24, 0)
-		mntl.PrintHelperRight("Retour choix Code Postal →", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
+		mntl.HelperRight("Retour choix Code Postal →", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
 
 		inputs.ActivateFirst()
 

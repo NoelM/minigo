@@ -14,34 +14,34 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		mntl.ModeG0()
 
 		mntl.MoveAt(12, 1)
-		mntl.WriteAttributes(minigo.FondNormal, minigo.DoubleHauteur)
-		mntl.WriteString("Connectez vous au serveur")
+		mntl.Attributes(minigo.FondNormal, minigo.DoubleHauteur)
+		mntl.Print("Connectez vous au serveur")
 
-		mntl.WriteAttributes(minigo.GrandeurNormale)
+		mntl.Attributes(minigo.GrandeurNormale)
 
 		mntl.ReturnCol(3, 1)
-		mntl.WriteString("PSEUDO:")
+		mntl.Print("PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
 
-		mntl.MoveRight(18)
-		mntl.WriteString("+")
-		mntl.MoveRight(1)
-		mntl.WriteButton("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.Right(18)
+		mntl.Print("+")
+		mntl.Right(1)
+		mntl.Button("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
 
 		mntl.ReturnCol(1, 1)
-		mntl.WriteString("MOT DE PASSE:")
+		mntl.Print("MOT DE PASSE:")
 		inputs.AppendInput("pwd", minigo.NewInput(mntl, 16, 15, 10, 1, true))
 
 		mntl.ReturnCol(2, 1)
-		mntl.PrintHelper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
+		mntl.Helper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
 		mntl.ReturnCol(2, 1)
-		mntl.WriteString("Si déconnexions, 2nde ligne:")
+		mntl.Print("Si déconnexions, 2nde ligne:")
 		mntl.ReturnCol(1, 1)
-		mntl.WriteStringWithAttributes("01.83.64.51.44", minigo.InversionFond)
+		mntl.PrintAttributes("01.83.64.51.44", minigo.InversionFond)
 
 		mntl.ReturnCol(3, 1)
-		mntl.PrintHelper("Première visite →", "GUIDE", minigo.FondVert, minigo.CaractereNoir)
+		mntl.Helper("Première visite →", "GUIDE", minigo.FondVert, minigo.CaractereNoir)
 
 		inputs.InitAll()
 
@@ -58,7 +58,7 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 		inputs.ResetAll()
 
 		if len(creds["login"]) == 0 || len(creds["pwd"]) == 0 {
-			mntl.WriteStringAtWithAttributes(11, 1, "Pseudo ou MDP vides", minigo.InversionFond)
+			mntl.PrintAttributesAt(11, 1, "Pseudo ou MDP vides", minigo.InversionFond)
 			inputs.ActivateFirst()
 			return nil, minigo.NoOp
 		}
@@ -70,7 +70,7 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 			logs.InfoLog("sign-in: logged as user=%s\n", creds["login"])
 			return creds, minigo.EnvoiOp
 		} else {
-			mntl.WriteStringAtWithAttributes(11, 1, "Pseudo ou MDP invalides", minigo.InversionFond)
+			mntl.PrintAttributesAt(11, 1, "Pseudo ou MDP invalides", minigo.InversionFond)
 			inputs.ActivateFirst()
 			return nil, minigo.NoOp
 		}

@@ -12,21 +12,21 @@ func RunSupprPage(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo 
 		mntl.CleanScreen()
 
 		mntl.MoveAt(2, 0)
-		mntl.WriteStringWithAttributes("Supprimer son Compte", minigo.DoubleHauteur)
+		mntl.PrintAttributes("Supprimer son Compte", minigo.DoubleHauteur)
 
 		mntl.Return(1)                 // Row 3
 		mntl.HLine(40, minigo.HCenter) // Returns Row 4
 
 		mntl.Return(1) // Row 5
-		mntl.WriteString("Ecrire \"supprimer\":")
+		mntl.Print("Ecrire \"supprimer\":")
 		inputs.AppendInput("suppr", minigo.NewInput(mntl, 5, 22, 9, 1, true))
 
 		mntl.Return(2) // Row 7
-		mntl.WriteString("Mot de passe:")
+		mntl.Print("Mot de passe:")
 		inputs.AppendInput("pwd", minigo.NewInput(mntl, 7, 22, 10, 1, true))
 
 		mntl.Return(2) // Row 9
-		mntl.PrintHelper("Validez avec", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+		mntl.Helper("Validez avec", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 
 		inputs.InitAll()
 		return minigo.NoOp

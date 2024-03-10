@@ -1,4 +1,4 @@
-package main
+package databases
 
 import (
 	"encoding/csv"

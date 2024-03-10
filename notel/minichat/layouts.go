@@ -59,31 +59,36 @@ func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, cntd 
 }
 
 func (c *ChatLayout) cleanFooter() {
-	c.mntl.MoveAt(rowHLine, 1)
+	c.mntl.MoveAt(rowHLine, 0)
 	c.mntl.CleanLine()
 
-	c.mntl.MoveAt(rowHelpers-1, 1)
+	c.mntl.Return(rowHelpers - 1 - rowHLine)
 	c.mntl.CleanLine()
 
-	c.mntl.MoveAt(24, 1)
+	c.mntl.Return(1)
 	c.mntl.CleanLine()
 }
 
 func (c *ChatLayout) printFooter() {
-	c.mntl.HLine(rowHLine, 1, 40, minigo.HCenter)
+	c.mntl.MoveAt(rowHLine, 0)
+	c.mntl.HLine(40, minigo.HCenter)
+	// It already went to the next line!
 
-	c.mntl.HLine(rowHelpers-1, 1, 40, minigo.HCenter)
-	c.mntl.WriteHelperLeftAt(rowHelpers, "Màj. écran", "REPET.")
-	c.mntl.WriteHelperRightAt(rowHelpers, "Message +", "ENVOI")
+	c.mntl.Return(rowHelpers - 1 - rowHLine - 1)
+	c.mntl.HLine(40, minigo.HCenter)
+	// It already went to the next line!
+
+	c.mntl.Helper("Nouveaux Msg", "REPET", minigo.FondBleu, minigo.CaractereBlanc)
+	c.mntl.HelperRight("→", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 }
 
 func (c *ChatLayout) printHeader() {
 	cntd := c.cntd.Load()
 
 	if cntd < 2 {
-		c.mntl.WriteStatusLine(fmt.Sprintf("> Connecté: %d", cntd))
+		c.mntl.PrintStatus(fmt.Sprintf("→ Connecté: %d", cntd))
 	} else {
-		c.mntl.WriteStatusLine(fmt.Sprintf("> Connectés: %d", cntd))
+		c.mntl.PrintStatus(fmt.Sprintf("→ Connectés: %d", cntd))
 	}
 }
 
@@ -124,13 +129,13 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 		c.cache.Top(Date)
 	}
 
-	c.mntl.WriteAttributes(minigo.CaractereBleu)
+	c.mntl.Attributes(minigo.CaractereBleu)
 
 	length := utf8.RuneCountInString(dateString)
-	c.mntl.MoveCursorRight((minigo.ColonnesSimple - length) / 2)
-	c.mntl.WriteString(dateString)
+	c.mntl.Right((minigo.ColonnesSimple - length) / 2)
+	c.mntl.Print(dateString)
 
-	c.mntl.WriteAttributes(minigo.CaractereBlanc)
+	c.mntl.Attributes(minigo.CaractereBlanc)
 
 	if dir == Up {
 		c.mntl.ReturnUp(1)
@@ -141,7 +146,7 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 }
 
 func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
-	lines, vdt := FormatMessage(c.messages[msgId], dir)
+	lines, vdt := FormatMessage(c.messages[msgId], dir, c.mntl.SupportCSI())
 
 	if limit < 0 || limit > lines {
 		limit = lines
@@ -169,7 +174,7 @@ func (c *ChatLayout) Init() {
 
 	// No cursor and go to the origin
 	c.mntl.CursorOff()
-	c.mntl.MoveAt(1, 1)
+	c.mntl.MoveAt(1, 0)
 
 	// We'll use the rouleau mode from the TOP
 	// Until one reaches the `rowMsgZoneEnd`
@@ -220,7 +225,7 @@ func (c *ChatLayout) Update() {
 	// Move the cursor there, otherwise, the rouleau mode
 	// will not push blank lines to `endMsgZone`
 	if curLine < 24 {
-		c.mntl.MoveAt(24, 1)
+		c.mntl.MoveAt(24, 0)
 	}
 
 	// Now push curLine to rowMsgZoneEng

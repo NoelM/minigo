@@ -1,7 +1,5 @@
 package minigo
 
-import "fmt"
-
 type List struct {
 	mntl        *Minitel
 	orderedKeys []string
@@ -30,22 +28,34 @@ func (l *List) AppendItem(key, value string) {
 }
 
 func (l *List) Display() {
-
 	line := l.refRow
+	l.mntl.MoveAt(l.refRow, l.refCol)
+
 	colAlign := 0
 	for _, key := range l.orderedKeys {
 		value := l.items[key]
 
-		l.mntl.WriteAttributes(GrandeurNormale, InversionFond)
-		l.mntl.WriteStringAt(line, colAlign+l.refCol, fmt.Sprintf(" %s ", key))
+		l.mntl.Attributes(FondBlanc, CaractereNoir)
+		l.mntl.Print(" ")
 
-		l.mntl.WriteAttributes(FondNormal)
-		l.mntl.WriteStringAt(line, colAlign+l.refCol+len(key)+3, value)
+		l.mntl.Print(key)
+
+		l.mntl.Attributes(FondNormal, CaractereBlanc)
+		l.mntl.Print(" ")
+
+		l.mntl.Right(1)
+
+		l.mntl.Attributes(FondNormal)
+		l.mntl.Print(value)
 
 		line += l.brk
-		if line >= l.maxRow {
+		if line >= l.maxRow && colAlign == 0 {
 			line = l.refRow
 			colAlign = 20
+			l.mntl.MoveAt(l.refRow, l.refCol+colAlign)
+		} else {
+			l.mntl.Return(l.brk)
+			l.mntl.Right(l.refCol + colAlign)
 		}
 	}
 }

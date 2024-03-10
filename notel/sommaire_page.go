@@ -5,7 +5,10 @@ import (
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/logs"
+	"github.com/NoelM/minigo/notel/meteo"
 	"github.com/NoelM/minigo/notel/minichat"
+	"github.com/NoelM/minigo/notel/profil"
+	"github.com/NoelM/minigo/notel/serveur"
 	"github.com/NoelM/minigo/notel/sudoku"
 )
 
@@ -17,24 +20,27 @@ const (
 	serveurId
 	sudokuId
 	profilId
+	annuaireId
 )
 
 const (
-	chatKey    = "*CHA"
-	meteoKey   = "*MTO"
-	infoKey    = "*INF"
-	serveurKey = "*SRV"
-	sudokuKey  = "*SDK"
-	profilKey  = "*PRO"
+	chatKey     = "*CHA"
+	meteoKey    = "*MTO"
+	infoKey     = "*INF"
+	serveurKey  = "*SRV"
+	sudokuKey   = "*SDK"
+	profilKey   = "*PRO"
+	annuaireKey = "*ANU"
 )
 
 var ServIdMap = map[string]int{
-	chatKey:    chatId,
-	meteoKey:   meteoId,
-	infoKey:    infoId,
-	serveurKey: serveurId,
-	sudokuKey:  sudokuId,
-	profilKey:  profilId,
+	chatKey:     chatId,
+	meteoKey:    meteoId,
+	infoKey:     infoId,
+	serveurKey:  serveurId,
+	sudokuKey:   sudokuId,
+	profilKey:   profilId,
+	annuaireKey: annuaireId,
 }
 
 func SommaireHandler(m *minigo.Minitel, nick string) {
@@ -54,15 +60,17 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 		case chatId:
 			op = minichat.RunChatPage(m, MessageDb, &NbConnectedUsers, nick, promMsgNb)
 		case meteoId:
-			op = ServiceMeteo(m)
+			op = meteo.ServiceMeteo(m, CommuneDb)
 		case infoId:
 			_, op = NewPageInfo(m).Run()
 		case serveurId:
-			_, op = NewServeurPage(m).Run()
+			_, op = serveur.NewServeurPage(m).Run()
 		case sudokuId:
 			op = sudoku.SudokuService(m, nick)
 		case profilId:
-			op = RunPageProfil(m, UsersDb, nick)
+			op = profil.ProfilService(m, UsersDb, nick)
+		case annuaireId:
+			_, op = NewPageAnnuaire(m, UsersDb).Run()
 		}
 	}
 	logs.InfoLog("quits sommaire handler\n")
@@ -87,35 +95,37 @@ func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]s
 	mntl.SendVDT("static/notel.vdt")
 
 	mntl.ModeG0()
-	mntl.WriteAttributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
+	mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
-	listLeft := minigo.NewList(mntl, 8, 1, 20, 2)
-	listLeft.AppendItem(chatKey, "MINICHAT")
-	listLeft.AppendItem(meteoKey, "METEO")
-	listLeft.AppendItem(infoKey, "INFOS")
-	listLeft.AppendItem(sudokuKey, "SUDOKU")
-	listLeft.AppendItem(serveurKey, "SERVEUR")
-	listLeft.Display()
+	list := minigo.NewList(mntl, 8, 1, 17, 2)
+	list.AppendItem(chatKey, "MINICHAT")
+	list.AppendItem(meteoKey, "METEO")
+	list.AppendItem(infoKey, "INFOS")
+	list.AppendItem(sudokuKey, "SUDOKU")
+	list.AppendItem(serveurKey, "SERVEUR")
+	list.AppendItem(profilKey, "PROFIL")
+	list.AppendItem(annuaireKey, "ANNUAIRE")
+	list.Display()
 
-	listRight := minigo.NewList(mntl, 8, 20, 20, 2)
-	listRight.AppendItem(profilKey, "PROFIL")
-	listRight.Display()
+	mntl.MoveAt(19, 0)
+	mntl.Attributes(minigo.DoubleHauteur)
+	mntl.PrintCenter("Allez faire un tour dans PROFIL")
 
-	mntl.WriteAttributes(minigo.DoubleHauteur)
-	mntl.WriteStringCenterAt(19, "! NOTEL est de retour !")
-	mntl.WriteAttributes(minigo.GrandeurNormale)
+	mntl.Attributes(minigo.GrandeurNormale)
 
-	mntl.WriteStringCenterAt(20, "RDV Dim. 3 Mars à 20h")
+	mntl.Return(1)
+	mntl.PrintCenter("Y'a du nouveau !")
 
+	mntl.ReturnCol(4, 1)
 	cntd := NbConnectedUsers.Load()
 	if cntd < 2 {
-		mntl.WriteStringLeftAt(24, fmt.Sprintf("> Connecté: %d", cntd))
+		mntl.Print(fmt.Sprintf("> Connecté: %d", cntd))
 	} else {
-		mntl.WriteStringLeftAt(24, fmt.Sprintf("> Connectés: %d", cntd))
+		mntl.Print(fmt.Sprintf("> Connectés: %d", cntd))
 	}
 
-	mntl.WriteHelperRightAt(24, "CODE ....", "ENVOI")
-	form.AppendInput("choice", minigo.NewInput(mntl, 24, 30, 4, 1, true))
+	mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
+	form.AppendInput("choice", minigo.NewInput(mntl, 24, 25, 4, 1, true))
 
 	form.InitAll()
 

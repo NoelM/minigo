@@ -1,4 +1,4 @@
-package main
+package meteo
 
 import (
 	"encoding/json"
@@ -7,49 +7,53 @@ import (
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/databases"
 	"github.com/NoelM/minigo/notel/logs"
 )
 
-func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo.Page {
+func NewCommunesPage(mntl *minigo.Minitel, cDB *databases.CommuneDatabase, selectedCP map[string]string) *minigo.Page {
 	communesPage := minigo.NewPage("communes", mntl, selectedCP)
 
-	var communes []Commune
+	var communes []databases.Commune
 
 	communesPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
 		codePostal, ok := initData["code_postal"]
 		if !ok {
-			return sommaireId
+			return minigo.SommaireOp
 		}
 
-		communes = CommuneDb.GetCommunesFromCodePostal(codePostal)
+		communes = cDB.GetCommunesFromCodePostal(codePostal)
 		if communes == nil {
-			mntl.CleanScreen()
-			mntl.WriteStringLeftAt(1, "IMPOSSIBLE DE TROUVER UNE COMMUNE")
-			mntl.WriteStringLeftAt(2, "RETOUR AU SOMMAIRE DANS 5 SEC.")
+			mntl.Print("Impossible de trouver une commune")
+			mntl.Return(1)
+			mntl.Print("Retour au sommaire dans 5 sec.")
+
 			time.Sleep(5 * time.Second)
-			return sommaireId
+			return minigo.SommaireOp
 		}
 
-		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeftAt(2, "CHOISISSEZ UNE COMMUNE:")
-		mntl.WriteAttributes(minigo.GrandeurNormale)
+		mntl.MoveAt(2, 0)
+		mntl.Attributes(minigo.DoubleHauteur)
+		mntl.Print("Choisissez une commune:")
+		mntl.Attributes(minigo.GrandeurNormale)
 
-		communeList := minigo.NewListEnum(mntl, nil)
-		communeList.SetXY(1, 4)
-		communeList.SetEntryHeight(1)
-
+		var listItem []string
 		for _, c := range communes {
-			communeList.AppendItem(fmt.Sprintf("%s (%02s)", c.NomCommune, c.CodeDepartement))
+			listItem = append(listItem, fmt.Sprintf("%s (%02s)", c.NomCommune, c.CodeDepartement))
 		}
+		communeList := minigo.NewListEnum(mntl, listItem, 4, 1, 20, 1)
+
 		communeList.Display()
 
-		mntl.WriteHelperLeftAt(len(communes)+5, "CHOIX: .. +", "ENVOI")
-
-		mntl.WriteHelperLeftAt(24, "CHOIX CODE POSTAL", "SOMMAIRE")
-
+		mntl.MoveAt(len(communes)+5, 1)
+		mntl.Helper("CHOIX: .. +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 		inputs.AppendInput("commune_id", minigo.NewInput(mntl, len(communes)+5, 8, 2, 1, true))
+
+		mntl.MoveAt(24, 0)
+		mntl.HelperRight("Retour choix Code Postal →", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
+
 		inputs.ActivateFirst()
 
 		return minigo.NoOp
@@ -64,19 +68,19 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 		communeId, err := strconv.ParseInt(inputs.ValueActive(), 10, 32)
 		if err != nil {
 			logs.ErrorLog("unable to parse code choice: %s\n", err.Error())
-			return nil, sommaireId
+			return nil, minigo.SommaireOp
 		}
 
 		if communeId > 0 && int(communeId-1) >= len(communes) {
 			logs.ErrorLog("choice %d out of range\n", communeId)
-			return nil, sommaireId
+			return nil, minigo.SommaireOp
 		}
 		logs.InfoLog("chosen commune: %s\n", communes[communeId-1].NomCommune)
 
 		data, err := json.Marshal(communes[communeId-1])
 		if err != nil {
 			logs.ErrorLog("unable to marshall JSON: %s\n", err.Error())
-			return nil, sommaireId
+			return nil, minigo.SommaireOp
 		}
 
 		return map[string]string{"commune": string(data)}, minigo.QuitOp
@@ -92,7 +96,7 @@ func NewCommunesPage(mntl *minigo.Minitel, selectedCP map[string]string) *minigo
 	})
 
 	communesPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		return nil, sommaireId
+		return nil, minigo.SommaireOp
 	})
 
 	return communesPage

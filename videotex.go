@@ -38,73 +38,122 @@ func CursorInScreen(x, y int, resolution uint) (bool, error) {
 	}
 }
 
-func MoveAt(row, col int) (buf []byte) {
+// MoveAt moves the cursor ton an absolute position
+func MoveAt(row, col int, csi bool) (buf []byte) {
 	if row == 1 && col == 1 {
-		buf = []byte{Rs}
-	} else {
+		return []byte{Rs}
+	} else if csi && (row+col) > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(row)...)
 		buf = append(buf, 0x3B)
 		buf = append(buf, PCode(col)...)
 		buf = append(buf, 0x48)
+	} else {
+		buf = []byte{Rs}
+		for i := 1; i < row; i += 1 {
+			buf = append(buf, Lf)
+		}
+		for i := 0; i < col; i += 1 {
+			buf = append(buf, Ht)
+		}
 	}
-
 	return
 }
 
-func MoveLeft(n int) (buf []byte) {
+// MoveOf moves the cursor relatively from its current position
+// * row > 0, moves down
+// * col > 0, moves right
+func MoveOf(row, col int, csi bool) (buf []byte) {
+	if row > 0 {
+		buf = append(buf, MoveDown(row, csi)...)
+	} else if row < 0 {
+		buf = append(buf, MoveUp(-row, csi)...)
+	}
+
+	if col > 0 {
+		buf = append(buf, MoveRight(col, csi)...)
+	} else if col < 0 {
+		buf = append(buf, MoveLeft(-col, csi)...)
+	}
+	return
+}
+
+func MoveLeft(n int, csi bool) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Bs)
-	} else {
+	} else if csi && n > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x44)
+	} else {
+		for i := 0; i < n; i += 1 {
+			buf = append(buf, Bs)
+		}
 	}
 	return
 }
 
-func MoveRight(n int) (buf []byte) {
+func MoveRight(n int, csi bool) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Ht)
-	} else {
+	} else if csi && n > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x43)
+	} else {
+		for i := 0; i < n; i += 1 {
+			buf = append(buf, Ht)
+		}
 	}
 	return
 }
 
-func MoveDown(n int) (buf []byte) {
+func MoveDown(n int, csi bool) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Lf)
-	} else {
+	} else if csi && n > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x42)
+	} else {
+		for i := 0; i < n; i += 1 {
+			buf = append(buf, Lf)
+		}
 	}
 	return
 }
 
-func MoveUp(n int) (buf []byte) {
+func MoveUp(n int, csi bool) (buf []byte) {
 	if n == 1 {
 		buf = append(buf, Vt)
-	} else {
+	} else if csi && n > 12 {
 		buf = Word(Csi)
 		buf = append(buf, PCode(n)...)
 		buf = append(buf, 0x41)
+	} else {
+		for i := 0; i < n; i += 1 {
+			buf = append(buf, Vt)
+		}
 	}
 	return
 }
 
-func Return(n int) (buf []byte) {
+func Return(n int, csi bool) (buf []byte) {
 	buf = append(buf, Cr)
-	buf = append(buf, MoveDown(n)...)
+	buf = append(buf, MoveDown(n, csi)...)
 	return
 }
 
-func ReturnUp(n int) (buf []byte) {
+func ReturnCol(n, col int, csi bool) (buf []byte) {
 	buf = append(buf, Cr)
-	buf = append(buf, MoveUp(n)...)
+	buf = append(buf, MoveDown(n, csi)...)
+	buf = append(buf, MoveRight(col, csi)...)
+	return
+}
+
+func ReturnUp(n int, csi bool) (buf []byte) {
+	buf = append(buf, Cr)
+	buf = append(buf, MoveUp(n, csi)...)
 	return
 }
 
@@ -381,14 +430,27 @@ func RepeatRune(r rune, n int) (buf []byte) {
 	return
 }
 
-func HLine(row, col, len int, t LineType) (buf []byte) {
-	buf = MoveAt(row, col)
+func HLine(len int, t LineType) []byte {
+	return []byte{byte(t), Rep, 0x40 + byte(len-1)}
+}
+
+func HLineAt(row, col, len int, t LineType, csi bool) (buf []byte) {
+	buf = MoveAt(row, col, csi)
 	buf = append(buf, byte(t), Rep, 0x40+byte(len-1))
 	return
 }
 
-func VLine(row, col, len int, t LineType) (buf []byte) {
-	buf = MoveAt(row, col)
+func VLine(len int, t LineType) (buf []byte) {
+	for i := 0; i < len; i += 1 {
+		// BS = moves cursor left
+		// LF = moves cursor down
+		buf = append(buf, byte(t), Bs, Lf)
+	}
+	return
+}
+
+func VLineAt(row, col, len int, t LineType, csi bool) (buf []byte) {
+	buf = MoveAt(row, col, csi)
 
 	for i := 0; i < len; i += 1 {
 		// BS = moves cursor left
@@ -398,11 +460,11 @@ func VLine(row, col, len int, t LineType) (buf []byte) {
 	return
 }
 
-func Rectangle(row, col, width, height int) (buf []byte) {
-	buf = HLine(row, col, width, Bottom)
-	buf = append(buf, VLine(row+1, col, height-2, Left)...)
-	buf = append(buf, VLine(row+1, col+width, height-2, Left)...)
-	buf = append(buf, HLine(row+height-1, col, width, Top)...)
+func RectangleAt(row, col, width, height int, csi bool) (buf []byte) {
+	buf = HLineAt(row, col, width, Bottom, csi)
+	buf = append(buf, VLineAt(row+1, col, height-2, Left, csi)...)
+	buf = append(buf, VLineAt(row+1, col+width, height-2, Left, csi)...)
+	buf = append(buf, HLineAt(row+height-1, col, width, Top, csi)...)
 	return
 }
 

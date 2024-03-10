@@ -8,11 +8,11 @@ func NewPageMessage(mntl *minigo.Minitel, pseudo string) *minigo.Page {
 	homePage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
-		mntl.WriteStringAtWithAttributes(10, 1, "Publiez un message", minigo.DoubleHauteur)
+		mntl.PrintAttributesAt(10, 1, "Publiez un message", minigo.DoubleHauteur)
 		inputs.AppendInput("message", minigo.NewInput(mntl, 12, 1, 40, 5, true))
 
-		mntl.WriteHelperRightAt(18, "Publiez avec", "ENVOI")
-		mntl.WriteHelperLeftAt(24, "Menu", "SOMMAIRE")
+		mntl.HelperRightAt(18, "Publiez avec", "ENVOI")
+		mntl.HelperLeftAt(24, "Menu", "SOMMAIRE")
 
 		inputs.InitAll()
 		return minigo.NoOp

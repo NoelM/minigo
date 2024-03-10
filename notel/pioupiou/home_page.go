@@ -10,12 +10,12 @@ func NewPageHome(mntl *minigo.Minitel) *minigo.Page {
 	homePage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
-		mntl.WriteStringAtWithAttributes(10, 1, "Microblog sur Minitel", minigo.DoubleHauteur)
-		mntl.WriteHelperLeftAt(11, "Retrouvez cet aide avec", "GUIDE")
+		mntl.PrintAttributesAt(10, 1, "Microblog sur Minitel", minigo.DoubleHauteur)
+		mntl.HelperLeftAt(11, "Retrouvez cet aide avec", "GUIDE")
 
-		mntl.WriteStringLeftAt(13, "/FIL  Ouvrir son FIL personnel")
-		mntl.WriteStringLeftAt(14, "/MSG  Ecrivez un MESSAGE")
-		mntl.WriteStringLeftAt(15, "/ANU  ANNUAIRE des profils")
+		mntl.PrintLeftAt(13, "/FIL  Ouvrir son FIL personnel")
+		mntl.PrintLeftAt(14, "/MSG  Ecrivez un MESSAGE")
+		mntl.PrintLeftAt(15, "/ANU  ANNUAIRE des profils")
 		//mntl.WriteStringLeft(15, "/NOT  Ouvrir ses NOTIFICATIONS")
 		//mntl.WriteStringLeft(16, "/CRC  CHERCHEZ profil ou mot-dièse")
 		//mntl.WriteStringLeft(17, "/PRO  Ouvrir son PROFIL")
@@ -23,9 +23,9 @@ func NewPageHome(mntl *minigo.Minitel) *minigo.Page {
 		//mntl.WriteStringLeft(19, "Mentionnez un utilisateur avec @PSEUDO")
 		//mntl.WriteStringLeft(20, "Utilisez des mots-dièses #EXEMPLE")
 
-		mntl.WriteHelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
+		mntl.HelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
 		inputs.AppendInput("command", minigo.NewInput(mntl, 24, 29, 4, 1, true))
-		mntl.WriteHelperRightAt(24, ".... +", "ENVOI")
+		mntl.HelperRightAt(24, ".... +", "ENVOI")
 
 		inputs.InitAll()
 		return minigo.NoOp

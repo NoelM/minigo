@@ -1,4 +1,4 @@
-package main
+package meteo
 
 import (
 	"github.com/NoelM/minigo"
@@ -14,20 +14,27 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.SendVDT("static/meteo.vdt")
 		mntl.ModeG0()
 
-		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeftAt(10, "Prévisions Météo")
-		mntl.WriteAttributes(minigo.GrandeurNormale)
+		mntl.MoveAt(9, 1)
+		mntl.PrintAttributes("Prévisions Météo", minigo.DoubleHauteur)
 
-		mntl.WriteHelperLeftAt(12, "CODE POSTAL:       +", "ENVOI")
-		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 12, 14, 5, 1, true))
+		mntl.ReturnCol(2, 1)
+		mntl.Helper("CODE POSTAL:       →", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+		inputs.AppendInput("code_postal", minigo.NewInput(mntl, 11, 14, 5, 1, true))
 
-		mntl.WriteAttributes(minigo.DoubleHauteur)
-		mntl.WriteStringLeftAt(16, "Observations en Direct")
-		mntl.WriteAttributes(minigo.GrandeurNormale)
-		mntl.WriteStringLeftAt(18, "Avec variations sur 24h")
+		mntl.ReturnCol(4, 1)
+		mntl.PrintAttributes("Observations en Direct", minigo.DoubleHauteur)
 
-		mntl.WriteHelperLeftAt(20, "APPUYEZ SUR", "SUITE")
-		mntl.WriteHelperLeftAt(24, "Menu NOTEL", "SOMMAIRE")
+		mntl.ReturnCol(2, 1)
+		mntl.Print("(Parfois panne Météo France...)")
+
+		mntl.ReturnCol(1, 1)
+		mntl.Print("Avec variations sur 24h")
+
+		mntl.ReturnCol(2, 1)
+		mntl.Helper("Consulter →", "SUITE", minigo.FondRouge, minigo.CaractereBlanc)
+
+		mntl.ReturnCol(4, 1)
+		mntl.Helper("Menu NOTEL", "SOMMAIRE", minigo.FondBleu, minigo.CaractereBlanc)
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -53,7 +60,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 	})
 
 	codePostalPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		return nil, sommaireId
+		return nil, minigo.SommaireOp
 	})
 
 	codePostalPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

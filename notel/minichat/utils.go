@@ -47,7 +47,7 @@ func GetDateString(lastMsg, newMsg time.Time) (str string) {
 	return
 }
 
-func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt [][]byte) {
+func FormatMessage(msg databases.Message, dir RouleauDir, csi bool) (lines int, vdt [][]byte) {
 	// Message Format
 	// [nick]_[msg]
 	formated := msg.Nick + " " + msg.Text
@@ -67,9 +67,9 @@ func FormatMessage(msg databases.Message, dir RouleauDir) (lines int, vdt [][]by
 
 		buf := make([]byte, 0)
 		if dir == Up {
-			buf = append(buf, minigo.ReturnUp(1)...)
+			buf = append(buf, minigo.ReturnUp(1, csi)...)
 		} else if dir == Down {
-			buf = append(buf, minigo.Return(1)...)
+			buf = append(buf, minigo.Return(1, csi)...)
 		}
 
 		if lineId == 0 {

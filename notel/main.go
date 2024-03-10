@@ -19,7 +19,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var CommuneDb *CommuneDatabase
+var CommuneDb *databases.CommuneDatabase
 var MessageDb *databases.MessageDatabase
 var UsersDb *databases.UsersDatabase
 
@@ -77,7 +77,7 @@ const (
 func main() {
 	var wg sync.WaitGroup
 
-	CommuneDb = NewCommuneDatabase()
+	CommuneDb = databases.NewCommuneDatabase()
 	CommuneDb.LoadCommuneDatabase("/media/core/communes-departement-region.csv")
 
 	MessageDb = databases.NewMessageDatabase()
@@ -138,6 +138,7 @@ func serveWS(wg *sync.WaitGroup, url string) {
 		innerWg.Add(2)
 
 		m := minigo.NewMinitel(ws, false, WSTag, promConnLostNb, &innerWg)
+		m.NoCSI()
 		go m.Serve()
 
 		NotelHandler(m, WSTag, &innerWg)

@@ -13,18 +13,42 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.SendVDT("static/connect.vdt")
 		mntl.ModeG0()
 
-		mntl.WriteStringAtWithAttributes(10, 1, "Inscrivez vous !", minigo.FondNormal, minigo.DoubleHauteur)
-		mntl.WriteStringLeftAt(11, "Compte supprimé si")
-		mntl.WriteStringLeftAt(12, "30j sans connexion")
+		mntl.MoveAt(12, 1)
+		mntl.Attributes(minigo.FondNormal, minigo.DoubleHauteur)
+		mntl.Print("Inscrivez vous !")
 
-		mntl.WriteStringLeftAt(15, "PSEUDO:")
+		mntl.Attributes(minigo.GrandeurNormale)
+
+		mntl.ReturnCol(3, 1)
+		mntl.Print("PSEUDO:")
 		inputs.AppendInput("login", minigo.NewInput(mntl, 15, 15, 10, 1, true))
-		mntl.WriteStringLeftAt(16, "MOT DE PASSE:")
-		inputs.AppendInput("pwd", minigo.NewInput(mntl, 16, 15, 10, 1, true))
-		mntl.WriteStringLeftAt(17, "MOT DE PASSE:")
-		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 17, 15, 10, 1, true))
 
-		mntl.WriteHelperLeftAt(19, "Validez avec", "ENVOI")
+		mntl.Right(18)
+		mntl.Print("+")
+		mntl.Right(1)
+		mntl.Button("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+
+		mntl.ReturnCol(2, 1)
+		mntl.Print("MOT DE PASSE:")
+		inputs.AppendInput("pwd", minigo.NewInput(mntl, 17, 15, 10, 1, true))
+
+		mntl.Right(12)
+		mntl.Print("+")
+		mntl.Right(1)
+		mntl.Button("SUITE", minigo.FondBleu, minigo.CaractereBlanc)
+
+		mntl.ReturnCol(1, 1)
+		mntl.Print("CONFIRMEZ:")
+		inputs.AppendInput("pwdRepeat", minigo.NewInput(mntl, 18, 15, 10, 1, true))
+
+		mntl.ReturnCol(2, 1)
+		mntl.Helper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
+
+		mntl.ReturnCol(3, 1)
+		mntl.Print("Compte supprimé après 30j")
+
+		mntl.ReturnCol(1, 3)
+		mntl.Print("sans connexion")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -90,5 +114,5 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 func printSignUpError(mntl *minigo.Minitel, errorMsg string) {
 	mntl.MoveAt(11, 1)
 	mntl.CleanLine()
-	mntl.WriteStringAtWithAttributes(11, 1, errorMsg, minigo.InversionFond)
+	mntl.PrintAttributesAt(11, 1, errorMsg, minigo.InversionFond)
 }

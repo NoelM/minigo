@@ -287,7 +287,7 @@ func (n *Network) sendLoop() {
 
 func (n *Network) send(data []byte) {
 	n.conn.Write(data)
-	time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
+	//time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
 }
 
 func (n *Network) Connected() bool {

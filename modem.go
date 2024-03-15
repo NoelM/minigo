@@ -46,10 +46,12 @@ func NewModem(portName string, baud int, init []ATCommand, tag string, connAttem
 }
 
 func (m *Modem) Init() error {
-	rep := strings.NewReplacer("\n", " ", "\r", " ")
-
 	infoLog.Println("modem init sequence")
+
+	m.port.SetDTR(false)
 	m.port.SetReadTimeout(serial.NoTimeout)
+
+	rep := strings.NewReplacer("\n", " ", "\r", " ")
 	for _, at := range m.init {
 		infoLog.Printf("send to modem '%s'\n", at)
 
@@ -76,6 +78,7 @@ func (m *Modem) sendCommandAndWait(at ATCommand) (bool, string, error) {
 	if len(at.Command) > 0 {
 		if _, err := m.port.Write([]byte(at.Command + "\r\n")); err != nil {
 			errorLog.Printf("unable to write to port: %s\n", err.Error())
+
 			return false, "", &ConnectorError{code: Unreachable, raw: err}
 		}
 	}
@@ -91,6 +94,7 @@ func (m *Modem) sendCommandAndWait(at ATCommand) (bool, string, error) {
 				errorLog.Printf("unable to read from port: %s\n", err.Error())
 				return false, "", &ConnectorError{code: Unreachable, raw: err}
 			}
+
 			if len(buffer) == 0 {
 				warnLog.Println("no data replied")
 				break
@@ -146,12 +150,14 @@ func (m *Modem) ReadTimeout(d time.Duration) ([]byte, error) {
 func (m *Modem) Connected() bool {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
+
 	return m.connected
 }
 
 func (m *Modem) SetConnected(status bool) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
 	m.connected = status
 }
 
@@ -171,9 +177,10 @@ func (m *Modem) Serve(forceRing bool) {
 
 		// Connection lost
 		if !status.DCD && m.Connected() {
-			infoLog.Println("modem lost V.23 connection")
+			warnLog.Println("modem lost V.23 connection")
+
+			m.port.SetDTR(false)
 			m.SetConnected(false)
-			m.Init()
 		}
 
 		// Call recieved
@@ -183,11 +190,6 @@ func (m *Modem) Serve(forceRing bool) {
 
 			m.connAttempt.With(prometheus.Labels{"source": m.tag}).Inc()
 			m.Connect()
-
-			// Fail to establish connection, reset the bouzin
-			if !m.Connected() {
-				m.Init()
-			}
 		}
 
 		time.Sleep(time.Second)
@@ -196,17 +198,25 @@ func (m *Modem) Serve(forceRing bool) {
 }
 
 func (m *Modem) Connect() {
-	rep := strings.NewReplacer("\n", " ", "\r", " ")
+	infoLog.Println("start up connection procedure")
 
+	m.port.SetDTR(true)
 	isAck, result, err := m.sendCommandAndWait(ATCommand{Command: "ATA", Reply: "CONNECT 1200/75/NONE"})
+
+	rep := strings.NewReplacer("\n", " ", "\r", " ")
 	if err != nil {
+		m.port.SetDTR(false)
+
 		errorLog.Printf("unable to send and ack command: %s\n", err.Error())
 		return
 	}
 
 	if !isAck {
+		m.port.SetDTR(false)
+
 		errorLog.Printf("unable to connect after RING got reply=%s\n", rep.Replace(result))
 		return
+
 	} else {
 		infoLog.Printf("acknowledged command='ATA' with reply='%s'", rep.Replace(result))
 	}
@@ -216,7 +226,7 @@ func (m *Modem) Connect() {
 	m.SetConnected(true)
 	infoLog.Println("connection V.23 established")
 
-	// Better to avoid any odd chars on the screen
+	// Cleanup all the In/Out buffers between the DCE and the DTE
 	if err := m.port.ResetInputBuffer(); err != nil {
 		errorLog.Printf("unable to reset input buffer: %s\n", err.Error())
 	}
@@ -224,7 +234,7 @@ func (m *Modem) Connect() {
 		errorLog.Printf("unable to reset output buffer: %s\n", err.Error())
 	}
 
-	// start to serve the teletel content
+	// Start to serve the teletel content
 	m.port.SetReadTimeout(10 * time.Millisecond)
 	go m.ringHandler(m)
 }
@@ -235,17 +245,8 @@ func (m *Modem) Disconnect() {
 		return
 	}
 
-	infoLog.Println("switch modem connected status to false")
-	m.SetConnected(false)
-
 	m.port.SetDTR(false)
-	infoLog.Println("set modem bit DTR=0, waiting 2s")
-	time.Sleep(2 * time.Second)
+	infoLog.Println("disconnect, set modem bit DTR=0")
 
-	m.port.SetDTR(true)
-	infoLog.Println("set modem bit DTR=1, waiting 2s")
-	time.Sleep(2 * time.Second)
-
-	infoLog.Println("relaunch modem init sequence")
-	m.Init()
+	m.SetConnected(false)
 }

@@ -1,0 +1,93 @@
+package annuaire
+
+import (
+	"time"
+
+	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/databases"
+)
+
+func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick string) *minigo.Page {
+	detailPage := minigo.NewPage("notel:details", mntl, nil)
+
+	detailPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
+		mntl.CleanScreen()
+
+		user, err := userDB.LoadUser(nick)
+		if err != nil {
+			mntl.Print("Impossible de charger l'utilisateur")
+			time.Sleep(2 * time.Second)
+			return minigo.SommaireOp
+		}
+
+		printAnnuaireHeader(mntl)
+		printUserDetails(mntl, user)
+		printHelpers(mntl)
+
+		return minigo.NoOp
+	})
+
+	detailPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, minigo.SommaireOp
+	})
+
+	return detailPage
+}
+
+func printUserDetails(mntl *minigo.Minitel, user databases.User) {
+	mntl.MoveAt(4, 0)
+
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" ")
+	mntl.SendCAN()
+	mntl.Return(1)
+
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" PSEUDO")
+	mntl.SendCAN()
+
+	mntl.Return(2)
+	mntl.Attributes(minigo.FondNoir)
+	mntl.Print(" ")
+
+	mntl.PrintAttributes(user.Nick, minigo.DoubleLargeur)
+
+	mntl.Return(2)
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" BIO")
+	mntl.SendCAN()
+
+	mntl.Attributes(minigo.FondNoir)
+
+	for _, line := range minigo.WrapperGenerique(user.Bio, 37) {
+		mntl.Return(1)
+		mntl.Print(" " + line)
+	}
+
+	mntl.Return(2)
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" SERVEUR MINITEL")
+	mntl.SendCAN()
+
+	mntl.Return(1)
+	mntl.Attributes(minigo.FondNoir)
+	mntl.Print(" ")
+
+	mntl.Print(user.Tel)
+
+	mntl.Return(2) // Row 13
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" LIEU")
+	mntl.SendCAN()
+
+	mntl.Return(1)
+	mntl.Attributes(minigo.FondNoir)
+	mntl.Print(" ")
+
+	mntl.Print(user.Location)
+}
+
+func printHelpers(mntl *minigo.Minitel) {
+	mntl.MoveAt(24, 0)
+	mntl.Helper("Liste des utilisateurs", "SOMMAIRE", minigo.FondBleu, minigo.CaractereBlanc)
+}

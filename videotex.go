@@ -426,7 +426,7 @@ func RepeatRune(r rune, n int) (buf []byte) {
 
 	buf = EncodeRune(r)
 	buf = append(buf, Rep)
-	buf = append(buf, 0x40+byte(n))
+	buf = append(buf, 0x40+byte(n-1))
 	return
 }
 

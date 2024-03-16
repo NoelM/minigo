@@ -41,7 +41,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 
 		mntl.Return(4) // Row 10
 		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.Print(" TÉLÉPHONE")
+		mntl.Print(" SERVEUR MINITEL")
 		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
 		mntl.Print(" ")
 		inputs.AppendInput("tel", minigo.NewInputWithValue(mntl, usr.Tel, 11, 0, 39, 1, true))

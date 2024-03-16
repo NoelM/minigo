@@ -25,18 +25,7 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 			return minigo.SommaireOp
 		}
 
-		mntl.Attributes(minigo.CaractereBlanc, minigo.FondBleu)
-		mntl.Repeat(0x20, 40)
-		mntl.Attributes(minigo.CaractereBlanc, minigo.FondBleu)
-		mntl.Repeat(0x20, 40)
-		mntl.Attributes(minigo.CaractereBlanc, minigo.FondBleu)
-		mntl.Repeat(0x20, 40)
-
-		mntl.MoveAt(2, 0)
-		mntl.Attributes(minigo.CaractereBlanc, minigo.FondBleu, minigo.DoubleHauteur)
-		mntl.PrintCenter(" Annuaire ")
-
-		mntl.Attributes(minigo.GrandeurNormale)
+		printAnnuaireHeader(mntl)
 
 		userId = displayList(mntl, users, userId)
 

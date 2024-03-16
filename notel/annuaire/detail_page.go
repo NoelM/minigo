@@ -20,14 +20,9 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 			return minigo.SommaireOp
 		}
 
-		mntl.MoveAt(2, 0)
-		mntl.PrintAttributes("Annuaire", minigo.DoubleHauteur)
-
-		mntl.Return(1)
-		mntl.HLine(40, minigo.HCenter)
-
-		displayUser(mntl, user)
-		displayHelpers(mntl)
+		printAnnuaireHeader(mntl)
+		printUserDetails(mntl, user)
+		printHelpers(mntl)
 
 		return minigo.NoOp
 	})
@@ -39,8 +34,14 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 	return detailPage
 }
 
-func displayUser(mntl *minigo.Minitel, user databases.User) {
-	mntl.MoveAt(5, 0)
+func printUserDetails(mntl *minigo.Minitel, user databases.User) {
+	mntl.MoveAt(4, 0)
+
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" ")
+	mntl.SendCAN()
+	mntl.Return(1)
+
 	mntl.Attributes(minigo.FondBleu)
 	mntl.Print(" PSEUDO")
 	mntl.SendCAN()
@@ -48,34 +49,29 @@ func displayUser(mntl *minigo.Minitel, user databases.User) {
 	mntl.Return(2)
 	mntl.Attributes(minigo.FondNoir)
 	mntl.Print(" ")
-	mntl.Left(1)
 
 	mntl.PrintAttributes(user.Nick, minigo.DoubleLargeur)
 
-	mntl.Return(2) // Row 6
+	mntl.Return(2)
 	mntl.Attributes(minigo.FondBleu)
 	mntl.Print(" BIO")
+	mntl.SendCAN()
+
+	mntl.Attributes(minigo.FondNoir)
+
+	for _, line := range minigo.WrapperGenerique(user.Bio, 37) {
+		mntl.Return(1)
+		mntl.Print(" " + line)
+	}
+
+	mntl.Return(2)
+	mntl.Attributes(minigo.FondBleu)
+	mntl.Print(" SERVEUR MINITEL")
 	mntl.SendCAN()
 
 	mntl.Return(1)
 	mntl.Attributes(minigo.FondNoir)
 	mntl.Print(" ")
-	mntl.Left(1)
-
-	for _, line := range minigo.WrapperLargeurNormale(user.Bio) {
-		mntl.Return(1)
-		mntl.Print(line)
-	}
-
-	mntl.Return(2)
-	mntl.Attributes(minigo.FondBleu)
-	mntl.Print(" TÉLÉPHONE")
-	mntl.SendCAN()
-
-	mntl.Return(2)
-	mntl.Attributes(minigo.FondNoir)
-	mntl.Print(" ")
-	mntl.Left(1)
 
 	mntl.Print(user.Tel)
 
@@ -84,15 +80,14 @@ func displayUser(mntl *minigo.Minitel, user databases.User) {
 	mntl.Print(" LIEU")
 	mntl.SendCAN()
 
-	mntl.Return(2)
+	mntl.Return(1)
 	mntl.Attributes(minigo.FondNoir)
 	mntl.Print(" ")
-	mntl.Left(1)
 
 	mntl.Print(user.Location)
 }
 
-func displayHelpers(mntl *minigo.Minitel) {
+func printHelpers(mntl *minigo.Minitel) {
 	mntl.MoveAt(24, 0)
 	mntl.Helper("Liste des utilisateurs", "SOMMAIRE", minigo.FondBleu, minigo.CaractereBlanc)
 }

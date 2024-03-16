@@ -123,9 +123,9 @@ func (i *Input) UnHide() {
 		command = append(command, MoveAt(row, i.refCol, i.m.supportCSI)...)
 
 		if i.dots {
-			command = append(command, RepeatRune('.', i.width-1)...)
+			command = append(command, RepeatRune('.', i.width)...)
 		} else {
-			command = append(command, RepeatRune(' ', i.width-1)...)
+			command = append(command, RepeatRune(' ', i.width)...)
 		}
 	}
 	command = append(command, MoveAt(i.refRow, i.refCol, i.m.supportCSI)...)

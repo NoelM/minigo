@@ -5,7 +5,7 @@ import (
 	"github.com/NoelM/minigo/notel/databases"
 )
 
-func ServiceMeteo(m *minigo.Minitel, communeDB *databases.CommuneDatabase) int {
+func MeteoService(m *minigo.Minitel, communeDB *databases.CommuneDatabase) int {
 HOME:
 	out, serviceId := NewCodePostalPage(m).Run()
 	if serviceId == minigo.SuiteOp {

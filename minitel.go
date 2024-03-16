@@ -1,6 +1,7 @@
 package minigo
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -275,6 +276,10 @@ func (m *Minitel) Print(s string) {
 	m.Send(EncodeString(s))
 }
 
+func (m *Minitel) Printf(format string, a ...any) {
+	m.Print(fmt.Sprintf(format, a...))
+}
+
 func (m *Minitel) Button(s string, back, front byte) {
 	m.Attributes(back, front)
 	m.Print(" ")
@@ -290,7 +295,7 @@ func (m *Minitel) PrintStatus(s string) error {
 	// Enters row 0
 	buf := []byte{Us, 0x40, 0x41}
 	// Clean curent value
-	buf = append(buf, RepeatRune(' ', 34)...)
+	buf = append(buf, RepeatRune(' ', 35)...)
 	// Return carriage to the begining of row 0
 	buf = append(buf, Us, 0x40, 0x41)
 	// Encode string to VDT format

@@ -48,7 +48,7 @@ func NewModem(portName string, baud int, init []ATCommand, tag string, connAttem
 func (m *Modem) Init() error {
 	infoLog.Println("modem init sequence")
 
-	m.port.SetDTR(false)
+	m.port.SetDTR(true)
 	m.port.SetReadTimeout(serial.NoTimeout)
 
 	rep := strings.NewReplacer("\n", " ", "\r", " ")
@@ -240,11 +240,6 @@ func (m *Modem) Connect() {
 }
 
 func (m *Modem) Disconnect() {
-	if !m.Connected() {
-		infoLog.Println("asked for modem disconnect, but already disconnected")
-		return
-	}
-
 	m.port.SetDTR(false)
 	infoLog.Println("disconnect, set modem bit DTR=0")
 

@@ -7,12 +7,17 @@ import (
 
 // 1 byte, is 8 bits and 2 bits (start and stop)
 // 1 byte = 10 symbols
-const ByteDurAt1200Bd = 8333 * time.Microsecond
+// (real is 8333, we approx software latencies)
+const ByteDurAt1200Bd = 8000 * time.Microsecond
 
 type Network struct {
 	conn   Connector
 	parity bool
 	source string
+
+	databuf []byte
+
+	sendLock sync.Mutex
 
 	subTime time.Time
 	subCnt  int
@@ -49,18 +54,18 @@ func NewNetwork(conn Connector, parity bool, group *sync.WaitGroup, source strin
 func (n *Network) Serve() {
 	n.group.Add(2)
 
-	go n.listenLoop()
+	go n.recvLoop()
 	go n.sendLoop()
 }
 
-func (n *Network) listenLoop() {
+func (n *Network) recvLoop() {
 	pceAck := make([]byte, 0)
 
 	for n.conn.Connected() {
 
 		inBytes, readErr := n.conn.Read()
 		if readErr != nil {
-			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", n.source, readErr.Error())
+			warnLog.Printf("[%s] recv: stop loop: lost connection: %s\n", n.source, readErr.Error())
 
 			// Connexion/Fin
 			n.In <- 0x13
@@ -77,7 +82,7 @@ func (n *Network) listenLoop() {
 				var parityErr error
 
 				if b, parityErr = CheckByteParity(b); parityErr != nil {
-					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", n.source, b)
+					errorLog.Printf("[%s] recv: wrong parity ignored key=%x\n", n.source, b)
 					continue
 				}
 			}
@@ -85,7 +90,7 @@ func (n *Network) listenLoop() {
 			if b == Sub {
 				// SUB desginates parity error, we increment counter wetherer
 				// the PCE starts or not
-				warnLog.Printf("[%s] listen: minitel bad parity with SUB\n", n.source)
+				warnLog.Printf("[%s] recv: minitel bad parity with SUB\n", n.source)
 				n.incSub()
 
 				// The byte is not sent to the minitel
@@ -96,13 +101,13 @@ func (n *Network) listenLoop() {
 				// The minitel requested a repetition, noted:
 				// NACK, X, with X the block to be repeated
 				if !n.pce {
-					errorLog.Printf("[%s] listen: minitel request sync (NACK) but PCE is OFF\n", n.source)
+					errorLog.Printf("[%s] recv: minitel request sync (NACK) but PCE is OFF\n", n.source)
 
 					// The byte is not sent to the minitel loop
 					continue
 				}
 
-				infoLog.Printf("[%s] listen: minitel request synchronization NACK frame\n", n.source)
+				infoLog.Printf("[%s] recv: minitel request synchronization NACK frame\n", n.source)
 				n.nackTime = time.Now()
 				n.nackBlock = true
 
@@ -117,9 +122,9 @@ func (n *Network) listenLoop() {
 					n.nackBlockId = b - byte(0x40)
 					n.nackSynSend = true
 
-					infoLog.Printf("[%s] listen: receieved NACK block=%x\n", n.source, b)
+					infoLog.Printf("[%s] recv: receieved NACK block=%x\n", n.source, b)
 				} else {
-					errorLog.Printf("[%s] listen: receieved invalid NACK block=%x\n", n.source, b)
+					errorLog.Printf("[%s] recv: receieved invalid NACK block=%x\n", n.source, b)
 				}
 				n.nackBlock = false
 
@@ -137,7 +142,7 @@ func (n *Network) listenLoop() {
 				// * next if it needs another byte, set to false if the
 				//   suite of bytes are irrelevant
 				if ack, next := AckPCE(pceAck); ack {
-					infoLog.Printf("[%s] listen: minitel acknowledged the PCE\n", n.source)
+					infoLog.Printf("[%s] recv: minitel acknowledged the PCE\n", n.source)
 
 					n.pce = true
 					n.pcePending = false
@@ -146,7 +151,7 @@ func (n *Network) listenLoop() {
 				} else if !next {
 					// If next is at false, without an ack, this means that the suite
 					// of bytes does not correspond to an ack
-					warnLog.Printf("[%s] listen: unable to acknowledge PCE, invalid message\n", n.source)
+					warnLog.Printf("[%s] recv: unable to acknowledge PCE, invalid message\n", n.source)
 
 					n.pcePending = false
 					pceAck = []byte{}
@@ -155,7 +160,7 @@ func (n *Network) listenLoop() {
 				// The protocol bytes are also sent to the minitel loop
 			}
 
-			// Push byte to the In chan, listened by the minitel loop
+			// Push byte to the In chan, recved by the minitel loop
 			n.In <- b
 		}
 	}
@@ -174,6 +179,7 @@ func (n *Network) incSub() {
 			// the module asks for PCE ON
 			warnLog.Printf("[%s] inc-sub: the activation of PCE has been transmitted\n", n.source)
 
+			// TODO: this should stop every bit sent!
 			n.send(GetRequestPCE())
 			n.pcePending = true
 		}
@@ -255,6 +261,7 @@ func (n *Network) sendLoop() {
 				}
 
 			} else {
+				// TODO: verify that for each bit, that PCE has not been requested!
 				// otherwise we just send it!
 				if n.parity {
 					n.send(ApplyParity(msg))
@@ -285,9 +292,48 @@ func (n *Network) sendLoop() {
 	n.group.Done()
 }
 
-func (n *Network) send(data []byte) {
+func (n *Network) sendProtocol(data []byte) {
 	n.conn.Write(data)
-	//time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
+	time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
+}
+
+func (n *Network) sendBlock(data []byte) {
+	n.sendLock.Lock()
+	defer n.sendLock.Unlock()
+
+	n.conn.Write(data)
+	time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
+}
+
+func (n *Network) send(data []byte) {
+	if !n.purgeBuffer() {
+		n.databuf = append(n.databuf, data...)
+		return
+	}
+
+	for pos, b := range data {
+		if !n.sendLock.TryLock() {
+			n.databuf = append(n.databuf, data[pos:]...)
+		}
+
+		n.conn.Write([]byte{b})
+		time.Sleep(ByteDurAt1200Bd)
+	}
+}
+
+func (n *Network) purgeBuffer() bool {
+	for pos, b := range n.databuf {
+		if !n.sendLock.TryLock() {
+			n.databuf = n.databuf[pos:]
+			return false
+		}
+
+		n.conn.Write([]byte{b})
+		time.Sleep(ByteDurAt1200Bd)
+	}
+
+	n.databuf = []byte{}
+	return true
 }
 
 func (n *Network) Connected() bool {

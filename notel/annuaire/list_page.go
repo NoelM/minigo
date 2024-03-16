@@ -1,6 +1,7 @@
 package annuaire
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -12,6 +13,7 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 
 	var users []databases.User
 	var userId int
+	var selectedUserId int64 = -1
 
 	listPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
@@ -38,6 +40,10 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 
 		userId = displayList(mntl, users, userId)
 
+		mntl.MoveAt(24, 0)
+		mntl.Attributes(minigo.CaractereNoir, minigo.FondVert)
+		mntl.HelperRight(" Numéro du profil + ", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
+
 		return minigo.NoOp
 	})
 
@@ -45,43 +51,19 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 		return nil, minigo.SommaireOp
 	})
 
-	listPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		if userId == len(users)-1 {
-			return nil, minigo.NoOp
+	listPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key rune) {
+		var err error
+		selectedUserId, err = strconv.ParseInt(string(key), 10, 64)
+		if err != nil {
+			selectedUserId = -1
+			return
 		}
-
-		mntl.CleanScreen()
-
-		mntl.MoveAt(2, 0)
-		mntl.PrintAttributes("Annuaire", minigo.DoubleHauteur)
-
-		mntl.Return(1)
-		mntl.HLine(40, minigo.HCenter)
-
-		userId += 1
-		displayUser(mntl, users[userId])
-		displayHelpers(mntl, userId, len(users))
-
-		return nil, minigo.NoOp
 	})
 
-	listPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		if userId == 0 {
-			return nil, minigo.NoOp
+	listPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		if selectedUserId > 0 && selectedUserId < 7 {
+			return map[string]string{"user": users[selectedUserId-1].Nick}, minigo.EnvoiOp
 		}
-
-		mntl.CleanScreen()
-
-		mntl.MoveAt(2, 0)
-		mntl.PrintAttributes("Annuaire", minigo.DoubleHauteur)
-
-		mntl.Return(1)
-		mntl.HLine(40, minigo.HCenter)
-
-		userId -= 1
-		displayUser(mntl, users[userId])
-		displayHelpers(mntl, userId, len(users))
-
 		return nil, minigo.NoOp
 	})
 

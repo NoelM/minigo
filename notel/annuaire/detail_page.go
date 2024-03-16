@@ -1,4 +1,4 @@
-package main
+package annuaire
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 	"github.com/NoelM/minigo/notel/databases"
 )
 
-func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.Page {
-	infoPage := minigo.NewPage("notel:annuaire", mntl, nil)
+func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.Page {
+	detailPage := minigo.NewPage("notel:details", mntl, nil)
 
 	var users []databases.User
 	var userId int
 
-	infoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
+	detailPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
 
 		var err error
@@ -36,11 +36,11 @@ func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *min
 		return minigo.NoOp
 	})
 
-	infoPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+	detailPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		return nil, minigo.SommaireOp
 	})
 
-	infoPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+	detailPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		if userId == len(users)-1 {
 			return nil, minigo.NoOp
 		}
@@ -60,7 +60,7 @@ func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *min
 		return nil, minigo.NoOp
 	})
 
-	infoPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+	detailPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		if userId == 0 {
 			return nil, minigo.NoOp
 		}
@@ -80,7 +80,7 @@ func NewPageAnnuaire(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *min
 		return nil, minigo.NoOp
 	})
 
-	return infoPage
+	return detailPage
 }
 
 func displayUser(mntl *minigo.Minitel, user databases.User) {

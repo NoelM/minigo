@@ -3,7 +3,8 @@ package main
 import "github.com/NoelM/minigo"
 
 var ConfUSR56KFaxModem = []minigo.ATCommand{
-	// Z0: Reset configuration
+	// Z0:  Reset configuration
+	// &F1: Reset to default factory for hardware control flow
 	{
 		Command: "AT&F1",
 		Reply:   "OK",

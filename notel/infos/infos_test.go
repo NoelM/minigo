@@ -1,11 +1,11 @@
-package main
+package infos
 
 import (
 	"testing"
 )
 
 func TestLoadFeed(t *testing.T) {
-	feed := LoadFeed(France24FeedURL)
+	feed := LoadFeed(France24Rss)
 
 	if len(feed) == 0 {
 		t.Fatal("empty feed")

@@ -5,6 +5,7 @@ import (
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/annuaire"
+	"github.com/NoelM/minigo/notel/infos"
 	"github.com/NoelM/minigo/notel/logs"
 	"github.com/NoelM/minigo/notel/meteo"
 	"github.com/NoelM/minigo/notel/minichat"
@@ -63,7 +64,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 		case meteoId:
 			op = meteo.MeteoService(m, CommuneDb)
 		case infoId:
-			_, op = NewPageInfo(m).Run()
+			op = infos.ServiceInfo(m)
 		case serveurId:
 			_, op = serveur.NewServeurPage(m).Run()
 		case sudokuId:

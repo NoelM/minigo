@@ -1,4 +1,4 @@
-package main
+package infos
 
 import (
 	"time"
@@ -6,8 +6,13 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-const France24FeedURL = "https://www.france24.com/fr/rss"
-const FranceInfoFeedURL = "https://www.francetvinfo.fr/titres.rss"
+const France24Rss = "https://www.france24.com/fr/rss"
+const FranceInfoRss = "https://www.francetvinfo.fr/titres.rss"
+const LeMondeRss = "https://www.lemonde.fr/rss/une.xml"
+const LeMondeLiveRss = "https://www.lemonde.fr/rss/en_continu.xml"
+const BBCRss = "http://feeds.bbci.co.uk/news/rss.xml"
+const LiberationRss = "https://www.liberation.fr/arc/outboundfeeds/rss-all/?outputType=xml"
+const TheVergeRss = "https://www.theverge.com/rss/index.xml"
 
 type Depeche struct {
 	Title    string

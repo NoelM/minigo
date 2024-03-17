@@ -329,7 +329,7 @@ func (m *Minitel) PrintRightAt(lineId int, s string) error {
 
 func (m *Minitel) PrintCenter(s string) {
 	msgLen := len(s) * m.charWidth()
-	colId := maxInt((ColonnesSimple-msgLen)/2+1, 0)
+	colId := maxInt((ColonnesSimple-msgLen)/2, 0)
 
 	m.Right(colId)
 	m.Print(s)

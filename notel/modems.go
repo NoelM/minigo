@@ -5,7 +5,7 @@ import "github.com/NoelM/minigo"
 var ConfUSR56KFaxModem = []minigo.ATCommand{
 	// Z0: Reset configuration
 	{
-		Command: "ATZ0",
+		Command: "AT&F1",
 		Reply:   "OK",
 	},
 	// X4:  Full length modem reply
@@ -21,13 +21,18 @@ var ConfUSR56KFaxModem = []minigo.ATCommand{
 	// S13=1:  reset when DTR drops
 	// &W0:    save in NVRAM
 	{
-		Command: "AT&N2S27=16",
+		Command: "AT&N2",
+		Reply:   "OK",
+	},
+	{
+		Command: "ATS27=16",
 		Reply:   "OK",
 	},
 	{
 		Command: "ATS13=1",
 		Reply:   "OK",
 	},
+
 	{
 		Command: "AT&W0",
 		Reply:   "OK",

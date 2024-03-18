@@ -1,6 +1,7 @@
 package annuaire
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -35,59 +36,49 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 }
 
 func printUserDetails(mntl *minigo.Minitel, user databases.User) {
-	mntl.MoveAt(4, 0)
+	mntl.MoveAt(6, 0)
 
-	mntl.Attributes(minigo.FondBleu)
+	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
 	mntl.Print(" ")
 	mntl.SendCAN()
-	mntl.Return(1)
 
-	mntl.Attributes(minigo.FondBleu)
-	mntl.Print(" PSEUDO")
-	mntl.SendCAN()
-
-	mntl.Return(2)
-	mntl.Attributes(minigo.FondNoir)
-	mntl.Print(" ")
-
-	mntl.PrintAttributes(user.Nick, minigo.DoubleLargeur)
+	mntl.Left(1)
+	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir, minigo.DoubleLargeur)
+	mntl.PrintCenter(fmt.Sprintf(" %s ", user.Nick))
 
 	mntl.Return(2)
-	mntl.Attributes(minigo.FondBleu)
-	mntl.Print(" BIO")
+	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir, minigo.GrandeurNormale)
+	mntl.Print(" → BIO")
 	mntl.SendCAN()
 
-	mntl.Attributes(minigo.FondNoir)
-
+	mntl.Attributes(minigo.CaractereVert)
 	for _, line := range minigo.WrapperGenerique(user.Bio, 37) {
-		mntl.Return(1)
-		mntl.Print(" " + line)
+		mntl.ReturnCol(1, 1)
+		mntl.Print(line)
 	}
 
 	mntl.Return(2)
-	mntl.Attributes(minigo.FondBleu)
-	mntl.Print(" SERVEUR MINITEL")
+	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+	mntl.Print(" → SERVEUR MINITEL")
 	mntl.SendCAN()
 
-	mntl.Return(1)
-	mntl.Attributes(minigo.FondNoir)
-	mntl.Print(" ")
+	mntl.ReturnCol(1, 1)
+	mntl.Attributes(minigo.CaractereVert)
 
 	mntl.Print(user.Tel)
 
 	mntl.Return(2) // Row 13
-	mntl.Attributes(minigo.FondBleu)
-	mntl.Print(" LIEU")
+	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+	mntl.Print(" → LIEU")
 	mntl.SendCAN()
 
-	mntl.Return(1)
-	mntl.Attributes(minigo.FondNoir)
-	mntl.Print(" ")
+	mntl.ReturnCol(1, 1)
+	mntl.Attributes(minigo.CaractereVert)
 
 	mntl.Print(user.Location)
 }
 
 func printHelpers(mntl *minigo.Minitel) {
 	mntl.MoveAt(24, 0)
-	mntl.Helper("Liste des utilisateurs", "SOMMAIRE", minigo.FondBleu, minigo.CaractereBlanc)
+	mntl.HelperRight("Liste des utilisateurs", "SOMMAIRE", minigo.FondVert, minigo.CaractereNoir)
 }

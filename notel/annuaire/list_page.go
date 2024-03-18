@@ -1,7 +1,6 @@
 package annuaire
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -85,7 +84,10 @@ func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId
 	m.MoveAt(1, 0)
 
 	printAnnuaireHeader(m)
-	m.PrintRightAt(2, fmt.Sprintf("%d/%d ", pageId+1, len(users)/usersPerPage+1))
+
+	m.MoveAt(2, 35)
+	m.Attributes(minigo.CaractereNoir)
+	m.Printf("%d/%d ", pageId+1, len(users)/usersPerPage+1)
 
 	displayList(m, users, pageId*usersPerPage)
 
@@ -96,7 +98,7 @@ func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId
 
 func displayList(m *minigo.Minitel, users []databases.User, userId int) {
 
-	m.MoveAt(5, 2)
+	m.MoveAt(6, 2)
 	for i := userId; i < userId+usersPerPage; i += 1 {
 		if i >= len(users) {
 			break
@@ -106,7 +108,7 @@ func displayList(m *minigo.Minitel, users []databases.User, userId int) {
 		m.Printf(" %d ", i+1)
 
 		m.Right(2)
-		m.Attributes(minigo.InversionFond)
+		m.Attributes(minigo.FondNormal)
 		m.Print(users[i].Nick)
 
 		txt := minigo.WrapperGenerique(users[i].Bio, 26)

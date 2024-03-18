@@ -1,7 +1,6 @@
 package annuaire
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/NoelM/minigo"
@@ -38,13 +37,8 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 func printUserDetails(mntl *minigo.Minitel, user databases.User) {
 	mntl.MoveAt(6, 0)
 
-	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
-	mntl.Print(" ")
-	mntl.SendCAN()
-
-	mntl.Left(1)
-	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir, minigo.DoubleLargeur)
-	mntl.PrintCenter(fmt.Sprintf(" %s ", user.Nick))
+	mntl.Attributes(minigo.CaractereVert, minigo.DoubleLargeur)
+	mntl.PrintCenter(user.Nick)
 
 	mntl.Return(2)
 	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir, minigo.GrandeurNormale)

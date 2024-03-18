@@ -21,29 +21,5 @@ HOME:
 }
 
 func printAnnuaireHeader(m *minigo.Minitel) {
-	m.CleanScreen()
-	m.MoveAt(1, 0)
-
-	m.Attributes(minigo.CaractereBlanc, minigo.FondBleu)
-	m.Print(" ")
-	m.HLine(38, minigo.Top)
-	m.SendCAN()
-	m.Return(1)
-
-	m.Attributes(minigo.CaractereBlanc, minigo.FondBleu)
-	m.Print(" ")
-	m.HLine(38, minigo.HCenter)
-	m.SendCAN()
-	m.Return(1)
-
-	m.Attributes(minigo.CaractereBlanc, minigo.FondBleu)
-	m.Print(" ")
-	m.HLine(38, minigo.Bottom)
-	m.SendCAN()
-
-	m.MoveAt(2, 0)
-	m.Attributes(minigo.CaractereBlanc, minigo.FondBleu, minigo.DoubleHauteur)
-	m.PrintCenter(" Annuaire ")
-
-	m.Attributes(minigo.GrandeurNormale)
+	m.SendVDT("static/annuaire.vdt")
 }

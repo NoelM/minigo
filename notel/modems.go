@@ -17,23 +17,22 @@ var ConfUSR56KFaxModem = []minigo.ATCommand{
 		Command: "ATE0L0M0X4",
 		Reply:   "OK",
 	},
-	// &N2:    1200 bps connection default
-	// S27=16: fallback on V.23
-	// S13=1:  reset when DTR drops
-	// &W0:    save in NVRAM
+	// &N2: 1200 bps connection default
 	{
 		Command: "AT&N2",
 		Reply:   "OK",
 	},
+	// S27=16: fallback on V.23
 	{
 		Command: "ATS27=16",
 		Reply:   "OK",
 	},
+	// S13=1: reset when DTR drops
 	{
 		Command: "ATS13=1",
 		Reply:   "OK",
 	},
-
+	// &W0: save in NVRAM
 	{
 		Command: "AT&W0",
 		Reply:   "OK",

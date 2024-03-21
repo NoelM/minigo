@@ -3,10 +3,9 @@ package main
 import "github.com/NoelM/minigo"
 
 var ConfUSR56KFaxModem = []minigo.ATCommand{
-	// Z0:  Reset configuration
-	// &F1: Reset to default factory for hardware control flow
+	// Z0: Reset configuration
 	{
-		Command: "AT&F1",
+		Command: "ATZ0",
 		Reply:   "OK",
 	},
 	// X4:  Full length modem reply
@@ -17,24 +16,14 @@ var ConfUSR56KFaxModem = []minigo.ATCommand{
 		Command: "ATE0L0M0X4",
 		Reply:   "OK",
 	},
-	// &N2: 1200 bps connection default
+	// &N2:    1200 bps connection default
 	{
 		Command: "AT&N2",
 		Reply:   "OK",
 	},
-	// S27=16: fallback on V.23
+	// S27=16: V23 mode enabled
 	{
 		Command: "ATS27=16",
-		Reply:   "OK",
-	},
-	// S13=1: reset when DTR drops
-	{
-		Command: "ATS13=1",
-		Reply:   "OK",
-	},
-	// &W0: save in NVRAM
-	{
-		Command: "AT&W0",
 		Reply:   "OK",
 	},
 }

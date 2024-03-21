@@ -211,6 +211,8 @@ func NotelHandler(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup) {
 	logs.InfoLog("[%s] notel-handler: start handler, connected=%d\n", sourceTag, active)
 	startConn := time.Now()
 
+	StartSplash(mntl)
+
 SIGNIN:
 	creds, op := NewPageSignIn(mntl).Run()
 

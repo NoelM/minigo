@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/annuaire"
@@ -53,7 +54,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 
 	for op != minigo.DisconnectOp {
 		choice, op = NewPageSommaire(m).Run()
-		serviceId, ok := ServIdMap[choice["choice"]]
+		serviceId, ok := ServIdMap[strings.ToUpper(choice["choice"])]
 		if !ok {
 			continue
 		}
@@ -85,9 +86,6 @@ func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
 	sommairePage.SetCharFunc(keySommaire)
 	sommairePage.SetEnvoiFunc(envoiSommaire)
 	sommairePage.SetCorrectionFunc(correctionSommaire)
-	sommairePage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		return nil, chatId
-	})
 
 	return sommairePage
 }

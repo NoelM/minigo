@@ -20,14 +20,14 @@ func maxInt(i, j int) int {
 }
 
 func WrapperLargeurNormale(text string) []string {
-	return WrapperGenerique(text, ColonnesSimple)
+	return Wrapper(text, ColonnesSimple)
 }
 
 func WrapperLargeurDouble(text string) []string {
-	return WrapperGenerique(text, ColonnesDouble)
+	return Wrapper(text, ColonnesDouble)
 }
 
-func WrapperGenerique(text string, size int) (wrapped []string) {
+func Wrapper(text string, size int) (wrapped []string) {
 	var words []string
 	length := 0
 

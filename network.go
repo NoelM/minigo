@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// 1 byte, is 8 bits and 2 bits (start and stop)
+// 1 byte, is 8 symbols (data) and 2 symbols (start and stop)
 // 1 byte = 10 symbols
 const ByteDurAt1200Bd = 8333 * time.Microsecond
 
@@ -29,8 +29,8 @@ type Network struct {
 
 	group *sync.WaitGroup
 
-	In  chan byte
-	Out chan []byte
+	Recv chan byte
+	Send chan []byte
 }
 
 func NewNetwork(conn Connector, parity bool, group *sync.WaitGroup, source string) *Network {
@@ -41,19 +41,19 @@ func NewNetwork(conn Connector, parity bool, group *sync.WaitGroup, source strin
 		pceStack: make(chan []byte, 256),
 		pceCache: NewCache(),
 		group:    group,
-		In:       make(chan byte, 1024),
-		Out:      make(chan []byte, 256),
+		Recv:     make(chan byte, 1024),
+		Send:     make(chan []byte, 256),
 	}
 }
 
 func (n *Network) Serve() {
 	n.group.Add(2)
 
-	go n.listenLoop()
+	go n.recvLoop()
 	go n.sendLoop()
 }
 
-func (n *Network) listenLoop() {
+func (n *Network) recvLoop() {
 	pceAck := make([]byte, 0)
 
 	for n.conn.Connected() {
@@ -62,21 +62,25 @@ func (n *Network) listenLoop() {
 		if readErr != nil {
 			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", n.source, readErr.Error())
 
+			// If the connection is lost, we send the stop signal to application:
 			// Connexion/Fin
-			n.In <- 0x13
-			n.In <- 0x49
+			n.Recv <- 0x13
+			n.Recv <- 0x49
 
 			break
 		} else if len(inBytes) == 0 {
+			// No data read, we continue
 			continue
 		}
 
 		// Read all bytes received
 		for _, b := range inBytes {
+
+			// If parity enabled, check the bytes parity
 			if n.parity {
 				var parityErr error
 
-				if b, parityErr = CheckByteParity(b); parityErr != nil {
+				if b, parityErr = ValidAndRemoveParity(b); parityErr != nil {
 					errorLog.Printf("[%s] listen: wrong parity ignored key=%x\n", n.source, b)
 					continue
 				}
@@ -156,7 +160,7 @@ func (n *Network) listenLoop() {
 			}
 
 			// Push byte to the In chan, listened by the minitel loop
-			n.In <- b
+			n.Recv <- b
 		}
 	}
 
@@ -245,7 +249,7 @@ func (n *Network) sendLoop() {
 
 		// The Out chan must not be blocking, so we handle it on a 'select'
 		select {
-		case msg := <-n.Out:
+		case msg := <-n.Send:
 			if n.pce {
 				// when the PCE is active, we compute blocks
 				// but we always send them later, to prevent any
@@ -287,7 +291,7 @@ func (n *Network) sendLoop() {
 
 func (n *Network) send(data []byte) {
 	n.conn.Write(data)
-	//time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
+	time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
 }
 
 func (n *Network) Connected() bool {

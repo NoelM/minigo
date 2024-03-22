@@ -161,6 +161,7 @@ func ReturnUp(n int, csi bool) (buf []byte) {
 func ResetScreen() []byte {
 	return []byte{Ff}
 }
+
 func CleanScreen() (buf []byte) {
 	buf = Word(Csi)
 	buf = append(buf, 0x32, 0x4A)
@@ -211,18 +212,6 @@ func CleanNRowsFromCursor(n int) (buf []byte) {
 	return
 }
 
-func TextZone(text string, attributes ...byte) (buf []byte) {
-	buf = append(buf, Sp)
-
-	for _, atb := range attributes {
-		buf = append(buf, EncodeAttribute(atb)...)
-	}
-	buf = append(buf, EncodeString(text)...)
-	buf = append(buf, Sp)
-
-	return
-}
-
 // SubArticle defines a sub-article in the page, moves the cursor at (row;col)
 // This resets all the attributes to default: G0, size, color, and background
 func SubArticle(row, col int) []byte {
@@ -237,7 +226,7 @@ func GetCursorOff() byte {
 	return CursorOff
 }
 
-func EncodeCharToVideotex(c byte) byte {
+func EncodeChar(c byte) byte {
 	return byte(strings.LastIndexByte(CharTable, c))
 }
 
@@ -403,7 +392,7 @@ func EncodeRune(r rune) []byte {
 		return specialRune
 	}
 
-	vdtByte := EncodeCharToVideotex(byte(r))
+	vdtByte := EncodeChar(byte(r))
 	if ValidChar(vdtByte) {
 		return []byte{vdtByte}
 	}
@@ -497,13 +486,13 @@ func ApplyParity(in []byte) (out []byte) {
 	out = make([]byte, len(in))
 
 	for id, b := range in {
-		out[id] = GetByteWithParity(b)
+		out[id] = SetParity(b)
 	}
 
 	return out
 }
 
-func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err error) {
+func DecodeTerminalBytes(entryBytes []byte) (done bool, pro bool, value int32, err error) {
 	if entryBytes[0] == Ss2 {
 		// Special characters, switch G2 mode
 		if len(entryBytes) <= 1 {

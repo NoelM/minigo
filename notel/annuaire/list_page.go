@@ -109,7 +109,7 @@ func displayList(m *minigo.Minitel, users []databases.User, userId int) {
 		m.Attributes(minigo.FondNormal)
 		m.Print(users[i].Nick)
 
-		txt := minigo.WrapperGenerique(users[i].Bio, 26)
+		txt := minigo.Wrapper(users[i].Bio, 26)
 		m.ReturnCol(1, 10)
 		m.Attributes(minigo.CaractereVert, minigo.GrandeurNormale)
 		m.Printf("%s...", txt[0])

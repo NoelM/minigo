@@ -72,7 +72,7 @@ func printDepeche(mntl *minigo.Minitel, d Depeche) {
 	}
 
 	// Display Content
-	content := minigo.WrapperGenerique(d.Content, 38)
+	content := minigo.Wrapper(d.Content, 38)
 
 	mntl.Attributes(minigo.CaractereBlanc, minigo.FondNormal)
 	for _, l := range content {

@@ -160,7 +160,7 @@ func (m *Minitel) Serve() {
 	for m.net.Connected() {
 
 		select {
-		case inbyte = <-m.net.In:
+		case inbyte = <-m.net.Recv:
 		default:
 			// No message from the network, we'll wait a bit
 			time.Sleep(100 * time.Millisecond)
@@ -174,7 +174,7 @@ func (m *Minitel) Serve() {
 		// pro:   is true if the message is a protocol message
 		// entry: is non-zero when 'done' is true
 		// err:   stands for words bigger than 4 bytes (uint32)
-		done, pro, entry, err := ReadEntryBytes(word)
+		done, pro, entry, err := DecodeTerminalBytes(word)
 		if err != nil {
 			errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.source, word, err.Error())
 
@@ -225,7 +225,7 @@ func (m *Minitel) Serve() {
 }
 
 func (m *Minitel) Send(buf []byte) error {
-	m.net.Out <- buf
+	m.net.Send <- buf
 	return nil
 }
 

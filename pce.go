@@ -66,7 +66,7 @@ func GetPCEBlock(buf []byte) []byte {
 
 	crc := getCRC7(inner)
 
-	inner = append(inner, GetByteWithParity(crc), 0)
+	inner = append(inner, SetParity(crc), 0)
 	return inner
 }
 

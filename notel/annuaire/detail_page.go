@@ -46,7 +46,7 @@ func printUserDetails(mntl *minigo.Minitel, user databases.User) {
 	mntl.SendCAN()
 
 	mntl.Attributes(minigo.CaractereVert)
-	for _, line := range minigo.WrapperGenerique(user.Bio, 37) {
+	for _, line := range minigo.Wrapper(user.Bio, 37) {
 		mntl.ReturnCol(1, 1)
 		mntl.Print(line)
 	}

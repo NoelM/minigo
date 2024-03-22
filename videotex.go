@@ -26,17 +26,6 @@ func Word(word int) []byte {
 	return []byte{GetByteHigh(word), GetByteLow(word)}
 }
 
-func CursorInScreen(x, y int, resolution uint) (bool, error) {
-	switch resolution {
-	case ResolutionSimple:
-		return x > 0 && x <= ColonnesSimple && y > 0 && y <= LignesSimple, nil
-	case ResolutionDouble:
-		return x > 0 && x <= ColonnesDouble && y > 0 && y <= ColonnesSimple, nil
-	default:
-		return false, fmt.Errorf("unknown resolution: %d", resolution)
-	}
-}
-
 // MoveAt moves the cursor ton an absolute position
 func MoveAt(row, col int, csi bool) (buf []byte) {
 	if row == 1 && col == 1 {

@@ -69,7 +69,7 @@ func (n *Network) recvLoop() {
 
 			break
 		} else if len(inBytes) == 0 {
-			// No data read, we continue
+			// No data read from network
 			continue
 		}
 
@@ -86,19 +86,20 @@ func (n *Network) recvLoop() {
 				}
 			}
 
+			// SUB desginates parity error, we increment counter wetherer
+			// the PCE starts or not
 			if b == Sub {
-				// SUB desginates parity error, we increment counter wetherer
-				// the PCE starts or not
 				warnLog.Printf("[%s] listen: minitel bad parity with SUB\n", n.source)
-				n.incSub()
+				n.incrementSubCounter()
 
 				// The byte is not sent to the minitel
 				continue
 			}
 
+			// The minitel requested a repetition, with this bytes sequence:
+			// NACK, X, with X the block to be repeated
 			if b == Nack {
-				// The minitel requested a repetition, noted:
-				// NACK, X, with X the block to be repeated
+				// NACK is always asked when PCE is ON
 				if !n.pce {
 					errorLog.Printf("[%s] listen: minitel request sync (NACK) but PCE is OFF\n", n.source)
 
@@ -114,15 +115,18 @@ func (n *Network) recvLoop() {
 				continue
 			}
 
+			// We previously recieved NACK, so we wait for the block number
 			if n.nackBlock {
+
 				// If previously on receieved a NACK, now one waits for a block
 				if b >= 0x40 && b <= 0x4F {
-					// Irrelevant block ID, bye, bye
 					n.nackBlockId = b - byte(0x40)
 					n.nackSynSend = true
 
 					infoLog.Printf("[%s] listen: receieved NACK block=%x\n", n.source, b)
+
 				} else {
+					// Irrelevant block ID, bye, bye
 					errorLog.Printf("[%s] listen: receieved invalid NACK block=%x\n", n.source, b)
 				}
 				n.nackBlock = false
@@ -167,7 +171,7 @@ func (n *Network) recvLoop() {
 	n.group.Done()
 }
 
-func (n *Network) incSub() {
+func (n *Network) incrementSubCounter() {
 	if time.Since(n.subTime) < time.Minute {
 		// If the counter has been reset less than a miniute ago, we increment
 		n.subCnt += 1

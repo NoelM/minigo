@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -157,6 +156,11 @@ func ReturnUp(n int, csi bool) (buf []byte) {
 	return
 }
 
+// ResetScreen cleans the screen, move the cusror in postion (1;0)
+// sets all the attributes to default: G0, size, color, background.
+func ResetScreen() []byte {
+	return []byte{Ff}
+}
 func CleanScreen() (buf []byte) {
 	buf = Word(Csi)
 	buf = append(buf, 0x32, 0x4A)
@@ -219,18 +223,10 @@ func TextZone(text string, attributes ...byte) (buf []byte) {
 	return
 }
 
-func SubArticle(content []byte, x, y int, res uint) (buf []byte) {
-	inScreen, err := CursorInScreen(x, y, res)
-	if err != nil {
-		log.Printf("unable to create sub-article: %s", err.Error())
-	}
-	if !inScreen {
-		log.Printf("positon (x=%d ; y=%d) out-of-bounds", x, y)
-	}
-
-	buf = append(buf, Us, byte(0x40+x), byte(0x40+y))
-	buf = append(buf, content...)
-	return
+// SubArticle defines a sub-article in the page, moves the cursor at (row;col)
+// This resets all the attributes to default: G0, size, color, and background
+func SubArticle(row, col int) []byte {
+	return []byte{Us, byte(0x40 + row), byte(0x40 + col)}
 }
 
 func GetCursorOn() byte {

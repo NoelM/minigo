@@ -21,7 +21,7 @@ func RunPageGame(mntl *minigo.Minitel, login string, level int) (op int) {
 	start := time.Now()
 
 	gamePage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 		mntl.ClavierEtendu()
 
 		var d difficulty.Difficulty

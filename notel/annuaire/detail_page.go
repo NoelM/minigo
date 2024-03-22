@@ -11,7 +11,7 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 	detailPage := minigo.NewPage("notel:details", mntl, nil)
 
 	detailPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 
 		user, err := userDB.LoadUser(nick)
 		if err != nil {

@@ -11,7 +11,7 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 	infoPage := minigo.NewPage("serveur", mntl, nil)
 
 	infoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 		mntl.CursorOff()
 
 		mntl.MoveAt(2, 0)

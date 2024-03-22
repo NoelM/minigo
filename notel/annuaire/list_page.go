@@ -19,8 +19,7 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 	var selectedUserId int64 = -1
 
 	listPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
-		mntl.MoveAt(1, 0)
+		mntl.Reset()
 
 		var err error
 		if users, err = userDB.LoadAnnuaireUsers(); err != nil {
@@ -80,10 +79,9 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 }
 
 func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId int) {
-	m.CleanScreen()
-	m.MoveAt(1, 0)
-
 	printAnnuaireHeader(m)
+
+	m.ModeG0()
 
 	m.MoveAt(2, 35)
 	m.Attributes(minigo.CaractereNoir)

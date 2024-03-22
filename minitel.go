@@ -234,10 +234,7 @@ func (m *Minitel) toApp(entry int32) {
 }
 
 func (m *Minitel) Reset() error {
-	buf := CleanScreen()
-	buf = append(buf, EncodeAttributes(GrandeurNormale, FondNormal, CursorOff)...)
-	buf = append(buf, MoveAt(1, 1, m.supportCSI)...)
-	return m.Send(buf)
+	return m.Send(ResetScreen())
 }
 
 //

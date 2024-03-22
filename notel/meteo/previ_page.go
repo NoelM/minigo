@@ -31,7 +31,7 @@ func NewPrevisionPage(mntl *minigo.Minitel, communeMap map[string]string) *minig
 	lastForecastDate := forecastDate.Add(5 * 24 * time.Hour) // 5 days of forecasts
 
 	previPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 		mntl.CursorOff()
 
 		communeJSON, ok := initData["commune"]

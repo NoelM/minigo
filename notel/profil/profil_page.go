@@ -11,7 +11,7 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 	profilPage := minigo.NewPage("profil", mntl, nil)
 
 	profilPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 
 		usr, err := userDB.LoadUser(pseudo)
 		if err != nil {

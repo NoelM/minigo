@@ -11,7 +11,7 @@ func RunMDPPage(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo st
 	mdpPage := minigo.NewPage("mdp", mntl, nil)
 
 	mdpPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 
 		mntl.MoveAt(2, 0)
 		mntl.PrintAttributes("Changer Mot de Passe", minigo.DoubleHauteur)

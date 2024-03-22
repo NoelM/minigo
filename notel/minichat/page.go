@@ -15,6 +15,8 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atom
 	chatLayout := NewChatLayout(m, msgDB, cntd, nick)
 
 	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
+		m.Reset()
+
 		m.RouleauOn()
 		m.MinusculeOn()
 

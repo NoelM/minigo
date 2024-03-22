@@ -26,7 +26,7 @@ func NewObservationsPage(mntl *minigo.Minitel) *minigo.Page {
 	var reports map[string][]WeatherReport
 
 	meteoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 		mntl.CursorOff()
 
 		var err error

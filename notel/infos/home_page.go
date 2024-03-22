@@ -30,9 +30,10 @@ func NewHomePage(m *minigo.Minitel) *minigo.Page {
 	}
 
 	home.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 		mntl.SendVDT("static/infos.vdt")
 
+		mntl.ModeG0()
 		list := minigo.NewListEnum(mntl, names, 6, 1, 20, 2)
 		list.Display()
 

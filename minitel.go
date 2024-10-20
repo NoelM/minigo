@@ -17,8 +17,8 @@ var warnLog = log.New(os.Stdout, "[minigo] warn:", log.Ldate|log.Ltime|log.Lshor
 var errorLog = log.New(os.Stdout, "[minigo] error:", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
 type Minitel struct {
-	net   Network
-	group *sync.WaitGroup
+	network *Network
+	group   *sync.WaitGroup
 
 	defaultCouleur  int32
 	defaultGrandeur int32
@@ -41,9 +41,9 @@ type Minitel struct {
 	In chan int32
 }
 
-func NewMinitel(conn Connector, parity bool, source string, connLost *prometheus.CounterVec, group *sync.WaitGroup) *Minitel {
+func NewMinitel(network *Network, parity bool, source string, connLost *prometheus.CounterVec, group *sync.WaitGroup) *Minitel {
 	return &Minitel{
-		net:             *NewNetwork(conn, parity, group, source),
+		network:         network,
 		defaultCouleur:  CaractereBlanc,
 		defaultGrandeur: GrandeurNormale,
 		currentGrandeur: GrandeurNormale,
@@ -155,12 +155,13 @@ func (m *Minitel) Serve() {
 
 	var gotCnxFin bool
 
-	m.net.Serve()
+	m.network.Serve()
+	m.group.Add(1)
 
-	for m.net.Connected() {
+	for m.network.Connected() {
 
 		select {
-		case inbyte = <-m.net.Recv:
+		case inbyte = <-m.network.Recv:
 		default:
 			// No message from the network, we'll wait a bit
 			time.Sleep(100 * time.Millisecond)
@@ -222,10 +223,11 @@ func (m *Minitel) Serve() {
 
 	infoLog.Printf("[%s] listen: end of listen\n", m.source)
 	m.group.Done()
+	m.network.Quit()
 }
 
 func (m *Minitel) Send(buf []byte) error {
-	m.net.Send <- buf
+	m.network.Send <- buf
 	return nil
 }
 

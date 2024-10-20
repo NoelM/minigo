@@ -13,6 +13,7 @@ type Network struct {
 	conn   Connector
 	parity bool
 	source string
+	quit   bool
 
 	subTime time.Time
 	subCnt  int
@@ -56,9 +57,9 @@ func (n *Network) Serve() {
 func (n *Network) recvLoop() {
 	pceAck := make([]byte, 0)
 
-	for n.conn.Connected() {
+	for n.conn.Connected() && !n.quit {
 
-		inBytes, readErr := n.conn.Read()
+		readBytes, readErr := n.conn.Read()
 		if readErr != nil {
 			warnLog.Printf("[%s] listen: stop loop: lost connection: %s\n", n.source, readErr.Error())
 
@@ -68,13 +69,13 @@ func (n *Network) recvLoop() {
 			n.Recv <- 0x49
 
 			break
-		} else if len(inBytes) == 0 {
+		} else if len(readBytes) == 0 {
 			// No data read from network
 			continue
 		}
 
 		// Read all bytes received
-		for _, b := range inBytes {
+		for _, b := range readBytes {
 
 			// If parity enabled, check the bytes parity
 			if n.parity {
@@ -86,13 +87,13 @@ func (n *Network) recvLoop() {
 				}
 			}
 
-			// SUB desginates parity error, we increment counter wetherer
-			// the PCE starts or not
+			// SUB desginates parity error
+			// We increment the counter, it measures the connection stability
 			if b == Sub {
 				warnLog.Printf("[%s] listen: minitel bad parity with SUB\n", n.source)
-				n.incrementSubCounter()
+				n.SUBCounterIncrement()
 
-				// The byte is not sent to the minitel
+				// The byte is not sent to the server
 				continue
 			}
 
@@ -171,7 +172,7 @@ func (n *Network) recvLoop() {
 	n.group.Done()
 }
 
-func (n *Network) incrementSubCounter() {
+func (n *Network) SUBCounterIncrement() {
 	if time.Since(n.subTime) < time.Minute {
 		// If the counter has been reset less than a miniute ago, we increment
 		n.subCnt += 1
@@ -195,7 +196,7 @@ func (n *Network) incrementSubCounter() {
 }
 
 func (n *Network) sendLoop() {
-	for n.conn.Connected() {
+	for n.conn.Connected() && !n.quit {
 		if n.nackBlock || n.pcePending {
 			// Some commands block all the Send data:
 			// * NACK, waits for a blockId
@@ -300,4 +301,8 @@ func (n *Network) send(data []byte) {
 
 func (n *Network) Connected() bool {
 	return n.conn.Connected()
+}
+
+func (n *Network) Quit() {
+	n.quit = true
 }

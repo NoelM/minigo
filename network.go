@@ -169,6 +169,7 @@ func (n *Network) recvLoop() {
 		}
 	}
 
+	infoLog.Printf("[%s] network: leaving recv loop\n", n.source)
 	n.group.Done()
 }
 
@@ -291,6 +292,7 @@ func (n *Network) sendLoop() {
 		}
 	}
 
+	infoLog.Printf("[%s] network: leaving send loop\n", n.source)
 	n.group.Done()
 }
 
@@ -304,5 +306,6 @@ func (n *Network) Connected() bool {
 }
 
 func (n *Network) Quit() {
+	infoLog.Printf("[%s] network: ask to quit\n", n.source)
 	n.quit = true
 }

@@ -12,11 +12,8 @@ var ConfUSR56KFaxModem = []minigo.ATCommand{
 	// M0:  Speaker OFF
 	// L0:  Speaker volume LOW
 	// E0:  No command echo
-	{
-		Command: "ATE0L0M0X4",
-		Reply:   "OK",
-	},
 	// &N2:    1200 bps connection default
+<<<<<<< Updated upstream
 	{
 		Command: "AT&N2",
 		Reply:   "OK",
@@ -24,6 +21,11 @@ var ConfUSR56KFaxModem = []minigo.ATCommand{
 	// S27=16: V23 mode enabled
 	{
 		Command: "ATS27=16",
+=======
+	// S27=16: fallback on V.23
+	{
+		Command: "ATE0L0M0X4&A0&N2S0=1S27=16",
+>>>>>>> Stashed changes
 		Reply:   "OK",
 	},
 }
@@ -52,7 +54,7 @@ var ConfUSR56KFaxModem = []minigo.ATCommand{
 	//         in tenth of seconds (here 60s)
 	// &B1:    Fixed serial port rate
 	{
-		Command: "AT&N2S27=16S9=6&B1",
+		Command: "ATS27=16S9=6&B1",
 		Reply:   "OK",
 	},
 }

@@ -1,6 +1,13 @@
 package main
 
-import "github.com/NoelM/minigo"
+import (
+	"log"
+	"sync"
+
+	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/confs"
+	"github.com/NoelM/minigo/notel/logs"
+)
 
 var ConfUSR56KFaxModem = []minigo.ATCommand{
 	// Z0: Reset configuration
@@ -49,3 +56,35 @@ var ConfUSR56KFaxModem = []minigo.ATCommand{
 	},
 }
 */
+
+func serveModem(wg *sync.WaitGroup, connConf confs.ConnectorConf) {
+	defer wg.Done()
+
+	modem, err := minigo.NewModem(connConf.Path, 115200, connConf.Config, connConf.Tag, promConnAttemptNb)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = modem.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	modem.RingHandler(func(modem *minigo.Modem) {
+		var group sync.WaitGroup
+
+		network := minigo.NewNetwork(modem, true, &group, connConf.Tag)
+		minitel := minigo.NewMinitel(network, true, connConf.Tag, promConnLostNb, &group)
+		go minitel.Serve()
+
+		NotelApplication(minitel, connConf.Tag, &group)
+		group.Wait()
+
+		logs.InfoLog("[%s] ring-handler: disconnect\n", connConf.Tag)
+		modem.Disconnect()
+
+		logs.InfoLog("[%s] ring-handler: minitel session closed\n", connConf.Tag)
+	})
+
+	modem.Serve(false)
+}

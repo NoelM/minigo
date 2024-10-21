@@ -13,7 +13,7 @@ type Network struct {
 	conn   Connector
 	parity bool
 	source string
-	quit   bool
+	close  bool
 
 	subTime time.Time
 	subCnt  int
@@ -57,7 +57,7 @@ func (n *Network) Serve() {
 func (n *Network) recvLoop() {
 	pceAck := make([]byte, 0)
 
-	for n.conn.Connected() && !n.quit {
+	for n.conn.Connected() && !n.close {
 
 		readBytes, readErr := n.conn.Read()
 		if readErr != nil {
@@ -197,7 +197,7 @@ func (n *Network) SUBCounterIncrement() {
 }
 
 func (n *Network) sendLoop() {
-	for n.conn.Connected() && !n.quit {
+	for n.conn.Connected() && !n.close {
 		if n.nackBlock || n.pcePending {
 			// Some commands block all the Send data:
 			// * NACK, waits for a blockId
@@ -301,11 +301,11 @@ func (n *Network) send(data []byte) {
 	time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
 }
 
-func (n *Network) Connected() bool {
+func (n *Network) IsConnected() bool {
 	return n.conn.Connected()
 }
 
-func (n *Network) Quit() {
+func (n *Network) Close() {
 	infoLog.Printf("[%s] network: ask to quit\n", n.source)
-	n.quit = true
+	n.close = true
 }

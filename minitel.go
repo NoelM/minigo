@@ -38,7 +38,7 @@ type Minitel struct {
 	source   string
 	connLost *prometheus.CounterVec
 
-	In chan int32
+	Messages chan int32
 }
 
 func NewMinitel(network *Network, parity bool, source string, connLost *prometheus.CounterVec, group *sync.WaitGroup) *Minitel {
@@ -52,7 +52,7 @@ func NewMinitel(network *Network, parity bool, source string, connLost *promethe
 		source:          source,
 		connLost:        connLost,
 		group:           group,
-		In:              make(chan int32, 256),
+		Messages:        make(chan int32, 256),
 	}
 }
 
@@ -153,12 +153,12 @@ func (m *Minitel) Serve() {
 	var inbyte byte
 	var word []byte
 
-	var gotCnxFin bool
+	var ConnexionFinReceived bool
 
 	m.network.Serve()
 	m.group.Add(1)
 
-	for m.network.Connected() {
+	for m.network.IsConnected() {
 
 		select {
 		case inbyte = <-m.network.Recv:
@@ -177,7 +177,7 @@ func (m *Minitel) Serve() {
 		// err:   stands for words bigger than 4 bytes (uint32)
 		done, pro, entry, err := DecodeTerminalBytes(word)
 		if err != nil {
-			errorLog.Printf("[%s] listen: unable to read key=%x: %s\n", m.source, word, err.Error())
+			errorLog.Printf("[%s] minitel: unable to read key=%x: %s\n", m.source, word, err.Error())
 
 			word = []byte{}
 			continue
@@ -187,7 +187,7 @@ func (m *Minitel) Serve() {
 			// Enters here only if the previous buffer has been full read
 			// Now one gets a non-zero 'entry' value
 			if pro {
-				infoLog.Printf("[%s] listen: received protocol code=%x\n", m.source, word)
+				infoLog.Printf("[%s] minitel: received protocol code=%x\n", m.source, word)
 
 				m.saveProtocol(word)
 				if !m.ackStack.Empty() {
@@ -198,9 +198,9 @@ func (m *Minitel) Serve() {
 				m.toApp(entry)
 
 				if entry == ConnexionFin {
-					infoLog.Printf("[%s] listen: caught ConnexionFin: quit loop\n", m.source)
+					infoLog.Printf("[%s] minitel: caught ConnexionFin, quit serve\n", m.source)
 
-					gotCnxFin = true
+					ConnexionFinReceived = true
 					break
 				}
 			}
@@ -210,20 +210,21 @@ func (m *Minitel) Serve() {
 		}
 	}
 
-	infoLog.Printf("[%s] listen: loop exited\n", m.source)
+	infoLog.Printf("[%s] minitel: loop exited\n", m.source)
 
-	if !gotCnxFin {
+	if !ConnexionFinReceived {
 		// The loop has been exited without a ConnexionFin, one considers a lost connexion issue
-		infoLog.Printf("[%s] listen: connection lost: sending ConnexionFin to Page\n", m.source)
+		infoLog.Printf("[%s] minitel: connection lost: sending ConnexionFin to Page\n", m.source)
 		m.connLost.With(prometheus.Labels{"source": m.source}).Inc()
 
 		// The application loop waits for the ConnexionFin signal to quit
 		m.toApp(ConnexionFin)
 	}
 
-	infoLog.Printf("[%s] listen: end of listen\n", m.source)
+	infoLog.Printf("[%s] minitel: end of serve\n", m.source)
 	m.group.Done()
-	m.network.Quit()
+
+	m.network.Close()
 }
 
 func (m *Minitel) Send(buf []byte) error {
@@ -232,7 +233,7 @@ func (m *Minitel) Send(buf []byte) error {
 }
 
 func (m *Minitel) toApp(entry int32) {
-	m.In <- entry
+	m.Messages <- entry
 }
 
 func (m *Minitel) Reset() error {

@@ -27,8 +27,8 @@ type Modem struct {
 }
 
 type ATCommand struct {
-	Command string
-	Reply   string
+	Command string `json:"command"`
+	Reply   string `json:"reply"`
 }
 
 func NewModem(portName string, baud int, init []ATCommand, tag string, connAttempt *prometheus.CounterVec) (*Modem, error) {

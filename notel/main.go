@@ -1,206 +1,68 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"net/http"
+	"os"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/confs"
 	"github.com/NoelM/minigo/notel/databases"
 	"github.com/NoelM/minigo/notel/logs"
-	"nhooyr.io/websocket"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var CommuneDb *databases.CommuneDatabase
 var MessageDb *databases.MessageDatabase
 var UsersDb *databases.UsersDatabase
 
-var NbConnectedUsers atomic.Int32
-
-var (
-	promConnNb = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "notel_connection_number",
-		Help: "The total number connection to NOTEL",
-	},
-		[]string{"source"})
-
-	promConnAttemptNb = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "notel_connection_attempt_number",
-		Help: "The total number of connection attempts to NOTEL",
-	},
-		[]string{"source"})
-
-	promConnLostNb = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "notel_connection_lost_number",
-		Help: "The total number of lost connections on NOTEL",
-	},
-		[]string{"source"})
-
-	promConnActive = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "notel_connection_active",
-		Help: "The number of currently active connections to NOTEL",
-	},
-		[]string{"source"})
-
-	promConnDur = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "notel_connection_duration",
-		Help: "The total connection duration to NOTEL",
-	},
-		[]string{"source"})
-
-	promMsgNb = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "notel_messages_number",
-		Help: "The total number of postel messages to NOTEL",
-	})
-)
-
-const (
-	ServeWS              = true
-	ServeUSR56FaxModem1  = true
-	ServeUSR56KFaxModem2 = true
-)
-
-const (
-	WSTag              = "ws"
-	USR56KFaxModemTag1 = "usr-56k-faxmodem-1"
-	USR56KFaxModemTag2 = "usr-56k-faxmodem-2"
-)
-
 func main() {
-	var wg sync.WaitGroup
+	var group sync.WaitGroup
+
+	if len(os.Args) == 1 {
+		fmt.Errorf("notel: missing config file path\n")
+		return
+	}
+
+	notelConfig, err := confs.LoadConfig(os.Args[1])
+	if err != nil {
+		fmt.Errorf("notel: unable to load conf: %s\n", err.Error())
+		return
+	}
 
 	CommuneDb = databases.NewCommuneDatabase()
-	CommuneDb.LoadCommuneDatabase("/media/core/communes-departement-region.csv")
+	CommuneDb.LoadCommuneDatabase(notelConfig.CommuneDbPath)
 
 	MessageDb = databases.NewMessageDatabase()
-	MessageDb.LoadMessages("/media/core/messages.db")
+	MessageDb.LoadMessages(notelConfig.MessagesDbPath)
 
 	UsersDb = databases.NewUsersDatabase()
-	UsersDb.LoadDatabase("/media/core/users.db")
+	UsersDb.LoadDatabase(notelConfig.UsersDbPath)
 
-	if ServeWS {
-		wg.Add(1)
-		go serveWS(&wg, "192.168.1.34:3615")
+	for _, connConfig := range notelConfig.Connectors {
+		if !connConfig.Active {
+			continue
+		}
+
+		switch connConfig.Kind {
+		case "modem":
+			group.Add(1)
+			go serveModem(&group, connConfig)
+		case "websocket":
+			group.Add(1)
+			go serveWS(&group, connConfig)
+		}
 	}
 
-	if ServeUSR56FaxModem1 {
-		wg.Add(1)
-		go serveModem(&wg, ConfUSR56KFaxModem, "/dev/ttyUSB0", USR56KFaxModemTag1)
-	}
+	group.Add(1)
+	go serverMetrics(&group, notelConfig.Connectors)
 
-	if ServeUSR56KFaxModem2 {
-		wg.Add(1)
-		go serveModem(&wg, ConfUSR56KFaxModem, "/dev/ttyUSB1", USR56KFaxModemTag2)
-	}
-
-	wg.Add(1)
-	go serverMetrics(&wg)
-
-	wg.Wait()
+	group.Wait()
 
 	MessageDb.Quit()
 	UsersDb.Quit()
-}
-
-func serveWS(wg *sync.WaitGroup, url string) {
-	defer wg.Done()
-
-	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		tagFull := fmt.Sprintf("%s:%s", WSTag, r.RemoteAddr)
-
-		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
-		if err != nil {
-			logs.ErrorLog("[%s] serve-ws: unable to open websocket connection: %s\n", tagFull, err.Error())
-			return
-		}
-
-		defer conn.Close(websocket.StatusInternalError, "websocket internal error, quitting")
-		logs.InfoLog("[%s] serve-ws: new connection\n", tagFull)
-
-		conn.SetReadLimit(1024)
-
-		ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
-		defer cancel()
-
-		ws, _ := minigo.NewWebsocket(conn, ctx)
-		_ = ws.Init()
-
-		var innerWg sync.WaitGroup
-		innerWg.Add(2)
-
-		network := minigo.NewNetwork(ws, false, &innerWg, "websocket")
-		m := minigo.NewMinitel(network, false, WSTag, promConnLostNb, &innerWg)
-		m.NoCSI()
-		go m.Serve()
-
-		NotelApplication(m, WSTag, &innerWg)
-		innerWg.Wait()
-
-		logs.InfoLog("[%s] serve-ws: disconnect\n", tagFull)
-		ws.Disconnect()
-
-		logs.InfoLog("[%s] serve-ws: session closed\n", tagFull)
-	})
-
-	err := http.ListenAndServe(url, fn)
-	log.Fatal(err)
-}
-
-func serverMetrics(wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	for _, cv := range []*prometheus.CounterVec{promConnNb, promConnLostNb, promConnDur, promConnAttemptNb} {
-		cv.With(prometheus.Labels{"source": WSTag}).Inc()
-		cv.With(prometheus.Labels{"source": USR56KFaxModemTag1}).Inc()
-		cv.With(prometheus.Labels{"source": USR56KFaxModemTag2}).Inc()
-	}
-	promConnActive.With(prometheus.Labels{"source": WSTag}).Set(0)
-	promConnActive.With(prometheus.Labels{"source": USR56KFaxModemTag1}).Set(0)
-	promConnActive.With(prometheus.Labels{"source": USR56KFaxModemTag2}).Set(0)
-
-	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":2112", nil)
-}
-
-func serveModem(wg *sync.WaitGroup, init []minigo.ATCommand, tty string, modemTag string) {
-	defer wg.Done()
-
-	modem, err := minigo.NewModem(tty, 115200, init, modemTag, promConnAttemptNb)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = modem.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	modem.RingHandler(func(modem *minigo.Modem) {
-		var group sync.WaitGroup
-
-		network := minigo.NewNetwork(modem, true, &group, modemTag)
-		minitel := minigo.NewMinitel(network, true, modemTag, promConnLostNb, &group)
-		go minitel.Serve()
-
-		NotelApplication(minitel, modemTag, &group)
-		group.Wait()
-
-		logs.InfoLog("[%s] ring-handler: disconnect\n", modemTag)
-		modem.Disconnect()
-
-		logs.InfoLog("[%s] ring-handler: minitel session closed\n", modemTag)
-	})
-
-	modem.Serve(false)
 }
 
 func NotelApplication(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup) {
@@ -212,8 +74,6 @@ func NotelApplication(mntl *minigo.Minitel, sourceTag string, wg *sync.WaitGroup
 
 	logs.InfoLog("[%s] notel-handler: start handler, connected=%d\n", sourceTag, active)
 	startConn := time.Now()
-
-	StartSplash(mntl)
 
 SIGNIN:
 	creds, op := NewPageSignIn(mntl).Run()

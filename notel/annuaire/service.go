@@ -9,7 +9,7 @@ func AnnuaireService(m *minigo.Minitel, userDB *databases.UsersDatabase) int {
 HOME:
 	user, op := NewPageList(m, userDB).Run()
 	if op != minigo.EnvoiOp {
-		return minigo.SommaireOp
+		return op
 	}
 
 	_, op = NewPageDetail(m, userDB, user["user"]).Run()
@@ -17,7 +17,7 @@ HOME:
 		goto HOME
 	}
 
-	return minigo.SommaireOp
+	return op
 }
 
 func printAnnuaireHeader(m *minigo.Minitel) {

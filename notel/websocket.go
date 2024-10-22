@@ -14,7 +14,7 @@ import (
 	"nhooyr.io/websocket"
 )
 
-func serveWS(wg *sync.WaitGroup, connConf confs.ConnectorConf) {
+func serveWebSocket(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
 	defer wg.Done()
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -42,11 +42,11 @@ func serveWS(wg *sync.WaitGroup, connConf confs.ConnectorConf) {
 		innerWg.Add(2)
 
 		network := minigo.NewNetwork(ws, false, &innerWg, "websocket")
-		m := minigo.NewMinitel(network, false, connConf.Tag, promConnLostNb, &innerWg)
+		m := minigo.NewMinitel(network, false, &innerWg, connConf.Tag, metrics.ConnLostCount)
 		m.NoCSI()
 		go m.Serve()
 
-		NotelApplication(m, connConf.Tag, &innerWg)
+		NotelApplication(m, &innerWg, &connConf, metrics)
 		innerWg.Wait()
 
 		logs.InfoLog("[%s] serve-ws: disconnect\n", tagFull)

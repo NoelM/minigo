@@ -11,49 +11,61 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var NbConnectedUsers atomic.Int32
+type Metrics struct {
+	ConnectedUsers atomic.Int32
 
-var (
-	promConnNb = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "notel_connection_number",
-		Help: "The total number connection to NOTEL",
-	},
-		[]string{"source"})
+	ConnCount         *prometheus.CounterVec
+	ConnAttemptCount  *prometheus.CounterVec
+	ConnLostCount     *prometheus.CounterVec
+	ConnDurationCount *prometheus.CounterVec
+	ConnActive        *prometheus.GaugeVec
 
-	promConnAttemptNb = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "notel_connection_attempt_number",
-		Help: "The total number of connection attempts to NOTEL",
-	},
-		[]string{"source"})
+	MessagesCount prometheus.Counter
+}
 
-	promConnLostNb = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "notel_connection_lost_number",
-		Help: "The total number of lost connections on NOTEL",
-	},
-		[]string{"source"})
+func NewMetrics() *Metrics {
+	return &Metrics{
+		ConnCount: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "notel_connection_number",
+			Help: "The total number connection to NOTEL",
+		},
+			[]string{"source"}),
 
-	promConnActive = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "notel_connection_active",
-		Help: "The number of currently active connections to NOTEL",
-	},
-		[]string{"source"})
+		ConnAttemptCount: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "notel_connection_attempt_number",
+			Help: "The total number of connection attempts to NOTEL",
+		},
+			[]string{"source"}),
 
-	promConnDur = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "notel_connection_duration",
-		Help: "The total connection duration to NOTEL",
-	},
-		[]string{"source"})
+		ConnLostCount: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "notel_connection_lost_number",
+			Help: "The total number of lost connections on NOTEL",
+		},
+			[]string{"source"}),
 
-	promMsgNb = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "notel_messages_number",
-		Help: "The total number of postel messages to NOTEL",
-	})
-)
+		ConnActive: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "notel_connection_active",
+			Help: "The number of currently active connections to NOTEL",
+		},
+			[]string{"source"}),
 
-func serverMetrics(wg *sync.WaitGroup, connectors []confs.ConnectorConf) {
+		ConnDurationCount: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "notel_connection_duration",
+			Help: "The total connection duration to NOTEL",
+		},
+			[]string{"source"}),
+
+		MessagesCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name: "notel_messages_number",
+			Help: "The total number of postel messages to NOTEL",
+		}),
+	}
+}
+
+func serveMetrics(wg *sync.WaitGroup, metrics *Metrics, connectors []confs.ConnectorConf) {
 	defer wg.Done()
 
-	for _, cv := range []*prometheus.CounterVec{promConnNb, promConnLostNb, promConnDur, promConnAttemptNb} {
+	for _, cv := range []*prometheus.CounterVec{metrics.ConnCount, metrics.ConnLostCount, metrics.ConnDurationCount, metrics.ConnAttemptCount} {
 		for _, connConf := range connectors {
 			if !connConf.Active {
 				continue
@@ -66,7 +78,7 @@ func serverMetrics(wg *sync.WaitGroup, connectors []confs.ConnectorConf) {
 		if !connConf.Active {
 			continue
 		}
-		promConnActive.With(prometheus.Labels{"source": connConf.Tag}).Set(0)
+		metrics.ConnActive.With(prometheus.Labels{"source": connConf.Tag}).Set(0)
 	}
 
 	http.Handle("/metrics", promhttp.Handler())

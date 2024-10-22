@@ -46,14 +46,14 @@ var ServIdMap = map[string]int{
 	annuaireKey: annuaireId,
 }
 
-func SommaireHandler(m *minigo.Minitel, nick string) {
+func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 	logs.InfoLog("enters sommaire handler\n")
 
 	var op int
 	var choice map[string]string
 
 	for op != minigo.DisconnectOp {
-		choice, op = NewPageSommaire(m).Run()
+		choice, op = NewPageSommaire(m, metrics).Run()
 		serviceId, ok := ServIdMap[strings.ToUpper(choice["choice"])]
 		if !ok {
 			continue
@@ -61,7 +61,7 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 
 		switch serviceId {
 		case chatId:
-			op = minichat.RunChatPage(m, MessageDb, &NbConnectedUsers, nick, promMsgNb)
+			op = minichat.RunChatPage(m, MessageDb, &metrics.ConnectedUsers, nick, metrics.MessagesCount)
 		case meteoId:
 			op = meteo.MeteoService(m, CommuneDb)
 		case infoId:
@@ -79,57 +79,56 @@ func SommaireHandler(m *minigo.Minitel, nick string) {
 	logs.InfoLog("quits sommaire handler\n")
 }
 
-func NewPageSommaire(mntl *minigo.Minitel) *minigo.Page {
+func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 	sommairePage := minigo.NewPage("sommaire", mntl, nil)
 
-	sommairePage.SetInitFunc(initSommaire)
+	sommairePage.SetInitFunc(func(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
+		mntl.CleanScreen()
+		mntl.SendVDT("static/notel.vdt")
+
+		mntl.ModeG0()
+		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
+
+		list := minigo.NewList(mntl, 8, 1, 17, 2)
+		list.AppendItem(chatKey, "MINICHAT")
+		list.AppendItem(meteoKey, "METEO")
+		list.AppendItem(infoKey, "INFOS")
+		list.AppendItem(sudokuKey, "SUDOKU")
+		list.AppendItem(serveurKey, "SERVEUR")
+		list.AppendItem(profilKey, "PROFIL")
+		list.AppendItem(annuaireKey, "ANNUAIRE")
+		list.Display()
+
+		mntl.MoveAt(19, 0)
+		mntl.Attributes(minigo.DoubleHauteur)
+		mntl.PrintCenter("NOTEL est de retour !")
+
+		mntl.Attributes(minigo.GrandeurNormale)
+
+		mntl.Return(1)
+		mntl.PrintCenter("Bienvenue sur le Minitel")
+
+		mntl.ReturnCol(4, 1)
+		cntd := metrics.ConnectedUsers.Load()
+		if cntd < 2 {
+			mntl.Print(fmt.Sprintf("> Connecté: %d", cntd))
+		} else {
+			mntl.Print(fmt.Sprintf("> Connectés: %d", cntd))
+		}
+
+		mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
+		form.AppendInput("choice", minigo.NewInput(mntl, 24, 25, 4, 1, true))
+
+		form.InitAll()
+
+		return minigo.NoOp
+	})
+
 	sommairePage.SetCharFunc(keySommaire)
 	sommairePage.SetEnvoiFunc(envoiSommaire)
 	sommairePage.SetCorrectionFunc(correctionSommaire)
 
 	return sommairePage
-}
-
-func initSommaire(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
-	mntl.CleanScreen()
-	mntl.SendVDT("static/notel.vdt")
-
-	mntl.ModeG0()
-	mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
-
-	list := minigo.NewList(mntl, 8, 1, 17, 2)
-	list.AppendItem(chatKey, "MINICHAT")
-	list.AppendItem(meteoKey, "METEO")
-	list.AppendItem(infoKey, "INFOS")
-	list.AppendItem(sudokuKey, "SUDOKU")
-	list.AppendItem(serveurKey, "SERVEUR")
-	list.AppendItem(profilKey, "PROFIL")
-	list.AppendItem(annuaireKey, "ANNUAIRE")
-	list.Display()
-
-	mntl.MoveAt(19, 0)
-	mntl.Attributes(minigo.DoubleHauteur)
-	mntl.PrintCenter("Allez faire un tour dans PROFIL")
-
-	mntl.Attributes(minigo.GrandeurNormale)
-
-	mntl.Return(1)
-	mntl.PrintCenter("Y'a du nouveau !")
-
-	mntl.ReturnCol(4, 1)
-	cntd := NbConnectedUsers.Load()
-	if cntd < 2 {
-		mntl.Print(fmt.Sprintf("> Connecté: %d", cntd))
-	} else {
-		mntl.Print(fmt.Sprintf("> Connectés: %d", cntd))
-	}
-
-	mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
-	form.AppendInput("choice", minigo.NewInput(mntl, 24, 25, 4, 1, true))
-
-	form.InitAll()
-
-	return minigo.NoOp
 }
 
 func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {

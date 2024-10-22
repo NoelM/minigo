@@ -41,7 +41,7 @@ type Minitel struct {
 	Messages chan int32
 }
 
-func NewMinitel(network *Network, parity bool, source string, connLost *prometheus.CounterVec, group *sync.WaitGroup) *Minitel {
+func NewMinitel(network *Network, parity bool, group *sync.WaitGroup, source string, connLost *prometheus.CounterVec) *Minitel {
 	return &Minitel{
 		network:         network,
 		defaultCouleur:  CaractereBlanc,

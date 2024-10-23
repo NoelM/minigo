@@ -17,7 +17,7 @@ func NewCommunesPage(mntl *minigo.Minitel, cDB *databases.CommuneDatabase, selec
 	var communes []databases.Commune
 
 	communesPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 
 		codePostal, ok := initData["code_postal"]
 		if !ok {

@@ -59,19 +59,19 @@ func TestBitWriteAt(t *testing.T) {
 func TestGetByteWithParity(t *testing.T) {
 	var originalByte byte = 0b01000001
 	var expectedByte byte = 0b01000001
-	if computed := GetByteWithParity(originalByte); computed != expectedByte {
+	if computed := SetParity(originalByte); computed != expectedByte {
 		t.Fatalf("expected result: %b got %b", expectedByte, computed)
 	}
 
 	originalByte = 0b01100001
 	expectedByte = 0b11100001
-	if computed := GetByteWithParity(originalByte); computed != expectedByte {
+	if computed := SetParity(originalByte); computed != expectedByte {
 		t.Fatalf("expected result: %b got %b", expectedByte, computed)
 	}
 
 	originalByte = 0b00000000
 	expectedByte = 0b00000000
-	if computed := GetByteWithParity(originalByte); computed != expectedByte {
+	if computed := SetParity(originalByte); computed != expectedByte {
 		t.Fatalf("expected result: %b got %b", expectedByte, computed)
 	}
 }
@@ -79,19 +79,19 @@ func TestGetByteWithParity(t *testing.T) {
 func TestCheckByteParity(t *testing.T) {
 	var goodParityByte byte = 0b01000001
 	var goodParityRemoved byte = 0b01000001
-	if computed, err := CheckByteParity(goodParityByte); computed != goodParityRemoved || err != nil {
+	if computed, err := ValidAndRemoveParity(goodParityByte); computed != goodParityRemoved || err != nil {
 		t.Fatalf("wrong parity check for %b, expected %b, computed %b, with error: %s", goodParityByte, goodParityRemoved, computed, err.Error())
 	}
 
 	goodParityByte = 0b10010011
 	goodParityRemoved = 0b00010011
-	if computed, err := CheckByteParity(goodParityByte); computed != goodParityRemoved || err != nil {
+	if computed, err := ValidAndRemoveParity(goodParityByte); computed != goodParityRemoved || err != nil {
 		t.Fatalf("wrong parity check for %b, expected %b, computed %b, with error: %s", goodParityByte, goodParityRemoved, computed, err.Error())
 	}
 
 	var wrongParityByte byte = 0b11000001
 	var wrongParityRemoved byte = 0b11000001
-	if computed, err := CheckByteParity(wrongParityByte); computed != wrongParityRemoved || err == nil {
+	if computed, err := ValidAndRemoveParity(wrongParityByte); computed != wrongParityRemoved || err == nil {
 		t.Fatalf("wrong parity check for %b, expected %b, computed %b, with error: %s", goodParityByte, wrongParityRemoved, computed, err.Error())
 	}
 }

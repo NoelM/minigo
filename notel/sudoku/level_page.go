@@ -10,7 +10,7 @@ func RunPageLevel(mntl *minigo.Minitel) (level, op int) {
 	levelPage := minigo.NewPage("sudoku:level", mntl, nil)
 
 	levelPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 		mntl.SendVDT("sudoku/sudoku.vdt")
 		mntl.ModeG0()
 

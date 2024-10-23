@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -25,17 +24,6 @@ func PCode(i int) []byte {
 
 func Word(word int) []byte {
 	return []byte{GetByteHigh(word), GetByteLow(word)}
-}
-
-func CursorInScreen(x, y int, resolution uint) (bool, error) {
-	switch resolution {
-	case ResolutionSimple:
-		return x > 0 && x <= ColonnesSimple && y > 0 && y <= LignesSimple, nil
-	case ResolutionDouble:
-		return x > 0 && x <= ColonnesDouble && y > 0 && y <= ColonnesSimple, nil
-	default:
-		return false, fmt.Errorf("unknown resolution: %d", resolution)
-	}
 }
 
 // MoveAt moves the cursor ton an absolute position
@@ -157,6 +145,12 @@ func ReturnUp(n int, csi bool) (buf []byte) {
 	return
 }
 
+// ResetScreen cleans the screen, move the cusror in postion (1;0)
+// sets all the attributes to default: G0, size, color, background.
+func ResetScreen() []byte {
+	return []byte{Ff}
+}
+
 func CleanScreen() (buf []byte) {
 	buf = Word(Csi)
 	buf = append(buf, 0x32, 0x4A)
@@ -207,30 +201,10 @@ func CleanNRowsFromCursor(n int) (buf []byte) {
 	return
 }
 
-func TextZone(text string, attributes ...byte) (buf []byte) {
-	buf = append(buf, Sp)
-
-	for _, atb := range attributes {
-		buf = append(buf, EncodeAttribute(atb)...)
-	}
-	buf = append(buf, EncodeString(text)...)
-	buf = append(buf, Sp)
-
-	return
-}
-
-func SubArticle(content []byte, x, y int, res uint) (buf []byte) {
-	inScreen, err := CursorInScreen(x, y, res)
-	if err != nil {
-		log.Printf("unable to create sub-article: %s", err.Error())
-	}
-	if !inScreen {
-		log.Printf("positon (x=%d ; y=%d) out-of-bounds", x, y)
-	}
-
-	buf = append(buf, Us, byte(0x40+x), byte(0x40+y))
-	buf = append(buf, content...)
-	return
+// SubArticle defines a sub-article in the page, moves the cursor at (row;col)
+// This resets all the attributes to default: G0, size, color, and background
+func SubArticle(row, col int) []byte {
+	return []byte{Us, byte(0x40 + row), byte(0x40 + col)}
 }
 
 func GetCursorOn() byte {
@@ -241,7 +215,7 @@ func GetCursorOff() byte {
 	return CursorOff
 }
 
-func EncodeCharToVideotex(c byte) byte {
+func EncodeChar(c byte) byte {
 	return byte(strings.LastIndexByte(CharTable, c))
 }
 
@@ -407,7 +381,7 @@ func EncodeRune(r rune) []byte {
 		return specialRune
 	}
 
-	vdtByte := EncodeCharToVideotex(byte(r))
+	vdtByte := EncodeChar(byte(r))
 	if ValidChar(vdtByte) {
 		return []byte{vdtByte}
 	}
@@ -501,13 +475,13 @@ func ApplyParity(in []byte) (out []byte) {
 	out = make([]byte, len(in))
 
 	for id, b := range in {
-		out[id] = GetByteWithParity(b)
+		out[id] = SetParity(b)
 	}
 
 	return out
 }
 
-func ReadEntryBytes(entryBytes []byte) (done bool, pro bool, value int32, err error) {
+func DecodeTerminalBytes(entryBytes []byte) (done bool, pro bool, value int32, err error) {
 	if entryBytes[0] == Ss2 {
 		// Special characters, switch G2 mode
 		if len(entryBytes) <= 1 {

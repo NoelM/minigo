@@ -1,0 +1,45 @@
+{
+    "communeDbPath": "/media/core/communes-departement-region.csv",
+    "messagesDbPath": "/media/core/messages.db",
+    "usersDbPath": "/media/core/users.db",
+    "connectors": [
+        {
+            "active": true,
+            "kind": "websocket",
+            "tag": "ws",
+            "path": "192.168.1.34:3615"
+        },
+        {
+            "active": true,
+            "kind": "modem",
+            "tag": "usr-56k-faxmodem-1",
+            "path": "/dev/ttyUSB0",
+            "config": [
+                {
+                    "command": "ATZ0",
+                    "reply":   "OK"
+                },
+                {
+                    "command": "ATE0L0M0X4&A0&N2S0=1S27=16",
+                    "reply":   "OK"
+                }
+            ]
+        },
+        {
+            "active": true,
+            "kind": "modem",
+            "tag": "usr-56k-faxmodem-2",
+            "path": "/dev/ttyUSB1",
+            "config": [
+                {
+                    "command": "ATZ0",
+                    "reply":   "OK"
+                },
+                {
+                    "command": "ATE0L0M0X4&A0&N2S0=1S27=16",
+                    "reply":   "OK"
+                }
+            ]
+        }
+    ]
+}

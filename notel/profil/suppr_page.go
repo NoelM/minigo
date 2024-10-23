@@ -9,7 +9,7 @@ func RunSupprPage(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo 
 	supprPage := minigo.NewPage("suppr", mntl, nil)
 
 	supprPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 
 		mntl.MoveAt(2, 0)
 		mntl.PrintAttributes("Supprimer son Compte", minigo.DoubleHauteur)
@@ -70,7 +70,7 @@ func RunSupprPage(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo 
 		}
 
 		printErrorMsg(mntl, inputs, "Compte supprimé, au revoir !")
-		mntl.In <- minigo.ConnexionFin
+		mntl.Messages <- minigo.ConnexionFin
 		return nil, minigo.NoOp
 	})
 

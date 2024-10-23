@@ -13,8 +13,7 @@ func NewPageInfo(mntl *minigo.Minitel, service map[string]string) *minigo.Page {
 	var itemId int
 
 	infoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
-		mntl.MoveAt(1, 0)
+		mntl.Reset()
 		mntl.RouleauOn()
 
 		items = LoadFeed(service["url"])
@@ -73,7 +72,7 @@ func printDepeche(mntl *minigo.Minitel, d Depeche) {
 	}
 
 	// Display Content
-	content := minigo.WrapperGenerique(d.Content, 38)
+	content := minigo.Wrapper(d.Content, 38)
 
 	mntl.Attributes(minigo.CaractereBlanc, minigo.FondNormal)
 	for _, l := range content {

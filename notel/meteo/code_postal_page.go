@@ -9,7 +9,7 @@ func NewCodePostalPage(mntl *minigo.Minitel) *minigo.Page {
 	codePostalPage := minigo.NewPage("code_postal", mntl, nil)
 
 	codePostalPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 
 		mntl.SendVDT("static/meteo.vdt")
 		mntl.ModeG0()

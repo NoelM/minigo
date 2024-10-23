@@ -142,7 +142,7 @@ func (p *Page) Run() (map[string]string, int) {
 	}
 
 	for {
-		key := <-p.mntl.In
+		key := <-p.mntl.Messages
 
 		switch key {
 		case Envoi:

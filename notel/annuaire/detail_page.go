@@ -11,7 +11,7 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 	detailPage := minigo.NewPage("notel:details", mntl, nil)
 
 	detailPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 
 		user, err := userDB.LoadUser(nick)
 		if err != nil {
@@ -46,7 +46,7 @@ func printUserDetails(mntl *minigo.Minitel, user databases.User) {
 	mntl.SendCAN()
 
 	mntl.Attributes(minigo.CaractereVert)
-	for _, line := range minigo.WrapperGenerique(user.Bio, 37) {
+	for _, line := range minigo.Wrapper(user.Bio, 37) {
 		mntl.ReturnCol(1, 1)
 		mntl.Print(line)
 	}

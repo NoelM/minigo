@@ -32,15 +32,21 @@ func BitWriteAt(b byte, pos int, value bool) byte {
 	}
 }
 
-func GetByteWithParity(b byte) byte {
-	// The parity bit is set to 0 if the sum of other bits is even,
-	// thus if the sum is odd the parity bit is set to 1
+// SetParity returns the input byte with the parity rule applied
+func SetParity(b byte) byte {
+	// The parity bit (at position 7) is set to:
+	// * 0 -> if the sum of (0;6) bits is even,
+	// * 1 -> if the sum of (0;6) bits is odd
 	return BitWriteAt(b, ParityBitPosition, !IsByteEven(b))
 }
 
-func CheckByteParity(b byte) (byte, error) {
-	// The parity bit is set to 0 if the sum of other bits is even,
-	// thus if the sum is odd the parity bit is set to 1
+// ValidAndRemoveParity, verifies the parity of the input byte:
+// * if the parity is invalid, the function returns an error
+// * if the parity is valid, the function returns the byte with parity bit at 0
+func ValidAndRemoveParity(b byte) (byte, error) {
+	// The parity bit (at position 7) is set to:
+	// * 0 -> if the sum of (0;6) bits is even,
+	// * 1 -> if the sum of (0;6) bits is odd
 	if IsByteEven(b) != BitReadAt(b, ParityBitPosition) {
 		return BitWriteAt(b, ParityBitPosition, false), nil
 	} else {

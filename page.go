@@ -141,7 +141,7 @@ func (p *Page) Run() (map[string]string, int) {
 		return nil, op
 	}
 
-	for {
+	for p.mntl.IsConnected() {
 		key := <-p.mntl.Messages
 
 		switch key {
@@ -231,4 +231,6 @@ func (p *Page) Run() (map[string]string, int) {
 			}
 		}
 	}
+
+	return nil, DisconnectOp
 }

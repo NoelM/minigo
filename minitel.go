@@ -227,6 +227,10 @@ func (m *Minitel) Serve() {
 	m.network.Close()
 }
 
+func (m *Minitel) IsConnected() bool {
+	return m.network.IsConnected()
+}
+
 func (m *Minitel) Send(buf []byte) error {
 	m.network.Send <- buf
 	return nil

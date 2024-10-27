@@ -84,6 +84,7 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 
 	sommairePage.SetInitFunc(func(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
+		mntl.CursorOff()
 		mntl.SendVDT("static/notel.vdt")
 
 		mntl.ModeG0()

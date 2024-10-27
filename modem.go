@@ -72,6 +72,8 @@ func (m *Modem) Init() error {
 		} else {
 			infoLog.Printf("[modem] %s: acknowledged command='%s' with reply='%s'", m.tag, atCommand.Command, rep.Replace(result))
 		}
+
+		time.Sleep(time.Second)
 	}
 
 	return nil

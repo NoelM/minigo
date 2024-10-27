@@ -184,17 +184,17 @@ func (c *ChatLayout) Init() {
 	limit := 0
 
 	// One start from the last message recvd.
-	var lastUserName string
+	var nextUserName string = c.messages[len(c.messages)-2].Nick
 	for msgId := len(c.messages) - 1; msgId >= 0; msgId -= 1 {
 		limit = rowMsgZoneEnd - curLine
 
-		curLine += c.printMessage(msgId, limit, Up, lastUserName != c.messages[msgId].Nick)
-		lastUserName = c.messages[msgId].Nick
+		curLine += c.printMessage(msgId, limit, Up, nextUserName != c.messages[msgId].Nick)
+		nextUserName = c.messages[msgId-2].Nick
 
 		limit = rowMsgZoneEnd - curLine
 		dateLines := c.printDate(msgId, limit, Up)
 		if dateLines > 0 {
-			lastUserName = ""
+			nextUserName = ""
 		}
 		curLine += dateLines
 

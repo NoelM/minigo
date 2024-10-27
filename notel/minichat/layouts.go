@@ -145,8 +145,8 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 	return 2
 }
 
-func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
-	lines, vdt := FormatMessage(c.messages[msgId], dir, c.mntl.SupportCSI())
+func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir, withUserName bool) int {
+	lines, vdt := FormatMessage(c.messages[msgId], dir, c.mntl.SupportCSI(), withUserName)
 
 	if limit < 0 || limit > lines {
 		limit = lines
@@ -184,12 +184,19 @@ func (c *ChatLayout) Init() {
 	limit := 0
 
 	// One start from the last message recvd.
+	var lastUserName string
 	for msgId := len(c.messages) - 1; msgId >= 0; msgId -= 1 {
 		limit = rowMsgZoneEnd - curLine
-		curLine += c.printMessage(msgId, limit, Up)
+
+		curLine += c.printMessage(msgId, limit, Up, lastUserName != c.messages[msgId].Nick)
+		lastUserName = c.messages[msgId].Nick
 
 		limit = rowMsgZoneEnd - curLine
-		curLine += c.printDate(msgId, limit, Up)
+		dateLines := c.printDate(msgId, limit, Up)
+		if dateLines > 0 {
+			lastUserName = ""
+		}
+		curLine += dateLines
 
 		if curLine >= rowMsgZoneEnd {
 			break
@@ -215,9 +222,16 @@ func (c *ChatLayout) Update() {
 
 	// We print on the DOWN direction all the new messages, no limits here!
 	curLine := rowMsgZoneEnd
+	lastUserName := c.messages[c.maxId].Nick
 	for msgId := c.maxId + 1; msgId < len(c.messages); msgId += 1 {
-		curLine += c.printDate(msgId, NoLimit, Down)
-		curLine += c.printMessage(msgId, NoLimit, Down)
+		dateLines := c.printDate(msgId, NoLimit, Down)
+		if dateLines > 0 {
+			lastUserName = ""
+		}
+		curLine += dateLines
+
+		curLine += c.printMessage(msgId, NoLimit, Down, lastUserName == c.messages[msgId].Nick)
+		lastUserName = c.messages[msgId].Nick
 	}
 	c.maxId = len(c.messages) - 1
 

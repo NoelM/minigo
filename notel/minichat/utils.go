@@ -47,10 +47,15 @@ func GetDateString(lastMsg, newMsg time.Time) (str string) {
 	return
 }
 
-func FormatMessage(msg databases.Message, dir RouleauDir, csi bool) (lines int, vdt [][]byte) {
+func FormatMessage(msg databases.Message, dir RouleauDir, csi bool, withUserName bool) (lines int, vdt [][]byte) {
 	// Message Format
 	// [nick]_[msg]
-	formated := msg.Nick + " " + msg.Text
+	var formated string
+	if withUserName {
+		formated = msg.Nick + " " + msg.Text
+	} else {
+		formated = msg.Text
+	}
 
 	// Wraps the message to 40 chars
 	wrapped := minigo.WrapperLargeurNormale(formated)
@@ -73,11 +78,15 @@ func FormatMessage(msg databases.Message, dir RouleauDir, csi bool) (lines int, 
 		}
 
 		if lineId == 0 {
-			buf = append(buf, minigo.EncodeAttributes(minigo.CaractereRouge)...)
-			buf = append(buf, minigo.EncodeString(lineMsg[:len(msg.Nick)])...)
-			buf = append(buf, minigo.EncodeAttribute(minigo.CaractereBlanc)...)
+			if withUserName {
+				buf = append(buf, minigo.EncodeAttributes(minigo.CaractereRouge)...)
+				buf = append(buf, minigo.EncodeString(lineMsg[:len(msg.Nick)])...)
+				buf = append(buf, minigo.EncodeAttribute(minigo.CaractereBlanc)...)
 
-			buf = append(buf, minigo.EncodeString(lineMsg[len(msg.Nick):])...)
+				buf = append(buf, minigo.EncodeString(lineMsg[len(msg.Nick):])...)
+			} else {
+				buf = append(buf, minigo.EncodeString(lineMsg)...)
+			}
 		} else {
 			buf = append(buf, minigo.EncodeString(lineMsg)...)
 		}

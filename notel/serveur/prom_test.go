@@ -1,11 +1,24 @@
 package serveur
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestRequest(t *testing.T) {
-	Request(ConnectWeekly)
-	Request(DurationWeekly)
-	Request(MessagesWeekly)
-	Request(CPULoad)
-	Request(CPUTemp)
+	r, _ := Request(ConnectWeekly)
+	fmt.Println(r.Data)
+
+	r, _ = Request(DurationWeekly)
+	fmt.Println(r.Data)
+
+	r, _ = Request(MessagesWeekly)
+	fmt.Println(r.Data)
+
+	r, _ = Request(CPULoad)
+	fmt.Println(r.Data)
+
+	r, _ = Request(CPUTemp)
+	fmt.Println(r.Data)
+
 }

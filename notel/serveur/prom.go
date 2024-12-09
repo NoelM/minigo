@@ -2,6 +2,7 @@ package serveur
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -62,9 +63,10 @@ func Request(query string) (r PromApiResponse, err error) {
 		logs.ErrorLog("unable to read reply: %s\n", err.Error())
 		return
 	}
+	fmt.Println(string(promData))
 
 	if err = json.Unmarshal(promData, &r); err != nil {
-		logs.ErrorLog("unable to unmarshal data: %s\n", err.Error())
+		logs.ErrorLog("unable to unmarshal data: %s\n%s", err.Error(), promData)
 		return
 	}
 

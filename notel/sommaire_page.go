@@ -11,7 +11,7 @@ import (
 	"github.com/NoelM/minigo/notel/meteo"
 	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/profil"
-	"github.com/NoelM/minigo/notel/serveur"
+	"github.com/NoelM/minigo/notel/stats"
 )
 
 const (
@@ -63,7 +63,7 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 		case infoId:
 			op = infos.ServiceInfo(m)
 		case statsId:
-			_, op = serveur.NewServeurPage(m).Run()
+			_, op = stats.NewStatsPage(m).Run()
 		case profilId:
 			op = profil.ProfilService(m, UsersDb, nick)
 		case annuaireId:

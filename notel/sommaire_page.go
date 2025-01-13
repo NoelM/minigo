@@ -22,6 +22,7 @@ const (
 	statsId
 	profilId
 	annuaireId
+	blogId
 )
 
 const (
@@ -31,6 +32,7 @@ const (
 	statsKey    = "*STA"
 	profilKey   = "*PRO"
 	annuaireKey = "*ANU"
+	blogKey     = "*BLO"
 )
 
 var ServIdMap = map[string]int{
@@ -40,6 +42,7 @@ var ServIdMap = map[string]int{
 	statsKey:    statsId,
 	profilKey:   profilId,
 	annuaireKey: annuaireId,
+	blogKey:     blogId,
 }
 
 func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
@@ -88,6 +91,7 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 		list.AppendItem(chatKey, "MINICHAT")
 		list.AppendItem(meteoKey, "METEO")
 		list.AppendItem(infoKey, "INFOS")
+		list.AppendItem(blogKey, "BLOG")
 		list.AppendItem(statsKey, "STATS")
 		list.AppendItem(profilKey, "PROFIL")
 		list.AppendItem(annuaireKey, "ANNUAIRE")

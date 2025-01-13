@@ -12,7 +12,6 @@ import (
 	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/profil"
 	"github.com/NoelM/minigo/notel/serveur"
-	"github.com/NoelM/minigo/notel/sudoku"
 )
 
 const (
@@ -21,7 +20,6 @@ const (
 	meteoId
 	infoId
 	serveurId
-	sudokuId
 	profilId
 	annuaireId
 )
@@ -31,7 +29,6 @@ const (
 	meteoKey    = "*MTO"
 	infoKey     = "*INF"
 	serveurKey  = "*SRV"
-	sudokuKey   = "*SDK"
 	profilKey   = "*PRO"
 	annuaireKey = "*ANU"
 )
@@ -41,7 +38,6 @@ var ServIdMap = map[string]int{
 	meteoKey:    meteoId,
 	infoKey:     infoId,
 	serveurKey:  serveurId,
-	sudokuKey:   sudokuId,
 	profilKey:   profilId,
 	annuaireKey: annuaireId,
 }
@@ -68,8 +64,6 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 			op = infos.ServiceInfo(m)
 		case serveurId:
 			_, op = serveur.NewServeurPage(m).Run()
-		case sudokuId:
-			op = sudoku.SudokuService(m, nick)
 		case profilId:
 			op = profil.ProfilService(m, UsersDb, nick)
 		case annuaireId:
@@ -94,7 +88,6 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 		list.AppendItem(chatKey, "MINICHAT")
 		list.AppendItem(meteoKey, "METEO")
 		list.AppendItem(infoKey, "INFOS")
-		list.AppendItem(sudokuKey, "SUDOKU")
 		list.AppendItem(serveurKey, "SERVEUR")
 		list.AppendItem(profilKey, "PROFIL")
 		list.AppendItem(annuaireKey, "ANNUAIRE")

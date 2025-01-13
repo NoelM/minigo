@@ -1,4 +1,4 @@
-package serveur
+package stats
 
 import (
 	"fmt"

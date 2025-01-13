@@ -19,7 +19,7 @@ const (
 	chatId
 	meteoId
 	infoId
-	serveurId
+	statsId
 	profilId
 	annuaireId
 )
@@ -28,7 +28,7 @@ const (
 	chatKey     = "*CHA"
 	meteoKey    = "*MTO"
 	infoKey     = "*INF"
-	serveurKey  = "*SRV"
+	statsKey    = "*STA"
 	profilKey   = "*PRO"
 	annuaireKey = "*ANU"
 )
@@ -37,7 +37,7 @@ var ServIdMap = map[string]int{
 	chatKey:     chatId,
 	meteoKey:    meteoId,
 	infoKey:     infoId,
-	serveurKey:  serveurId,
+	statsKey:    statsId,
 	profilKey:   profilId,
 	annuaireKey: annuaireId,
 }
@@ -62,7 +62,7 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 			op = meteo.MeteoService(m, CommuneDb)
 		case infoId:
 			op = infos.ServiceInfo(m)
-		case serveurId:
+		case statsId:
 			_, op = serveur.NewServeurPage(m).Run()
 		case profilId:
 			op = profil.ProfilService(m, UsersDb, nick)
@@ -88,7 +88,7 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 		list.AppendItem(chatKey, "MINICHAT")
 		list.AppendItem(meteoKey, "METEO")
 		list.AppendItem(infoKey, "INFOS")
-		list.AppendItem(serveurKey, "SERVEUR")
+		list.AppendItem(statsKey, "STATS")
 		list.AppendItem(profilKey, "PROFIL")
 		list.AppendItem(annuaireKey, "ANNUAIRE")
 		list.Display()

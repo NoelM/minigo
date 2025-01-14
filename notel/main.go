@@ -16,6 +16,7 @@ import (
 var CommuneDb *databases.CommuneDatabase
 var MessageDb *databases.MessageDatabase
 var UsersDb *databases.UsersDatabase
+var BlogDbPath string
 
 func main() {
 	var group sync.WaitGroup
@@ -39,6 +40,8 @@ func main() {
 
 	UsersDb = databases.NewUsersDatabase()
 	UsersDb.LoadDatabase(notelConf.UsersDbPath)
+
+	BlogDbPath = notelConfig.BlogDbPath
 
 	group.Add(1)
 	metrics := NewMetrics()

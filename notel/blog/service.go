@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/NoelM/minigo"
-	"github.com/NoelM/minigo/notel/confs"
 	"github.com/NoelM/minigo/notel/logs"
 )
 
@@ -15,10 +14,10 @@ type Article struct {
 	Content string `json:"content"`
 }
 
-func ServiceInfo(m *minigo.Minitel, conf *confs.NotelConf) int {
+func ServiceBlog(m *minigo.Minitel, blogDbPath string) int {
 	articles := []Article{}
 
-	if data, err := os.ReadFile(conf.BlogDbPath); err != nil {
+	if data, err := os.ReadFile(blogDbPath); err != nil {
 		logs.ErrorLog("unable to open Blog DB: %s\n", err)
 		return minigo.SommaireOp
 

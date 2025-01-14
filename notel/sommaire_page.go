@@ -6,6 +6,7 @@ import (
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/annuaire"
+	"github.com/NoelM/minigo/notel/blog"
 	"github.com/NoelM/minigo/notel/infos"
 	"github.com/NoelM/minigo/notel/logs"
 	"github.com/NoelM/minigo/notel/meteo"
@@ -67,6 +68,8 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 			op = infos.ServiceInfo(m)
 		case statsId:
 			_, op = stats.NewStatsPage(m).Run()
+		case blogId:
+			op = blog.ServiceBlog(m, BlogDbPath)
 		case profilId:
 			op = profil.ProfilService(m, UsersDb, nick)
 		case annuaireId:

@@ -15,6 +15,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 		mntl.MoveAt(3, 1)
 		mntl.Attributes(minigo.DoubleGrandeur)
 		mntl.Print(article.Title)
+		mntl.Attributes(minigo.GrandeurNormale)
 
 		mntl.Return(1)
 		mntl.HLine(40, minigo.HCenter)

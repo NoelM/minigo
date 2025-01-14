@@ -15,6 +15,7 @@ func NewHomePage(m *minigo.Minitel) *minigo.Page {
 		"Le Monde (en continu)",
 		"Le Monde (à la une)",
 		"Libération",
+		"Le Figaro",
 		"BBC News",
 		"The Verge",
 	}
@@ -25,6 +26,7 @@ func NewHomePage(m *minigo.Minitel) *minigo.Page {
 		LeMondeLiveRss,
 		LeMondeRss,
 		LiberationRss,
+		LeFigaroRss,
 		BBCRss,
 		TheVergeRss,
 	}

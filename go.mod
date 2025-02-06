@@ -46,6 +46,8 @@ require (
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
+	github.com/reiver/go-oi v1.0.0 // indirect
+	github.com/reiver/go-telnet v0.0.0-20180421082511-9ff0b2ab096e // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/snksoft/crc v1.1.0 // indirect

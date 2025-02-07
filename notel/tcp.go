@@ -6,6 +6,7 @@ import (
 	"net"
 	"regexp"
 	"sync"
+	"time"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/confs"
@@ -21,10 +22,12 @@ func serveTCP(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics
 
 		number, err := waitForConnect(tcp)
 		if err != nil {
-			logs.ErrorLog("[%s] serve-TCP: unable to connect %s\n", err)
+			logs.ErrorLog("[%s] serve-TCP: unable to connect %s\n", connConf.Tag, err)
 			return
 		}
 		logs.InfoLog("[%s] serve-TCP: connect from number %s\n", connConf.Tag, number)
+
+		time.Sleep(7 * time.Second)
 
 		fullTag := fmt.Sprintf("%s:%s", connConf.Tag, number)
 
@@ -86,7 +89,7 @@ func waitForConnect(tcp *minigo.TCP) (string, error) {
 		msg = append(msg, part...)
 
 		if re.Match(msg) {
-			return re.FindStringSubmatch(string(msg))[0], nil
+			return re.FindStringSubmatch(string(msg))[1], nil
 		}
 	}
 }

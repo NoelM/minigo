@@ -88,7 +88,7 @@ func waitForConnect(tcp *minigo.TCP) (string, error) {
 		msg = append(msg, part...)
 
 		if re.Match(msg) {
-			return re.FindStringSubmatch(msg)[0], nil
+			return re.FindStringSubmatch(string(msg))[0], nil
 		}
 	}
 

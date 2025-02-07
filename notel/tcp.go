@@ -6,7 +6,6 @@ import (
 	"net"
 	"regexp"
 	"sync"
-	"time"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/confs"
@@ -76,10 +75,9 @@ func waitForConnect(tcp *minigo.TCP) (string, error) {
 	*/
 
 	msg := make([]byte, 0)
-	re := regexp.MustCompile(`CALLFROM\s(\d+)\nSTARTURL\nPCE\s\d`)
+	re := regexp.MustCompile(`CALLFROM\s(\d+)\nSTARTURL\s\nPCE\s\d`)
 
-	start := time.Now()
-	for time.Since(start) < time.Minute {
+	for {
 		part, err := tcp.Read()
 		if err != nil {
 			return "", err
@@ -91,6 +89,4 @@ func waitForConnect(tcp *minigo.TCP) (string, error) {
 			return re.FindStringSubmatch(string(msg))[0], nil
 		}
 	}
-
-	return "", fmt.Errorf("unable to connect V.23")
 }

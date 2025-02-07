@@ -1,22 +1,19 @@
 package minigo
 
 import (
-	"github.com/reiver/go-telnet"
+	"net"
+	"time"
 )
 
 type Telnet struct {
-	ctx  telnet.Context
-	read telnet.Reader
-	wrt  telnet.Writer
+	conn net.Conn
 
 	connected bool
 }
 
-func NewTelnet(ctx telnet.Context, w telnet.Writer, r telnet.Reader) (*Telnet, error) {
+func NewTelnet(conn net.Conn) (*Telnet, error) {
 	return &Telnet{
-		ctx:  ctx,
-		read: r,
-		wrt:  w,
+		conn: conn,
 	}, nil
 }
 
@@ -26,7 +23,7 @@ func (t *Telnet) Init() error {
 }
 
 func (t *Telnet) Write(b []byte) error {
-	_, err := t.wrt.Write(b)
+	_, err := t.conn.Write(b)
 
 	if err != nil {
 		t.connected = false
@@ -38,7 +35,8 @@ func (t *Telnet) Write(b []byte) error {
 
 func (t *Telnet) Read() ([]byte, error) {
 	msg := make([]byte, 256)
-	n, err := t.read.Read(msg)
+	t.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+	n, err := t.conn.Read(msg)
 
 	if err != nil {
 		t.connected = false

@@ -2,27 +2,26 @@ package minigo
 
 import (
 	"net"
-	"time"
 )
 
-type Telnet struct {
+type TCP struct {
 	conn net.Conn
 
 	connected bool
 }
 
-func NewTelnet(conn net.Conn) (*Telnet, error) {
-	return &Telnet{
+func NewTCP(conn net.Conn) (*TCP, error) {
+	return &TCP{
 		conn: conn,
 	}, nil
 }
 
-func (t *Telnet) Init() error {
+func (t *TCP) Init() error {
 	t.connected = true
 	return nil
 }
 
-func (t *Telnet) Write(b []byte) error {
+func (t *TCP) Write(b []byte) error {
 	_, err := t.conn.Write(b)
 
 	if err != nil {
@@ -33,9 +32,8 @@ func (t *Telnet) Write(b []byte) error {
 	return nil
 }
 
-func (t *Telnet) Read() ([]byte, error) {
+func (t *TCP) Read() ([]byte, error) {
 	msg := make([]byte, 256)
-	t.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 	n, err := t.conn.Read(msg)
 
 	if err != nil {
@@ -46,10 +44,11 @@ func (t *Telnet) Read() ([]byte, error) {
 	return msg[:n], nil
 }
 
-func (t *Telnet) Connected() bool {
+func (t *TCP) Connected() bool {
 	return t.connected
 }
 
-func (t *Telnet) Disconnect() {
+func (t *TCP) Disconnect() {
+	t.conn.Close()
 	t.connected = false
 }

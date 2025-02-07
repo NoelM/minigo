@@ -58,9 +58,9 @@ func main() {
 			group.Add(1)
 			go serveWebSocket(&group, connConfig, metrics)
 
-		case "telnet":
+		case "tcp":
 			group.Add(1)
-			go serveTelnet(&group, connConfig, metrics)
+			go serveTCP(&group, connConfig, metrics)
 		}
 	}
 	group.Wait()

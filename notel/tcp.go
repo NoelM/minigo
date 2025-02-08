@@ -13,45 +13,46 @@ import (
 	"github.com/NoelM/minigo/notel/logs"
 )
 
-func serveTCP(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
+func tcpServe(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
 	defer wg.Done()
 
 	handler := func(conn net.Conn) {
 		tcp, _ := minigo.NewTCP(conn)
 		_ = tcp.Init()
 
-		number, err := waitForConnect(tcp)
+		number, err := getCallMetadata(tcp)
 		if err != nil {
-			logs.ErrorLog("[%s] serve-TCP: unable to connect %s\n", connConf.Tag, err)
+			logs.ErrorLog("[%s:<tel-number>] tcp-serve: unable to connect %s\n", connConf.Tag, err)
 			return
 		}
-		logs.InfoLog("[%s] serve-TCP: connect from number %s\n", connConf.Tag, number)
-
-		time.Sleep(7 * time.Second)
 
 		fullTag := fmt.Sprintf("%s:%s", connConf.Tag, number)
+		logs.InfoLog("[%s] tcp-serve: new call", fullTag)
 
-		var innerWg sync.WaitGroup
+		// Sleep while the connection is fully established, 7s is a approx.
+		time.Sleep(7 * time.Second)
 
-		network := minigo.NewNetwork(tcp, false, &innerWg, "TCP")
-		m := minigo.NewMinitel(network, false, &innerWg, fullTag, metrics.ConnLostCount)
-		m.NoCSI()
-		go m.Serve()
+		var group sync.WaitGroup
 
-		NotelApplication(m, &innerWg, &connConf, metrics)
-		innerWg.Wait()
+		network := minigo.NewNetwork(tcp, false, &group, fullTag)
+		minitel := minigo.NewMinitel(network, false, &group, fullTag, metrics.ConnLostCount)
+		minitel.NoCSI()
+		go minitel.Serve()
 
-		logs.InfoLog("[%s] serve-TCP: disconnect\n", fullTag)
+		NotelApplication(minitel, &group, &connConf, metrics)
+		group.Wait()
+
+		logs.InfoLog("[%s] tcp-serve: disconnect\n", fullTag)
 		tcp.Disconnect()
 
-		logs.InfoLog("[%s] serve-TCP: session closed\n", fullTag)
+		logs.InfoLog("[%s] tcp-serve: terminated\n", fullTag)
 	}
 
-	err := listenAndServeTCP(connConf.Path, handler)
+	err := tcpListenAndServe(connConf.Path, handler)
 	log.Fatal(err)
 }
 
-func listenAndServeTCP(path string, handler func(net.Conn)) error {
+func tcpListenAndServe(path string, handler func(net.Conn)) error {
 
 	listener, err := net.Listen("tcp", path)
 	if err != nil {
@@ -69,7 +70,7 @@ func listenAndServeTCP(path string, handler func(net.Conn)) error {
 	}
 }
 
-func waitForConnect(tcp *minigo.TCP) (string, error) {
+func getCallMetadata(tcp *minigo.TCP) (string, error) {
 	/*
 		CALLFROM 0173742367
 		STARTURL

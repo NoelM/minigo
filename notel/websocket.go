@@ -14,7 +14,7 @@ import (
 	"nhooyr.io/websocket"
 )
 
-func serveWebSocket(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
+func webSocketServe(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
 	defer wg.Done()
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

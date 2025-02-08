@@ -25,42 +25,42 @@ func main() {
 		return
 	}
 
-	notelConfig, err := confs.LoadConfig(os.Args[1])
+	notelConf, err := confs.LoadConfig(os.Args[1])
 	if err != nil {
 		logs.ErrorLog("notel: unable to load conf: %s\n", err.Error())
 		return
 	}
 
 	CommuneDb = databases.NewCommuneDatabase()
-	CommuneDb.LoadCommuneDatabase(notelConfig.CommuneDbPath)
+	CommuneDb.LoadCommuneDatabase(notelConf.CommuneDbPath)
 
 	MessageDb = databases.NewMessageDatabase()
-	MessageDb.LoadMessages(notelConfig.MessagesDbPath)
+	MessageDb.LoadMessages(notelConf.MessagesDbPath)
 
 	UsersDb = databases.NewUsersDatabase()
-	UsersDb.LoadDatabase(notelConfig.UsersDbPath)
+	UsersDb.LoadDatabase(notelConf.UsersDbPath)
 
 	group.Add(1)
 	metrics := NewMetrics()
-	go serveMetrics(&group, metrics, notelConfig.Connectors)
+	go metricsServe(&group, metrics, notelConf.Connectors)
 
-	for _, connConfig := range notelConfig.Connectors {
-		if !connConfig.Active {
+	for _, connConf := range notelConf.Connectors {
+		if !connConf.Active {
 			continue
 		}
 
-		switch connConfig.Kind {
+		switch connConf.Kind {
 		case "modem":
 			group.Add(1)
-			go serveModem(&group, connConfig, metrics)
+			go modemServe(&group, connConf, metrics)
 
 		case "websocket":
 			group.Add(1)
-			go serveWebSocket(&group, connConfig, metrics)
+			go webSocketServe(&group, connConf, metrics)
 
 		case "tcp":
 			group.Add(1)
-			go serveTCP(&group, connConfig, metrics)
+			go tcpServe(&group, connConf, metrics)
 		}
 	}
 	group.Wait()
@@ -69,8 +69,8 @@ func main() {
 	UsersDb.Quit()
 }
 
-func NotelApplication(mntl *minigo.Minitel, wg *sync.WaitGroup, connConf *confs.ConnectorConf, metrics *Metrics) {
-	wg.Add(1)
+func NotelApplication(minitel *minigo.Minitel, group *sync.WaitGroup, connConf *confs.ConnectorConf, metrics *Metrics) {
+	group.Add(1)
 
 	metrics.ConnCount.With(prometheus.Labels{"source": connConf.Tag}).Inc()
 
@@ -81,10 +81,10 @@ func NotelApplication(mntl *minigo.Minitel, wg *sync.WaitGroup, connConf *confs.
 	startConn := time.Now()
 
 SIGNIN:
-	creds, op := NewPageSignIn(mntl).Run()
+	creds, op := NewPageSignIn(minitel).Run()
 
 	if op == minigo.GuideOp {
-		creds, op = NewSignUpPage(mntl).Run()
+		creds, op = NewSignUpPage(minitel).Run()
 
 		if op == minigo.SommaireOp {
 			goto SIGNIN
@@ -92,7 +92,7 @@ SIGNIN:
 	}
 
 	if op == minigo.EnvoiOp {
-		SommaireHandler(mntl, creds["login"], metrics)
+		SommaireHandler(minitel, creds["login"], metrics)
 	}
 
 	metrics.ConnDurationCount.With(prometheus.Labels{"source": connConf.Tag}).Add(time.Since(startConn).Seconds())
@@ -102,5 +102,5 @@ SIGNIN:
 
 	logs.InfoLog("[%s] notel-handler: quit handler, connected=%d\n", connConf.Tag, activeUsers)
 
-	wg.Done()
+	group.Done()
 }

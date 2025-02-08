@@ -7,8 +7,7 @@ import (
 )
 
 type TCP struct {
-	conn net.Conn
-
+	conn      net.Conn
 	connected bool
 }
 
@@ -35,7 +34,7 @@ func (t *TCP) Write(b []byte) error {
 }
 
 func (t *TCP) Read() ([]byte, error) {
-	msg := make([]byte, 256)
+	msg := make([]byte, 64)
 	t.conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 	n, err := t.conn.Read(msg)
 

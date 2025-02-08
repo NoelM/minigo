@@ -9,7 +9,7 @@ import (
 	"github.com/NoelM/minigo/notel/logs"
 )
 
-func serveModem(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
+func modemServe(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
 	defer wg.Done()
 
 	modem, err := minigo.NewModem(connConf.Path, 115200, connConf.Config, connConf.Tag, metrics.ConnAttemptCount)

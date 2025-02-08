@@ -32,7 +32,6 @@ func serveTCP(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics
 		fullTag := fmt.Sprintf("%s:%s", connConf.Tag, number)
 
 		var innerWg sync.WaitGroup
-		innerWg.Add(2)
 
 		network := minigo.NewNetwork(tcp, false, &innerWg, "TCP")
 		m := minigo.NewMinitel(network, false, &innerWg, fullTag, metrics.ConnLostCount)

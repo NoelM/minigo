@@ -62,7 +62,7 @@ func NewMetrics() *Metrics {
 	}
 }
 
-func serveMetrics(wg *sync.WaitGroup, metrics *Metrics, connectors []confs.ConnectorConf) {
+func metricsServe(wg *sync.WaitGroup, metrics *Metrics, connectors []confs.ConnectorConf) {
 	defer wg.Done()
 
 	for _, cv := range []*prometheus.CounterVec{metrics.ConnCount, metrics.ConnLostCount, metrics.ConnDurationCount, metrics.ConnAttemptCount} {

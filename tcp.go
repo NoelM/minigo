@@ -2,6 +2,8 @@ package minigo
 
 import (
 	"net"
+	"strings"
+	"time"
 )
 
 type TCP struct {
@@ -34,9 +36,10 @@ func (t *TCP) Write(b []byte) error {
 
 func (t *TCP) Read() ([]byte, error) {
 	msg := make([]byte, 256)
+	t.conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 	n, err := t.conn.Read(msg)
 
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "timeout") {
 		t.connected = false
 		return nil, &ConnectorError{code: ClosedConnection, raw: err}
 	}

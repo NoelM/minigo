@@ -7,8 +7,8 @@ From Minitel in Golang with :heart:
 Minigo provides an SDK to build a [Minitel](https://en.wikipedia.org/wiki/Minitel) server over:
 
 * :white_check_mark: WebSockets
-* :white_check_mark: Serial Modem V.23 (Hayes)
-* :x: TCP
+* :white_check_mark: TCP
+* :white_check_mark: Serial Hayes Modem
 
 ## Teletel Standard
 

@@ -83,7 +83,7 @@ func (m *Metrics) Disconnect(name string) {
 
 func (m *Metrics) ListLogged() []string {
 	m.mutex.RLock()
-	defer m.mutex.Unlock()
+	defer m.mutex.RUnlock()
 
 	keys := make([]string, 0, len(m.loggedUsers))
 	for k := range m.loggedUsers {
@@ -95,7 +95,7 @@ func (m *Metrics) ListLogged() []string {
 
 func (m *Metrics) CountLogged() int {
 	m.mutex.RLock()
-	defer m.mutex.Unlock()
+	defer m.mutex.RUnlock()
 
 	return len(m.loggedUsers)
 }

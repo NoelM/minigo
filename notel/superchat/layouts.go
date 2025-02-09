@@ -134,7 +134,7 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 	//	c.cache.Top(Blank)
 	//}
 
-	return 2
+	return 1
 }
 
 func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {

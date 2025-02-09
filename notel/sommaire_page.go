@@ -13,11 +13,13 @@ import (
 	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/profil"
 	"github.com/NoelM/minigo/notel/stats"
+	"github.com/NoelM/minigo/notel/superchat"
 )
 
 const (
 	sommaireId = iota
 	chatId
+	superChatId
 	meteoId
 	infoId
 	statsId
@@ -27,23 +29,25 @@ const (
 )
 
 const (
-	chatKey     = "*CHA"
-	meteoKey    = "*MTO"
-	infoKey     = "*INF"
-	statsKey    = "*STA"
-	profilKey   = "*PRO"
-	annuaireKey = "*ANU"
-	blogKey     = "*BLO"
+	chatKey      = "*CHA"
+	superChatKey = "*SCA"
+	meteoKey     = "*MTO"
+	infoKey      = "*INF"
+	statsKey     = "*STA"
+	profilKey    = "*PRO"
+	annuaireKey  = "*ANU"
+	blogKey      = "*BLO"
 )
 
 var ServIdMap = map[string]int{
-	chatKey:     chatId,
-	meteoKey:    meteoId,
-	infoKey:     infoId,
-	statsKey:    statsId,
-	profilKey:   profilId,
-	annuaireKey: annuaireId,
-	blogKey:     blogId,
+	chatKey:      chatId,
+	superChatKey: superChatId,
+	meteoKey:     meteoId,
+	infoKey:      infoId,
+	statsKey:     statsId,
+	profilKey:    profilId,
+	annuaireKey:  annuaireId,
+	blogKey:      blogId,
 }
 
 func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
@@ -62,6 +66,8 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 		switch serviceId {
 		case chatId:
 			op = minichat.RunChatPage(m, MessageDb, &metrics.ConnectedUsers, nick, metrics.MessagesCount)
+		case superChatId:
+			op = superchat.ServiceSuperchat(m, MessageDb, &metrics.ConnectedUsers, nick, metrics.MessagesCount)
 		case meteoId:
 			op = meteo.MeteoService(m, CommuneDb)
 		case infoId:
@@ -76,7 +82,7 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 			op = annuaire.AnnuaireService(m, UsersDb)
 		}
 	}
-	logs.InfoLog("quits sommaire handler\n")
+	logs.InfoLog("sommaire: quits handler\n")
 }
 
 func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
@@ -90,34 +96,30 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 		mntl.ModeG0()
 		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
-		list := minigo.NewList(mntl, 8, 1, 17, 2)
+		list := minigo.NewList(mntl, 8, 1, 20, 2)
 		list.AppendItem(chatKey, "MINICHAT")
+		list.AppendItem(superChatKey, "SUPERCHAT (bêta)")
 		list.AppendItem(meteoKey, "METEO")
 		list.AppendItem(infoKey, "INFOS")
 		list.AppendItem(blogKey, "BLOG")
-		list.AppendItem(statsKey, "STATS")
+		//list.AppendItem(statsKey, "STATS")
 		list.AppendItem(profilKey, "PROFIL")
 		list.AppendItem(annuaireKey, "ANNUAIRE")
 		list.Display()
 
-		mntl.MoveAt(19, 0)
-		mntl.Attributes(minigo.DoubleHauteur)
-		mntl.PrintCenter("NOTEL est de retour !")
+		mntl.MoveAt(24, 0)
+		mntl.Attributes(minigo.FondBleu, minigo.CaractereBlanc)
 
-		mntl.Attributes(minigo.GrandeurNormale)
-
-		mntl.Return(1)
-		mntl.PrintCenter("Bienvenue sur le Minitel")
-
-		mntl.ReturnCol(4, 1)
-		cntd := metrics.ConnectedUsers.Load()
-		if cntd < 2 {
-			mntl.Print(fmt.Sprintf("> Connecté: %d", cntd))
+		loggedCnt := metrics.CountLogged()
+		if loggedCnt < 2 {
+			// Whitespace required to activate the background
+			mntl.Print(fmt.Sprintf(" Connecté: %d", loggedCnt))
 		} else {
-			mntl.Print(fmt.Sprintf("> Connectés: %d", cntd))
+			// Whitespace required to activate the background
+			mntl.Print(fmt.Sprintf(" Connectés: %d", loggedCnt))
 		}
 
-		mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 		form.AppendInput("choice", minigo.NewInput(mntl, 24, 25, 4, 1, true))
 
 		form.InitAll()
@@ -134,12 +136,12 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 
 func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	if len(form.ValueActive()) == 0 {
-		logs.WarnLog("empty choice\n")
+		logs.WarnLog("sommaire: empty choice\n")
 		return nil, minigo.NoOp
 	}
 
 	mntl.Reset()
-	logs.InfoLog("chosen service: %s\n", form.ValueActive())
+	logs.InfoLog("sommaire: chosen service: %s\n", form.ValueActive())
 
 	return form.ToMap(), minigo.SommaireOp
 }

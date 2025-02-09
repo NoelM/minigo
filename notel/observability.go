@@ -12,7 +12,10 @@ import (
 )
 
 type Metrics struct {
+	mutex sync.RWMutex
+
 	ConnectedUsers atomic.Int32
+	loggedUsers    map[string]bool
 
 	ConnCount         *prometheus.CounterVec
 	ConnAttemptCount  *prometheus.CounterVec
@@ -25,41 +28,76 @@ type Metrics struct {
 
 func NewMetrics() *Metrics {
 	return &Metrics{
+		loggedUsers: make(map[string]bool),
+
 		ConnCount: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "notel_connection_number",
-			Help: "The total number connection to NOTEL",
+			Name: "notel_connection_total",
+			Help: "Count of successful connections.",
 		},
 			[]string{"source"}),
 
 		ConnAttemptCount: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "notel_connection_attempt_number",
-			Help: "The total number of connection attempts to NOTEL",
+			Name: "notel_connection_attempt_total",
+			Help: "Count of connection attemps.",
 		},
 			[]string{"source"}),
 
 		ConnLostCount: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "notel_connection_lost_number",
-			Help: "The total number of lost connections on NOTEL",
+			Name: "notel_connection_lost_total",
+			Help: "Count of lost connections.",
 		},
 			[]string{"source"}),
 
 		ConnActive: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "notel_connection_active",
-			Help: "The number of currently active connections to NOTEL",
+			Help: "Gauge of active connections.",
 		},
 			[]string{"source"}),
 
 		ConnDurationCount: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "notel_connection_duration",
-			Help: "The total connection duration to NOTEL",
+			Name: "notel_connection_duration_seconds_total",
+			Help: "Count of connection durations in seconds.",
 		},
 			[]string{"source"}),
 
 		MessagesCount: promauto.NewCounter(prometheus.CounterOpts{
-			Name: "notel_messages_number",
-			Help: "The total number of postel messages to NOTEL",
+			Name: "notel_messages_total",
+			Help: "Count of posted messages.",
 		}),
 	}
+}
+
+func (m *Metrics) Logged(name string) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.loggedUsers[name] = true
+}
+
+func (m *Metrics) Disconnect(name string) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	delete(m.loggedUsers, name)
+}
+
+func (m *Metrics) ListLogged() []string {
+	m.mutex.RLock()
+	defer m.mutex.Unlock()
+
+	keys := make([]string, 0, len(m.loggedUsers))
+	for k := range m.loggedUsers {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+func (m *Metrics) CountLogged() int {
+	m.mutex.RLock()
+	defer m.mutex.Unlock()
+
+	return len(m.loggedUsers)
 }
 
 func metricsServe(wg *sync.WaitGroup, metrics *Metrics, connectors []confs.ConnectorConf) {

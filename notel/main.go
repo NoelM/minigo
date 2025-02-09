@@ -3,14 +3,10 @@ package main
 import (
 	"os"
 	"sync"
-	"time"
 
-	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/confs"
 	"github.com/NoelM/minigo/notel/databases"
 	"github.com/NoelM/minigo/notel/logs"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var CommuneDb *databases.CommuneDatabase
@@ -41,7 +37,7 @@ func main() {
 	UsersDb = databases.NewUsersDatabase()
 	UsersDb.LoadDatabase(notelConf.UsersDbPath)
 
-	BlogDbPath = notelConfig.BlogDbPath
+	BlogDbPath = notelConf.BlogDbPath
 
 	group.Add(1)
 	metrics := NewMetrics()
@@ -70,40 +66,4 @@ func main() {
 
 	MessageDb.Quit()
 	UsersDb.Quit()
-}
-
-func NotelApplication(minitel *minigo.Minitel, group *sync.WaitGroup, connConf *confs.ConnectorConf, metrics *Metrics) {
-	group.Add(1)
-
-	metrics.ConnCount.With(prometheus.Labels{"source": connConf.Tag}).Inc()
-
-	activeUsers := metrics.ConnectedUsers.Add(1)
-	metrics.ConnActive.With(prometheus.Labels{"source": connConf.Tag}).Inc()
-
-	logs.InfoLog("[%s] notel-handler: start handler, connected=%d\n", connConf.Tag, activeUsers)
-	startConn := time.Now()
-
-SIGNIN:
-	creds, op := NewPageSignIn(minitel).Run()
-
-	if op == minigo.GuideOp {
-		creds, op = NewSignUpPage(minitel).Run()
-
-		if op == minigo.SommaireOp {
-			goto SIGNIN
-		}
-	}
-
-	if op == minigo.EnvoiOp {
-		SommaireHandler(minitel, creds["login"], metrics)
-	}
-
-	metrics.ConnDurationCount.With(prometheus.Labels{"source": connConf.Tag}).Add(time.Since(startConn).Seconds())
-
-	activeUsers = metrics.ConnectedUsers.Add(-1)
-	metrics.ConnActive.With(prometheus.Labels{"source": connConf.Tag}).Dec()
-
-	logs.InfoLog("[%s] notel-handler: quit handler, connected=%d\n", connConf.Tag, activeUsers)
-
-	group.Done()
 }

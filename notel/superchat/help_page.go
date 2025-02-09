@@ -27,6 +27,8 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 
 		mntl.Print("Vous pouvez naviguer dans l'historique:")
 		mntl.Return(1)
+		mntl.Print("(parfois inactif)")
+		mntl.Return(1)
 
 		mntl.Print("- SUITE : message suivant")
 		mntl.Return(1)

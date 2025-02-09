@@ -18,7 +18,7 @@ const (
 
 const (
 	msgStartRow = 1
-	msgStopRow  = 19
+	msgStopRow  = 20
 	hLineRow    = 21
 	inputRow    = 22
 	helpersRow  = 24

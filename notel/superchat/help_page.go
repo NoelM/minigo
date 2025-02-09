@@ -25,28 +25,38 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 		mntl.Print("SuperChat est en bêta: il y a des bugs.")
 		mntl.Return(2)
 
-		mntl.Print("Vous pouvez naviguer dans l'historique:")
+		mntl.Print("Mode")
+		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.Print(" NAVIGATION ")
+		mntl.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
+		mntl.Print(" ")
 		mntl.Return(1)
-		mntl.Print("(parfois inactif)")
+		mntl.Print("Pour naviguer dans les messages avec")
 		mntl.Return(1)
 
-		mntl.Print("- SUITE : message suivant")
+		mntl.Print("- SUITE, message suivant")
 		mntl.Return(1)
-		mntl.Print("- RETOUR : message précédent")
+		mntl.Print("- RETOUR, message précédent")
 		mntl.Return(2)
 
-		mntl.Print("Appuyez sur REPETITION :")
+		mntl.Print("Mode")
+		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.Print(" EDITION ")
+		mntl.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
+		mntl.Print(" ")
+		mntl.Return(1)
+		mntl.Print("Activez avec le bouton REPETITION")
 		mntl.Return(1)
 
-		mntl.Print("- Pour revenir en mode édition")
+		mntl.Print("- Pour écrire des messages")
 		mntl.Return(1)
-		mntl.Print("- Pour charger le dernier msg")
+		mntl.Print("- Charger les messages en direct")
 		mntl.Return(2)
 
 		mntl.HLine(40, minigo.HCenter)
 		mntl.Return(1)
 
-		mntl.Print("Appuyez sur GUIDE n'importe quand pour revoir cette page.")
+		mntl.Print("Appuyez sur GUIDE n'importe quand pour  revoir cette page.")
 
 		mntl.HelperRightAt(24, "Aller au Chat", "SOMMAIRE")
 

@@ -108,15 +108,13 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 		list.Display()
 
 		mntl.MoveAt(24, 0)
-		mntl.Attributes(minigo.FondBleu, minigo.CaractereBlanc)
-
 		loggedCnt := metrics.CountLogged()
 		if loggedCnt < 2 {
 			// Whitespace required to activate the background
-			mntl.Print(fmt.Sprintf(" Connecté: %d", loggedCnt))
+			mntl.Print(fmt.Sprintf("Connecté: %d", loggedCnt))
 		} else {
 			// Whitespace required to activate the background
-			mntl.Print(fmt.Sprintf(" Connectés: %d", loggedCnt))
+			mntl.Print(fmt.Sprintf("Connectés: %d", loggedCnt))
 		}
 
 		mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)

@@ -78,10 +78,15 @@ func (c *ChatLayout) printFooter() {
 func (c *ChatLayout) printHeader() {
 	cntd := c.cntd.Load()
 
+	mode := "EDITION"
+	if c.navMode {
+		mode = "NAVIGATION"
+	}
+
 	if cntd < 2 {
-		c.mntl.PrintStatus(fmt.Sprintf("→ Connecté: %d", cntd))
+		c.mntl.PrintStatus(fmt.Sprintf("Mode %s | Connecté: %d", mode, cntd))
 	} else {
-		c.mntl.PrintStatus(fmt.Sprintf("→ Connectés: %d", cntd))
+		c.mntl.PrintStatus(fmt.Sprintf("Mode %s | Connectés: %d", mode, cntd))
 	}
 }
 

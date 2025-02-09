@@ -83,5 +83,9 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 		return nil, minigo.NoOp
 	})
 
+	page.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, minigo.SommaireOp
+	})
+
 	return page
 }

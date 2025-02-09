@@ -61,10 +61,7 @@ func (c *ChatLayout) cleanFooter() {
 	c.mntl.MoveAt(hLineRow, 0)
 	c.mntl.CleanLine()
 
-	//c.mntl.Return(helpersRow - 1 - hLineRow)
-	//c.mntl.CleanLine()
-
-	c.mntl.Return(1)
+	c.mntl.Return(helpersRow - hLineRow)
 	c.mntl.CleanLine()
 }
 

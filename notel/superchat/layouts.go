@@ -224,6 +224,7 @@ func (c *ChatLayout) PrintNextMessage() {
 		c.printMessage(msgId, NoLimit, Down)
 
 	} else {
+		c.mntl.MoveAt(rowId, 0)
 		c.printMessageFromLine(msgId, lastRow.lineId+1, NoLimit, Down)
 
 		msgId += 1
@@ -242,6 +243,7 @@ func (c *ChatLayout) Init() {
 		// No message, we quit!
 		return
 	}
+	c.cache.Init()
 
 	// No cursor and go to the origin
 	c.mntl.CursorOff()
@@ -273,15 +275,16 @@ func (c *ChatLayout) Init() {
 }
 
 func (c *ChatLayout) Update() {
-	if !c.getLastMessages() {
-		return
-	}
-
 	if c.navMode {
 		c.navMode = false
 		c.Init()
 		return
 	}
+
+	if !c.getLastMessages() {
+		return
+	}
+
 	// Clean screen before the update
 	c.mntl.CursorOff()
 	c.cleanFooter()

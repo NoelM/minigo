@@ -73,6 +73,10 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atom
 		return nil, minigo.SommaireOp
 	})
 
+	chatPage.SetGuideFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, minigo.GuideOp
+	})
+
 	chatPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
 		inputs.AppendKeyActive(key)
 	})

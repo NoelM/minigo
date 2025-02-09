@@ -51,8 +51,8 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 		return minigo.NoOp
 	})
 
-	helpPage.SetGuideFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		return nil, minigo.GuideOp
+	helpPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, minigo.SommaireOp
 	})
 
 	return helpPage

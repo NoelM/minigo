@@ -73,6 +73,16 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atom
 		return nil, minigo.SommaireOp
 	})
 
+	chatPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		chatLayout.PrintNextMessage()
+		return nil, minigo.NoOp
+	})
+
+	chatPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		chatLayout.PrintPreviousMessage()
+		return nil, minigo.NoOp
+	})
+
 	chatPage.SetGuideFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		return nil, minigo.GuideOp
 	})

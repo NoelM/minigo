@@ -25,11 +25,9 @@ const (
 )
 
 const (
-	Blank = -2
-	Date  = -1
+	NoLimit  = -1
+	MaxLimit = 256
 )
-
-const NoLimit = -1
 
 type ChatLayout struct {
 	mntl *minigo.Minitel
@@ -84,9 +82,9 @@ func (c *ChatLayout) printHeader() {
 	}
 
 	if cntd < 2 {
-		c.mntl.PrintStatus(fmt.Sprintf("Mode %s | Connecté: %d", mode, cntd))
+		c.mntl.PrintStatus(fmt.Sprintf("[Mode %s] Connecté: %d", mode, cntd))
 	} else {
-		c.mntl.PrintStatus(fmt.Sprintf("Mode %s | Connectés: %d", mode, cntd))
+		c.mntl.PrintStatus(fmt.Sprintf("[Mode %s] Connectés: %d", mode, cntd))
 	}
 }
 
@@ -116,47 +114,126 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 	}
 
 	if dir == Down {
-		//c.mntl.Return(1)
-		//c.cache.Bottom(Blank)
-
 		c.mntl.Return(1)
-		c.cache.Bottom(Date)
+		c.cache.AppendBottom(Date, msgId, 0)
 
 	} else if dir == Up {
 		c.mntl.ReturnUp(1)
-		c.cache.Top(Date)
+		c.cache.AppendTop(Date, msgId, 0)
 	}
 
 	c.mntl.Attributes(minigo.CaractereBleu)
 	c.mntl.PrintCenter(dateString)
 	c.mntl.Attributes(minigo.CaractereBlanc)
 
-	//if dir == Up {
-	//	c.mntl.ReturnUp(1)
-	//	c.cache.Top(Blank)
-	//}
-
 	return 1
 }
 
-func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
+func (c *ChatLayout) printMessageFromLine(msgId, lineId, limit int, dir RouleauDir) int {
 	lines, vdt := FormatMessage(c.messages[msgId], dir, c.mntl.SupportCSI())
 
 	if limit < 0 || limit > lines {
 		limit = lines
 	}
 
-	for i := 0; i < limit; i += 1 {
+	var start int
+	if dir == Up {
+		start = lines - lineId
+	} else {
+		start = lineId
+	}
+
+	if start < 0 {
+		start = 0
+	}
+
+	for i := start; i < limit; i += 1 {
 		c.mntl.Send(vdt[i])
 
 		if dir == Up {
-			c.cache.Top(msgId)
+			c.cache.AppendTop(Message, msgId, i)
 		} else if dir == Down {
-			c.cache.Bottom(msgId)
+			c.cache.AppendBottom(Message, msgId, i)
 		}
 	}
 
 	return limit
+}
+
+func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
+	if dir == Down {
+		return c.printMessageFromLine(msgId, 0, limit, dir)
+	} else {
+		return c.printMessageFromLine(msgId, 0, MaxLimit, dir)
+	}
+}
+
+func (c *ChatLayout) PrintPreviousMessage() {
+	if !c.navMode {
+		c.navMode = true
+		c.printHeader()
+	}
+
+	firstRow := c.cache.FirstRow()
+
+	var msgId int
+	if firstRow.kind == Date {
+		msgId = firstRow.msgId - 1
+		if msgId <= 0 {
+			return
+		}
+
+		c.mntl.MoveAt(1, 0)
+		c.printMessage(msgId, NoLimit, Up)
+		c.printDate(msgId, NoLimit, Up)
+
+	} else {
+		c.mntl.MoveAt(1, 0)
+		msgId = firstRow.msgId
+
+		if firstRow.lineId > 0 {
+			c.printMessageFromLine(msgId, firstRow.lineId-1, NoLimit, Up)
+		}
+		c.printDate(msgId, NoLimit, Up)
+
+		msgId -= 1
+		if msgId <= 0 {
+			return
+		}
+
+		c.printMessage(msgId, NoLimit, Up)
+		c.printDate(msgId, NoLimit, Up)
+	}
+}
+
+func (c *ChatLayout) PrintNextMessage() {
+	rowId, lastRow := c.cache.LastRow()
+	if lastRow.msgId == len(c.messages)-1 {
+		return
+	}
+
+	if !c.navMode {
+		c.navMode = true
+		c.printHeader()
+	}
+
+	msgId := lastRow.msgId
+
+	if lastRow.kind == Date {
+		c.mntl.MoveAt(rowId, 0)
+		c.printMessage(msgId, NoLimit, Down)
+
+	} else {
+		c.printMessageFromLine(msgId, lastRow.lineId+1, NoLimit, Down)
+
+		msgId += 1
+		if msgId == len(c.messages)-1 {
+			return
+		}
+
+		c.printDate(msgId, NoLimit, Down)
+		c.printMessage(msgId, NoLimit, Down)
+	}
 }
 
 func (c *ChatLayout) Init() {
@@ -200,6 +277,11 @@ func (c *ChatLayout) Update() {
 		return
 	}
 
+	if c.navMode {
+		c.navMode = false
+		c.Init()
+		return
+	}
 	// Clean screen before the update
 	c.mntl.CursorOff()
 	c.cleanFooter()

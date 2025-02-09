@@ -3,7 +3,7 @@ package superchat
 import "github.com/NoelM/minigo"
 
 func HelpPage(minitel *minigo.Minitel) *minigo.Page {
-	helpPage := minigo.NewPage("superchat: welcome", minitel, nil)
+	helpPage := minigo.NewPage("superchat: help", minitel, nil)
 
 	helpPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.CleanScreen()
@@ -12,11 +12,8 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 
 		mntl.MoveAt(2, 0)
 		mntl.Attributes(minigo.DoubleGrandeur)
-		mntl.PrintCenter("^..^ SuperChat ^..^")
+		mntl.PrintCenter("^oo^ SuperChat ^oo^")
 		mntl.Attributes(minigo.GrandeurNormale)
-		mntl.Return(1)
-
-		mntl.PrintCenter("Page d'aide")
 		mntl.Return(2)
 
 		mntl.HLine(40, minigo.HCenter)
@@ -25,9 +22,9 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 		mntl.Print("SuperChat est en bêta: il y a des bugs.")
 		mntl.Return(2)
 
-		mntl.Print("Mode")
+		mntl.Print("Mode ")
 		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.Print(" NAVIGATION ")
+		mntl.Print(" NAVIGATION")
 		mntl.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
 		mntl.Print(" ")
 		mntl.Return(1)
@@ -39,9 +36,9 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 		mntl.Print("- RETOUR, message précédent")
 		mntl.Return(2)
 
-		mntl.Print("Mode")
+		mntl.Print("Mode ")
 		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.Print(" EDITION ")
+		mntl.Print(" EDITION")
 		mntl.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
 		mntl.Print(" ")
 		mntl.Return(1)

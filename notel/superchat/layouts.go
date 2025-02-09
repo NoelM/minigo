@@ -239,10 +239,12 @@ func (c *ChatLayout) PrintNextMessage() {
 
 func (c *ChatLayout) Init() {
 	// Load the last messages from DB
-	if !c.getLastMessages() {
+	if !c.getLastMessages() && !c.navMode {
 		// No message, we quit!
 		return
 	}
+
+	c.navMode = false
 	c.cache.Init()
 
 	// No cursor and go to the origin
@@ -276,7 +278,6 @@ func (c *ChatLayout) Init() {
 
 func (c *ChatLayout) Update() {
 	if c.navMode {
-		c.navMode = false
 		c.Init()
 		return
 	}

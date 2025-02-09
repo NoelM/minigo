@@ -74,7 +74,7 @@ func (c *ChatLayout) printFooter() {
 	// It already went to the next line!
 	c.mntl.Return(helpersRow - 1 - hLineRow)
 
-	c.mntl.Helper("Aide", "GUIDE", minigo.FondBleu, minigo.CaractereBlanc)
+	c.mntl.Helper("Aide →", "GUIDE", minigo.FondBleu, minigo.CaractereBlanc)
 	c.mntl.HelperRight("→", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 }
 

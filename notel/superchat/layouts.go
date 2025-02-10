@@ -167,7 +167,7 @@ func (c *ChatLayout) printMessageFromLine(msgId, lineId, limit int, dir RouleauD
 
 func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
 	if dir == Down {
-		return c.printMessageFromLine(msgId, 0, limit, dir)
+		return c.printMessageFromLine(msgId, -1, limit, dir)
 	} else {
 		return c.printMessageFromLine(msgId, MaxLimit, limit, dir)
 	}

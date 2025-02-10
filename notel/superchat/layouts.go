@@ -138,7 +138,7 @@ func (c *ChatLayout) printMessageFromLine(msgId, lineId, limit int, dir RouleauD
 
 	var start int
 	if dir == Up {
-		start = lines - lineId
+		start = lines - 1 - lineId
 	} else {
 		start = lineId
 	}

@@ -218,13 +218,12 @@ func (c *ChatLayout) PrintNextMessage() {
 	}
 
 	msgId := lastRow.msgId
+	c.mntl.MoveAt(rowId+1, 0)
 
 	if lastRow.kind == Date {
-		c.mntl.MoveAt(rowId, 0)
 		c.printMessage(msgId, NoLimit, Down)
 
 	} else {
-		c.mntl.MoveAt(rowId, 0)
 		c.printMessageFromLine(msgId, lastRow.lineId+1, NoLimit, Down)
 
 		msgId += 1

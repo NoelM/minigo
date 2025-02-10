@@ -143,7 +143,7 @@ func (c *ChatLayout) printMessageFromLine(msgId, lineId, limit int, dir RouleauD
 		start = lineId
 
 		// we already reach the end of the msg
-		if start >= lines {
+		if start >= lines-1 {
 			return 0
 		}
 	}
@@ -282,6 +282,7 @@ func (c *ChatLayout) Init() {
 
 func (c *ChatLayout) Update() {
 	if c.navMode {
+		c.mntl.CleanScreen()
 		c.Init()
 		return
 	}

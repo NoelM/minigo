@@ -16,16 +16,11 @@ func GetDateString(lastMsg, newMsg time.Time) (str string) {
 	location, _ := time.LoadLocation("Europe/Paris")
 	newMsg = newMsg.In(location)
 
-	if sinceLastMsg >= 365*24*time.Hour || sinceToday >= 365*24*time.Hour {
-		// More than a YEAR
+	if sinceLastMsg > 30*time.Minute {
+		// More than 30 MINUTES
 		//
-		// Lun. 24 Juin 2023, 14:30
-		str = fmt.Sprintf("%s %d %s %d, %s",
-			utils.WeekdayIdToString(newMsg.Weekday()),
-			newMsg.Day(),
-			utils.MonthIdToString(newMsg.Month()),
-			newMsg.Year(),
-			newMsg.Format("15:04"))
+		// 14:30
+		str = newMsg.Format("15:04")
 
 	} else if sinceLastMsg >= 24*time.Hour || newMsg.Day() != lastMsg.Day() || sinceToday >= 24*time.Hour {
 		// More than 24 HOURS
@@ -38,11 +33,16 @@ func GetDateString(lastMsg, newMsg time.Time) (str string) {
 			utils.MonthIdToString(newMsg.Month()),
 			newMsg.Format("15:04"))
 
-	} else if sinceLastMsg > 30*time.Minute {
-		// More than 30 MINUTES
+	} else if sinceLastMsg >= 365*24*time.Hour || sinceToday >= 365*24*time.Hour {
+		// More than a YEAR
 		//
-		// 14:30
-		str = newMsg.Format("15:04")
+		// Lun. 24 Juin 2023, 14:30
+		str = fmt.Sprintf("%s %d %s %d, %s",
+			utils.WeekdayIdToString(newMsg.Weekday()),
+			newMsg.Day(),
+			utils.MonthIdToString(newMsg.Month()),
+			newMsg.Year(),
+			newMsg.Format("15:04"))
 	}
 
 	return

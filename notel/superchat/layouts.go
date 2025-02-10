@@ -175,6 +175,7 @@ func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
 
 func (c *ChatLayout) PrintPreviousMessage() {
 	if !c.navMode {
+		c.mntl.CursorOff()
 		c.navMode = true
 		c.printHeader()
 	}
@@ -218,6 +219,7 @@ func (c *ChatLayout) PrintNextMessage() {
 	}
 
 	if !c.navMode {
+		c.mntl.CursorOff()
 		c.navMode = true
 		c.printHeader()
 	}

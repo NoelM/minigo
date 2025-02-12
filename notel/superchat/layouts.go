@@ -81,11 +81,13 @@ func (c *ChatLayout) printHeader() {
 		mode = "NAVIGATION"
 	}
 
+	var status string
 	if cntd < 2 {
-		c.mntl.PrintStatus(fmt.Sprintf("[Mode %s] Connecté: %d", mode, cntd))
+		status = fmt.Sprintf(" [Mode %s] Connecté: %d", mode, cntd)
 	} else {
-		c.mntl.PrintStatus(fmt.Sprintf("[Mode %s] Connectés: %d", mode, cntd))
+		status = fmt.Sprintf(" [Mode %s] Connectés: %d", mode, cntd)
 	}
+	c.mntl.PrintStatusWithAttributes(fmt.Sprintf("%-35s", status), minigo.CaractereMagenta, minigo.CaractereNoir)
 }
 
 func (c *ChatLayout) getLastMessages() bool {

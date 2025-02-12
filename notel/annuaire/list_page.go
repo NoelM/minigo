@@ -1,4 +1,4 @@
-package annuaire
+package repertoire
 
 import (
 	"strconv"
@@ -22,7 +22,7 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 		mntl.Reset()
 
 		var err error
-		if users, err = userDB.LoadAnnuaireUsers(); err != nil {
+		if users, err = userDB.LoadAllUsers(); err != nil {
 			mntl.Print("Impossible de charger les utilisateurs")
 			time.Sleep(2 * time.Second)
 			return minigo.SommaireOp
@@ -79,7 +79,7 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 }
 
 func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId int) {
-	printAnnuaireHeader(m)
+	printRepertoireHeader(m)
 
 	m.ModeG0()
 

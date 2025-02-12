@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/NoelM/minigo"
-	"github.com/NoelM/minigo/notel/annuaire"
+	repertoire "github.com/NoelM/minigo/notel/annuaire"
 	"github.com/NoelM/minigo/notel/blog"
 	"github.com/NoelM/minigo/notel/infos"
 	"github.com/NoelM/minigo/notel/logs"
@@ -24,30 +24,30 @@ const (
 	infoId
 	statsId
 	profilId
-	annuaireId
+	repertoireId
 	blogId
 )
 
 const (
-	chatKey      = "*CHA"
-	superChatKey = "*SCA"
-	meteoKey     = "*MTO"
-	infoKey      = "*INF"
-	statsKey     = "*STA"
-	profilKey    = "*PRO"
-	annuaireKey  = "*ANU"
-	blogKey      = "*BLO"
+	chatKey       = "*CHA"
+	superChatKey  = "*SCA"
+	meteoKey      = "*MTO"
+	infoKey       = "*INF"
+	statsKey      = "*STA"
+	profilKey     = "*PRO"
+	repertoireKey = "*REP"
+	blogKey       = "*BLO"
 )
 
 var ServIdMap = map[string]int{
-	chatKey:      chatId,
-	superChatKey: superChatId,
-	meteoKey:     meteoId,
-	infoKey:      infoId,
-	statsKey:     statsId,
-	profilKey:    profilId,
-	annuaireKey:  annuaireId,
-	blogKey:      blogId,
+	chatKey:       chatId,
+	superChatKey:  superChatId,
+	meteoKey:      meteoId,
+	infoKey:       infoId,
+	statsKey:      statsId,
+	profilKey:     profilId,
+	repertoireKey: repertoireId,
+	blogKey:       blogId,
 }
 
 func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
@@ -78,8 +78,8 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 			op = blog.ServiceBlog(m, BlogDbPath)
 		case profilId:
 			op = profil.ProfilService(m, UsersDb, nick)
-		case annuaireId:
-			op = annuaire.AnnuaireService(m, UsersDb)
+		case repertoireId:
+			op = repertoire.RepertoireService(m, UsersDb)
 		}
 	}
 	logs.InfoLog("sommaire: quits handler\n")
@@ -104,7 +104,7 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 		list.AppendItem(blogKey, "BLOG")
 		//list.AppendItem(statsKey, "STATS")
 		list.AppendItem(profilKey, "PROFIL")
-		list.AppendItem(annuaireKey, "ANNUAIRE")
+		list.AppendItem(repertoireKey, "REPERTOIRE")
 		list.Display()
 
 		mntl.MoveAt(24, 0)

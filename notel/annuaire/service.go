@@ -1,11 +1,11 @@
-package annuaire
+package repertoire
 
 import (
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/databases"
 )
 
-func AnnuaireService(m *minigo.Minitel, userDB *databases.UsersDatabase) int {
+func RepertoireService(m *minigo.Minitel, userDB *databases.UsersDatabase) int {
 HOME:
 	user, op := NewPageList(m, userDB).Run()
 	if op != minigo.EnvoiOp {
@@ -20,6 +20,6 @@ HOME:
 	return op
 }
 
-func printAnnuaireHeader(m *minigo.Minitel) {
+func printRepertoireHeader(m *minigo.Minitel) {
 	m.SendVDT("static/annuaire.vdt")
 }

@@ -54,7 +54,7 @@ func (u *UsersDatabase) LoadUser(nick string) (user User, err error) {
 	return
 }
 
-func (u *UsersDatabase) LoadAnnuaireUsers() (users []User, err error) {
+func (u *UsersDatabase) LoadAllUsers() (users []User, err error) {
 	iter, _ := u.DB.NewIter(nil)
 	for iter.First(); iter.Valid(); iter.Next() {
 		var user User

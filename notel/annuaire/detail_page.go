@@ -1,4 +1,4 @@
-package annuaire
+package repertoire
 
 import (
 	"time"
@@ -20,7 +20,7 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 			return minigo.SommaireOp
 		}
 
-		printAnnuaireHeader(mntl)
+		printRepertoireHeader(mntl)
 		printUserDetails(mntl, user)
 		printHelpers(mntl)
 

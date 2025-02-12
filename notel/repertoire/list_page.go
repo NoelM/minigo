@@ -20,6 +20,7 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 
 	listPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.Reset()
+		mntl.CursorOff()
 
 		var err error
 		if users, err = userDB.LoadAllUsers(); err != nil {

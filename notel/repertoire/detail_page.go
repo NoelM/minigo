@@ -12,6 +12,7 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 
 	detailPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.Reset()
+		mntl.CursorOff()
 
 		user, err := userDB.LoadUser(nick)
 		if err != nil {

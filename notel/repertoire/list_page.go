@@ -90,8 +90,8 @@ func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId
 	displayList(m, users, pageId*usersPerPage)
 
 	m.MoveAt(24, 0)
-	m.Attributes(minigo.CaractereVert)
-	m.HelperRight("Numéro du profil + ", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+	m.Attributes(minigo.CaractereCyan)
+	m.HelperRight("Numéro du profil + ", "ENVOI", minigo.FondCyan, minigo.CaractereNoir)
 }
 
 func displayList(m *minigo.Minitel, users []databases.User, userId int) {
@@ -102,7 +102,7 @@ func displayList(m *minigo.Minitel, users []databases.User, userId int) {
 			break
 		}
 
-		m.Attributes(minigo.CaractereVert, minigo.DoubleLargeur, minigo.InversionFond)
+		m.Attributes(minigo.CaractereCyan, minigo.DoubleLargeur, minigo.InversionFond)
 		m.Printf(" %d ", i+1)
 
 		m.Right(2)
@@ -111,7 +111,7 @@ func displayList(m *minigo.Minitel, users []databases.User, userId int) {
 
 		txt := minigo.Wrapper(users[i].Bio, 26)
 		m.ReturnCol(1, 10)
-		m.Attributes(minigo.CaractereVert, minigo.GrandeurNormale)
+		m.Attributes(minigo.CaractereCyan, minigo.GrandeurNormale)
 		m.Printf("%s...", txt[0])
 
 		m.ReturnCol(2, 2)

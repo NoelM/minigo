@@ -21,5 +21,17 @@ HOME:
 }
 
 func printRepertoireHeader(m *minigo.Minitel) {
-	m.SendVDT("static/annuaire.vdt")
+	m.MoveAt(1, 0)
+	m.Attributes(minigo.FondCyan, minigo.CaractereNoir)
+	m.Repeat(' ', 40)
+	m.Return(1)
+	m.Attributes(minigo.DoubleGrandeur)
+	m.Right(2)
+	m.Print("Répertoire")
+	m.Repeat(' ', 28)
+	m.Attributes(minigo.GrandeurNormale)
+	m.ReturnUp(1)
+	m.Repeat(' ', 40)
+	m.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
+	m.Print(" ")
 }

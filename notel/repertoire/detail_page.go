@@ -37,42 +37,42 @@ func NewPageDetail(mntl *minigo.Minitel, userDB *databases.UsersDatabase, nick s
 func printUserDetails(mntl *minigo.Minitel, user databases.User) {
 	mntl.MoveAt(6, 0)
 
-	mntl.Attributes(minigo.CaractereVert, minigo.DoubleLargeur)
+	mntl.Attributes(minigo.CaractereCyan, minigo.DoubleLargeur)
 	mntl.PrintCenter(user.Nick)
 
 	mntl.Return(2)
-	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir, minigo.GrandeurNormale)
+	mntl.Attributes(minigo.FondCyan, minigo.CaractereNoir, minigo.GrandeurNormale)
 	mntl.Print(" → BIO")
 	mntl.SendCAN()
 
-	mntl.Attributes(minigo.CaractereVert)
+	mntl.Attributes(minigo.CaractereCyan)
 	for _, line := range minigo.Wrapper(user.Bio, 37) {
 		mntl.ReturnCol(1, 1)
 		mntl.Print(line)
 	}
 
 	mntl.Return(2)
-	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+	mntl.Attributes(minigo.FondCyan, minigo.CaractereNoir)
 	mntl.Print(" → SERVEUR MINITEL")
 	mntl.SendCAN()
 
 	mntl.ReturnCol(1, 1)
-	mntl.Attributes(minigo.CaractereVert)
+	mntl.Attributes(minigo.CaractereCyan)
 
 	mntl.Print(user.Tel)
 
 	mntl.Return(2) // Row 13
-	mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+	mntl.Attributes(minigo.FondCyan, minigo.CaractereNoir)
 	mntl.Print(" → LIEU")
 	mntl.SendCAN()
 
 	mntl.ReturnCol(1, 1)
-	mntl.Attributes(minigo.CaractereVert)
+	mntl.Attributes(minigo.CaractereCyan)
 
 	mntl.Print(user.Location)
 }
 
 func printHelpers(mntl *minigo.Minitel) {
 	mntl.MoveAt(24, 0)
-	mntl.HelperRight("Liste des utilisateurs", "SOMMAIRE", minigo.FondVert, minigo.CaractereNoir)
+	mntl.HelperRight("Liste des utilisateurs", "SOMMAIRE", minigo.FondCyan, minigo.CaractereNoir)
 }

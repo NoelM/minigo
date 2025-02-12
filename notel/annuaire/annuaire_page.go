@@ -33,7 +33,7 @@ func NewPageAnnuaire(mntl *minigo.Minitel, annuaireDbPath string) *minigo.Page {
 			}
 		}
 
-		printRepertoireHeader(mntl)
+		printAnnuaireHeader(mntl)
 		mntl.ModeG0()
 
 		mntl.MoveAt(5, 0)
@@ -70,6 +70,6 @@ func NewPageAnnuaire(mntl *minigo.Minitel, annuaireDbPath string) *minigo.Page {
 	return page
 }
 
-func printRepertoireHeader(m *minigo.Minitel) {
+func printAnnuaireHeader(m *minigo.Minitel) {
 	m.SendVDT("static/annuaire.vdt")
 }

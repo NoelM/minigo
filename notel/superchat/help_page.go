@@ -24,6 +24,20 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 
 		mntl.Print("Mode ")
 		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
+		mntl.Print(" EDITION")
+		mntl.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
+		mntl.Print("  actif par défaut")
+		mntl.Return(1)
+		mntl.Print("Activez avec le bouton REPETITION")
+		mntl.Return(1)
+
+		mntl.Print("- Pour écrire des messages")
+		mntl.Return(1)
+		mntl.Print("- Charger les messages en direct")
+		mntl.Return(2)
+
+		mntl.Print("Mode ")
+		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
 		mntl.Print(" NAVIGATION")
 		mntl.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
 		mntl.Print(" ")
@@ -34,20 +48,6 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 		mntl.Print("- SUITE, message suivant")
 		mntl.Return(1)
 		mntl.Print("- RETOUR, message précédent")
-		mntl.Return(2)
-
-		mntl.Print("Mode ")
-		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.Print(" EDITION")
-		mntl.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
-		mntl.Print(" ")
-		mntl.Return(1)
-		mntl.Print("Activez avec le bouton REPETITION")
-		mntl.Return(1)
-
-		mntl.Print("- Pour écrire des messages")
-		mntl.Return(1)
-		mntl.Print("- Charger les messages en direct")
 		mntl.Return(2)
 
 		mntl.HLine(40, minigo.HCenter)

@@ -136,21 +136,10 @@ func (c *ChatLayout) printMessageFromLine(msgId, lineId, limit int, dir RouleauD
 		limit = lines
 	}
 
-	var start int
-	if dir == Up {
-		start = lines - 1 - lineId
-
-		// when lineId is set to a really high value
-		if start < 0 {
-			start = 0
-		}
-	} else {
-		start = lineId
-
-		// we already reach the end of the msg
-		if start > lines-1 {
-			return 0
-		}
+	start := lineId
+	// we already reach the end of the msg
+	if start > lines-1 {
+		return 0
 	}
 
 	for i := start; i < limit; i += 1 {
@@ -167,11 +156,7 @@ func (c *ChatLayout) printMessageFromLine(msgId, lineId, limit int, dir RouleauD
 }
 
 func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
-	if dir == Down {
-		return c.printMessageFromLine(msgId, 0, limit, dir)
-	} else {
-		return c.printMessageFromLine(msgId, MaxLimit, limit, dir)
-	}
+	return c.printMessageFromLine(msgId, 0, limit, dir)
 }
 
 func (c *ChatLayout) PrintPreviousMessage() {

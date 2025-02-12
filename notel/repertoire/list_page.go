@@ -83,9 +83,14 @@ func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId
 
 	m.ModeG0()
 
-	m.MoveAt(3, 35)
+	m.MoveAt(3, 34)
 	m.Attributes(minigo.CaractereNoir)
-	m.Printf("%d/%d ", pageId+1, len(users)/usersPerPage+1)
+
+	maxPage := len(users)/usersPerPage + 1
+	if maxPage == 0 {
+		maxPage = 1
+	}
+	m.Printf(" %d/%d ", pageId+1, maxPage)
 
 	displayList(m, users, pageId*usersPerPage)
 

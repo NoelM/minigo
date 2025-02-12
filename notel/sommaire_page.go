@@ -5,13 +5,14 @@ import (
 	"strings"
 
 	"github.com/NoelM/minigo"
-	repertoire "github.com/NoelM/minigo/notel/annuaire"
+	"github.com/NoelM/minigo/notel/annuaire"
 	"github.com/NoelM/minigo/notel/blog"
 	"github.com/NoelM/minigo/notel/infos"
 	"github.com/NoelM/minigo/notel/logs"
 	"github.com/NoelM/minigo/notel/meteo"
 	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/profil"
+	"github.com/NoelM/minigo/notel/repertoire"
 	"github.com/NoelM/minigo/notel/stats"
 	"github.com/NoelM/minigo/notel/superchat"
 )
@@ -26,6 +27,7 @@ const (
 	profilId
 	repertoireId
 	blogId
+	annuaireId
 )
 
 const (
@@ -37,6 +39,7 @@ const (
 	profilKey     = "*PRO"
 	repertoireKey = "*REP"
 	blogKey       = "*BLO"
+	annuaireKey   = "*ANU"
 )
 
 var ServIdMap = map[string]int{
@@ -48,6 +51,7 @@ var ServIdMap = map[string]int{
 	profilKey:     profilId,
 	repertoireKey: repertoireId,
 	blogKey:       blogId,
+	annuaireKey:   annuaireId,
 }
 
 func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
@@ -80,6 +84,8 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 			op = profil.ProfilService(m, UsersDb, nick)
 		case repertoireId:
 			op = repertoire.RepertoireService(m, UsersDb)
+		case annuaireId:
+			op = annuaire.AnnuaireService(m, AnnuaireDbPath)
 		}
 	}
 	logs.InfoLog("sommaire: quits handler\n")
@@ -89,21 +95,22 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 	sommairePage := minigo.NewPage("sommaire", mntl, nil)
 
 	sommairePage.SetInitFunc(func(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 		mntl.CursorOff()
 		mntl.SendVDT("static/notel.vdt")
 
 		mntl.ModeG0()
 		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
-		list := minigo.NewList(mntl, 8, 1, 20, 2)
+		list := minigo.NewList(mntl, 8, 1, 22, 2)
 		list.AppendItem(chatKey, "MINICHAT")
-		list.AppendItem(superChatKey, "SUPERCHAT (bêta)")
+		list.AppendItem(superChatKey, "SUPERCHAT")
 		list.AppendItem(meteoKey, "METEO")
 		list.AppendItem(infoKey, "INFOS")
 		list.AppendItem(blogKey, "BLOG")
 		//list.AppendItem(statsKey, "STATS")
 		list.AppendItem(profilKey, "PROFIL")
+		list.AppendItem(annuaireKey, "ANNUAIRE")
 		list.AppendItem(repertoireKey, "REPERTOIRE")
 		list.Display()
 

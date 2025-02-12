@@ -13,6 +13,7 @@ var CommuneDb *databases.CommuneDatabase
 var MessageDb *databases.MessageDatabase
 var UsersDb *databases.UsersDatabase
 var BlogDbPath string
+var AnnuaireDbPath string
 
 func main() {
 	var group sync.WaitGroup
@@ -38,6 +39,7 @@ func main() {
 	UsersDb.LoadDatabase(notelConf.UsersDbPath)
 
 	BlogDbPath = notelConf.BlogDbPath
+	AnnuaireDbPath = notelConf.AnnuaireDbPath
 
 	group.Add(1)
 	metrics := NewMetrics()

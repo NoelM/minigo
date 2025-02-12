@@ -12,6 +12,7 @@ type NotelConf struct {
 	MessagesDbPath string          `json:"messagesDbPath"`
 	UsersDbPath    string          `json:"usersDbPath"`
 	BlogDbPath     string          `json:"blogDbPath"`
+	AnnuaireDbPath string          `json:"annuaireDbPath"`
 	Connectors     []ConnectorConf `json:"connectors"`
 }
 

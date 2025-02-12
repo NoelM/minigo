@@ -1,0 +1,21 @@
+{
+    "communeDbPath": "./data/communes-departement-region.csv",
+    "messagesDbPath": "./data/messages.db",
+    "usersDbPath": "./data/users.db",
+    "blogDbPath": "./data/blog.json",
+    "annuaireDbPath": "./data/annuaire.json",
+    "connectors": [
+        {
+            "active": true,
+            "kind": "websocket",
+            "tag": "ws",
+            "path": "192.168.1.26:8182"
+        },
+        {
+            "active": true,
+            "kind": "tcp",
+            "tag": "tel",
+            "path": "192.168.1.26:8183"
+        }
+   ]
+}

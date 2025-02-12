@@ -48,7 +48,14 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 	})
 
 	listPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		if pageId == len(users)/usersPerPage {
+		// maxPage is the exact count of page numbers, it goes from 1 to +inf
+		maxPage := len(users) / usersPerPage
+		if maxPage == 0 {
+			maxPage = 1
+		}
+
+		// pageId is the ID, going from 0 to +inf, so this explains why we set maxPage-1
+		if pageId == maxPage-1 {
 			return nil, minigo.NoOp
 		}
 
@@ -87,7 +94,7 @@ func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId
 	m.MoveAt(3, 34)
 	m.Attributes(minigo.CaractereNoir)
 
-	maxPage := len(users)/usersPerPage + 1
+	maxPage := len(users) / usersPerPage
 	if maxPage == 0 {
 		maxPage = 1
 	}

@@ -42,6 +42,8 @@ func webSocketServe(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *M
 		innerWg.Add(2)
 
 		network := minigo.NewNetwork(ws, false, &innerWg, "websocket")
+		network.SetNoDelay()
+
 		m := minigo.NewMinitel(network, false, &innerWg, connConf.Tag, metrics.ConnLostCount)
 		m.NoCSI()
 		go m.Serve()

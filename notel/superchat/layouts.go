@@ -183,9 +183,7 @@ func (c *ChatLayout) PrintPreviousMessage() {
 		c.mntl.MoveAt(1, 0)
 		msgId = firstRow.msgId
 
-		if firstRow.lineId > 0 {
-			c.printMessageFromLine(msgId, firstRow.lineId-1, NoLimit, Up)
-		}
+		c.printMessageFromLine(msgId, firstRow.lineId+1, NoLimit, Up)
 		c.printDate(msgId, NoLimit, Up)
 
 		msgId -= 1

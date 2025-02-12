@@ -29,7 +29,7 @@ func printRepertoireHeader(m *minigo.Minitel) {
 	m.Print("  RÉPERTOIRE")
 	m.Repeat(' ', 28)
 	m.Attributes(minigo.GrandeurNormale, minigo.FondCyan, minigo.CaractereNoir)
-	m.ReturnUp(2)
+	m.ReturnUp(3)
 	m.Repeat(' ', 40)
 	m.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
 	m.Print(" ")

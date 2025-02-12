@@ -25,7 +25,7 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 		mntl.Print("Mode ")
 		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
 		mntl.Print(" EDITION")
-		mntl.Attributes(minigo.FondNormal, minigo.CaractereBlanc)
+		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
 		mntl.Print("  actif par défaut")
 		mntl.Return(1)
 		mntl.Print("Activez avec le bouton REPETITION")

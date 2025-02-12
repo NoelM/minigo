@@ -83,7 +83,7 @@ func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId
 
 	m.ModeG0()
 
-	m.MoveAt(2, 35)
+	m.MoveAt(3, 35)
 	m.Attributes(minigo.CaractereNoir)
 	m.Printf("%d/%d ", pageId+1, len(users)/usersPerPage+1)
 

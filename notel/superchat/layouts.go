@@ -87,7 +87,7 @@ func (c *ChatLayout) printHeader() {
 	} else {
 		status = fmt.Sprintf(" [Mode %s] Connectés: %d", mode, cntd)
 	}
-	c.mntl.PrintStatusWithAttributes(fmt.Sprintf("%-35s", status), minigo.CaractereMagenta, minigo.CaractereNoir)
+	c.mntl.PrintStatusWithAttributes(fmt.Sprintf("%-35s", status), minigo.FondMagenta, minigo.CaractereNoir)
 }
 
 func (c *ChatLayout) getLastMessages() bool {

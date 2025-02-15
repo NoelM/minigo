@@ -26,8 +26,8 @@ func main() {
 	usersDb := databases.NewUsersDatabase()
 	usersDb.LoadDatabase(dbPath)
 
-	if err := usersDb.ChangePassword(nick, pwd); err != nil {
-		log.Fatal(err)
+	if changed := usersDb.ChangePassword(nick, pwd); !changed {
+		log.Fatal("unable to change pwd")
 	}
 
 	u, err := usersDb.LoadUser(nick)

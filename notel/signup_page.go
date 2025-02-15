@@ -9,6 +9,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 	signUpPage := minigo.NewPage("signup", mntl, nil)
 
 	signUpPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
+		mntl.Reset()
 		mntl.CleanScreen()
 		mntl.SendVDT("static/connect.vdt")
 		mntl.ModeG0()

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	"github.com/NoelM/minigo/notel/databases"
 )
@@ -24,5 +26,17 @@ func main() {
 	usersDb := databases.NewUsersDatabase()
 	usersDb.LoadDatabase(dbPath)
 
-	usersDb.ChangePassword(nick, pwd)
+	if err := usersDb.ChangePassword(nick, pwd); err != nil {
+		log.Fatal(err)
+	}
+
+	u, err := usersDb.LoadUser(nick)
+	if err != nil {
+		log.Fatal(err)
+	}
+	u.LastConnect = time.Now()
+
+	if err = usersDb.SetUser(u); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -56,7 +56,7 @@ func NewPageAnnuaire(mntl *minigo.Minitel, annuaireDbPath string) *minigo.Page {
 			// 2 |          |15
 			//   len(name)
 
-			mntl.Repeat(' ', 21-len(item.Name))
+			mntl.Repeat(' ', 26-len(item.Name)-len(item.Phone))
 			mntl.Printf("%s ", item.Phone)
 		}
 

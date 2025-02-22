@@ -45,7 +45,7 @@ func ListUsers(args []string) {
 	usersDb := databases.NewUsersDatabase()
 	usersDb.LoadDatabase(dbPath)
 
-	users, err := usersDb.LoadAllUsers()
+	users, err := usersDb.ListAllowedUsers()
 	if err != nil {
 		log.Fatal(err)
 	}

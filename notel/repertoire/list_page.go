@@ -23,7 +23,7 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 		mntl.CursorOff()
 
 		var err error
-		if users, err = userDB.LoadAllUsers(); err != nil {
+		if users, err = userDB.ListAllowedUsers(); err != nil {
 			mntl.Print("Impossible de charger les utilisateurs")
 			time.Sleep(2 * time.Second)
 			return minigo.SommaireOp

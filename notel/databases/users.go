@@ -54,7 +54,21 @@ func (u *UsersDatabase) LoadUser(nick string) (user User, err error) {
 	return
 }
 
-func (u *UsersDatabase) LoadAllUsers() (users []User, err error) {
+func (u *UsersDatabase) ListUsers() (users []User, err error) {
+	iter, _ := u.DB.NewIter(nil)
+	for iter.First(); iter.Valid(); iter.Next() {
+		var user User
+
+		if err = json.Unmarshal(iter.Value(), &user); err != nil {
+			fmt.Errorf("login error: nick=%s: %s", iter.Key(), err.Error())
+			continue
+		}
+	}
+
+	return users, err
+}
+
+func (u *UsersDatabase) ListAllowedUsers() (users []User, err error) {
 	iter, _ := u.DB.NewIter(nil)
 	for iter.First(); iter.Valid(); iter.Next() {
 		var user User

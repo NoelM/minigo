@@ -53,6 +53,7 @@ func ListUsers(args []string) {
 	for _, u := range users {
 		fmt.Printf("> %s\n", u.Nick)
 		fmt.Printf("  %s\n", u.LastConnect.Format("02/01/2006 15:04:05"))
+		fmt.Printf("  +30j: %t\n", time.Until(u.LastConnect) > 24*30*time.Hour)
 		fmt.Printf("  %s\n", u.Bio)
 		fmt.Printf("  %s\n", u.PwdHash)
 		fmt.Printf("  %s\n", u.Location)

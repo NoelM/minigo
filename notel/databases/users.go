@@ -63,6 +63,7 @@ func (u *UsersDatabase) ListUsers() (users []User, err error) {
 			fmt.Errorf("login error: nick=%s: %s", iter.Key(), err.Error())
 			continue
 		}
+		users = append(users, user)
 	}
 
 	return users, err

@@ -2,11 +2,11 @@ package superchat
 
 import (
 	"fmt"
-	"sync/atomic"
 	"time"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/databases"
+	"github.com/NoelM/minigo/notel/metrics"
 )
 
 type RouleauDir uint
@@ -41,17 +41,17 @@ type ChatLayout struct {
 	navMode bool
 	cache   *Cache
 
-	cntd *atomic.Int32
+	metrics *metrics.Metrics
 }
 
-func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atomic.Int32, nick string) *ChatLayout {
+func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, mtr *metrics.Metrics, nick string) *ChatLayout {
 	return &ChatLayout{
-		mntl:  mntl,
-		msgDB: msgDB,
-		maxId: -1,
-		nick:  nick,
-		cache: NewCache(),
-		cntd:  cntd,
+		mntl:    mntl,
+		msgDB:   msgDB,
+		maxId:   -1,
+		nick:    nick,
+		cache:   NewCache(),
+		metrics: mtr,
 	}
 }
 
@@ -74,7 +74,7 @@ func (c *ChatLayout) printFooter() {
 }
 
 func (c *ChatLayout) printHeader() {
-	cntd := c.cntd.Load()
+	cntd := c.metrics.CountLogged()
 
 	mode := "EDITION"
 	if c.navMode {

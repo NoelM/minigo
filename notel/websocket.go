@@ -11,10 +11,11 @@ import (
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/confs"
 	"github.com/NoelM/minigo/notel/logs"
+	"github.com/NoelM/minigo/notel/metrics"
 	"nhooyr.io/websocket"
 )
 
-func webSocketServe(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
+func webSocketServe(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *metrics.Metrics) {
 	defer wg.Done()
 
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

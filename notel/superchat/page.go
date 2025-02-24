@@ -1,18 +1,17 @@
 package superchat
 
 import (
-	"sync/atomic"
 	"time"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/databases"
 	"github.com/NoelM/minigo/notel/logs"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/NoelM/minigo/notel/metrics"
 )
 
-func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atomic.Int32, nick string, promMsgNb prometheus.Counter) (op int) {
+func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, mtr *metrics.Metrics, nick string) (op int) {
 	chatPage := minigo.NewPage("chat", m, nil)
-	chatLayout := NewChatLayout(m, msgDB, cntd, nick)
+	chatLayout := NewChatLayout(m, msgDB, mtr, nick)
 
 	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		m.Reset()
@@ -33,7 +32,7 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atom
 		if len(inputs.ValueActive()) == 0 {
 			return nil, minigo.NoOp
 		}
-		promMsgNb.Inc()
+		mtr.MessagesCount.Inc()
 
 		msg := databases.Message{
 			Nick: nick,

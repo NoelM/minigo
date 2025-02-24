@@ -10,6 +10,7 @@ import (
 	"github.com/NoelM/minigo/notel/infos"
 	"github.com/NoelM/minigo/notel/logs"
 	"github.com/NoelM/minigo/notel/meteo"
+	"github.com/NoelM/minigo/notel/metrics"
 	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/profil"
 	"github.com/NoelM/minigo/notel/repertoire"
@@ -54,14 +55,14 @@ var ServIdMap = map[string]int{
 	annuaireKey:   annuaireId,
 }
 
-func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
+func SommaireHandler(minitel *minigo.Minitel, nick string, metrics *metrics.Metrics) {
 	logs.InfoLog("enters sommaire handler\n")
 
 	var op int
 	var choice map[string]string
 
 	for op != minigo.DisconnectOp {
-		choice, op = NewPageSommaire(m, metrics).Run()
+		choice, op = NewPageSommaire(minitel, metrics).Run()
 		serviceId, ok := ServIdMap[strings.ToUpper(choice["choice"])]
 		if !ok {
 			continue
@@ -69,29 +70,29 @@ func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
 
 		switch serviceId {
 		case chatId:
-			op = minichat.RunChatPage(m, MessageDb, &metrics.ConnectedUsers, nick, metrics.MessagesCount)
+			op = minichat.RunChatPage(minitel, MessageDb, &metrics.ConnectedUsers, nick, metrics.MessagesCount)
 		case superChatId:
-			op = superchat.ServiceSuperchat(m, MessageDb, &metrics.ConnectedUsers, nick, metrics.MessagesCount)
+			op = superchat.ServiceSuperchat(minitel, MessageDb, metrics, nick)
 		case meteoId:
-			op = meteo.MeteoService(m, CommuneDb)
+			op = meteo.MeteoService(minitel, CommuneDb)
 		case infoId:
-			op = infos.ServiceInfo(m)
+			op = infos.ServiceInfo(minitel)
 		case statsId:
-			_, op = stats.NewStatsPage(m).Run()
+			_, op = stats.NewStatsPage(minitel).Run()
 		case blogId:
-			op = blog.ServiceBlog(m, BlogDbPath)
+			op = blog.ServiceBlog(minitel, BlogDbPath)
 		case profilId:
-			op = profil.ProfilService(m, UsersDb, nick)
+			op = profil.ProfilService(minitel, UsersDb, nick)
 		case repertoireId:
-			op = repertoire.RepertoireService(m, UsersDb)
+			op = repertoire.RepertoireService(minitel, UsersDb)
 		case annuaireId:
-			op = annuaire.AnnuaireService(m, AnnuaireDbPath)
+			op = annuaire.AnnuaireService(minitel, AnnuaireDbPath)
 		}
 	}
 	logs.InfoLog("sommaire: quits handler\n")
 }
 
-func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
+func NewPageSommaire(mntl *minigo.Minitel, metrics *metrics.Metrics) *minigo.Page {
 	sommairePage := minigo.NewPage("sommaire", mntl, nil)
 
 	sommairePage.SetInitFunc(func(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {

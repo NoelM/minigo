@@ -7,10 +7,11 @@ import (
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/confs"
 	"github.com/NoelM/minigo/notel/logs"
+	"github.com/NoelM/minigo/notel/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func NotelApplication(minitel *minigo.Minitel, group *sync.WaitGroup, connConf *confs.ConnectorConf, metrics *Metrics) {
+func NotelApplication(minitel *minigo.Minitel, group *sync.WaitGroup, connConf *confs.ConnectorConf, metrics *metrics.Metrics) {
 	group.Add(1)
 
 	metrics.ConnCount.With(prometheus.Labels{"source": connConf.Tag}).Inc()

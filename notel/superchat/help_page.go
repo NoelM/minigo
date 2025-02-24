@@ -1,8 +1,11 @@
 package superchat
 
-import "github.com/NoelM/minigo"
+import (
+	"github.com/NoelM/minigo"
+	"github.com/NoelM/minigo/notel/metrics"
+)
 
-func HelpPage(minitel *minigo.Minitel) *minigo.Page {
+func HelpPage(minitel *minigo.Minitel, mtr *metrics.Metrics) *minigo.Page {
 	helpPage := minigo.NewPage("superchat: help", minitel, nil)
 
 	helpPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
@@ -12,7 +15,7 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 
 		mntl.MoveAt(2, 0)
 		mntl.Attributes(minigo.DoubleGrandeur)
-		mntl.PrintCenter("^oo^ SuperChat ^oo^")
+		mntl.PrintCenter("^..^ SuperChat ^..^")
 		mntl.Attributes(minigo.GrandeurNormale)
 		mntl.Return(2)
 
@@ -53,7 +56,20 @@ func HelpPage(minitel *minigo.Minitel) *minigo.Page {
 		mntl.HLine(40, minigo.HCenter)
 		mntl.Return(1)
 
-		mntl.Print("Appuyez sur GUIDE n'importe quand pour  revoir cette page.")
+		logged := mtr.ListLogged()
+
+		if len(logged) == 1 {
+			mntl.Print("Connecté:")
+		} else {
+			mntl.Print("Connectés:")
+		}
+
+		for _, loggedNick := range logged {
+			mntl.Attributes(minigo.InversionFond)
+			mntl.Printf(" %s ", loggedNick)
+			mntl.Attributes(minigo.FondNormal)
+			mntl.Right(1)
+		}
 
 		mntl.HelperRightAt(24, "Aller au Chat", "SOMMAIRE")
 

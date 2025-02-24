@@ -1,4 +1,4 @@
-package main
+package metrics
 
 import (
 	"net/http"
@@ -100,7 +100,7 @@ func (m *Metrics) CountLogged() int {
 	return len(m.loggedUsers)
 }
 
-func metricsServe(wg *sync.WaitGroup, metrics *Metrics, connectors []confs.ConnectorConf) {
+func Serve(wg *sync.WaitGroup, metrics *Metrics, connectors []confs.ConnectorConf) {
 	defer wg.Done()
 
 	for _, cv := range []*prometheus.CounterVec{metrics.ConnCount, metrics.ConnLostCount, metrics.ConnDurationCount, metrics.ConnAttemptCount} {

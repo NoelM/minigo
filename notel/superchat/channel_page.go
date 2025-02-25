@@ -20,8 +20,10 @@ func ChannelPage(m *minigo.Minitel, chatManager *databases.ChatManager) *minigo.
 		m.ModeG0()
 		m.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
-		mntl.MoveAt(5, 1)
+		mntl.MoveAt(7, 1)
+		mntl.Attributes(minigo.DoubleHauteur)
 		mntl.Print("Salons disponibles")
+		mntl.Attributes(minigo.GrandeurNormale)
 
 		// Display available channels
 		channels := chatManager.ListChannels()
@@ -29,12 +31,12 @@ func ChannelPage(m *minigo.Minitel, chatManager *databases.ChatManager) *minigo.
 		for _, ch := range channels {
 			names = append(names, ch.Name)
 		}
-		list := minigo.NewListEnum(mntl, names, 8, 1, 22, 2)
+		list := minigo.NewListEnum(mntl, names, 9, 1, 22, 2)
 		list.Display()
 
 		mntl.MoveAt(24, 0)
 		mntl.HelperRight("SALON: .. +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
-		inputs.AppendInput("channel", minigo.NewInput(mntl, 24, 29, 2, 1, true))
+		inputs.AppendInput("channel", minigo.NewInput(mntl, 24, 27, 2, 1, true))
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -46,7 +48,7 @@ func ChannelPage(m *minigo.Minitel, chatManager *databases.ChatManager) *minigo.
 			return nil, minigo.NoOp
 		}
 
-		channelSlug := chatManager.ListChannels()[channelId].Slug
+		channelSlug := chatManager.ListChannels()[channelId-1].Slug
 		logs.InfoLog("selected channel: %s\n", channelSlug)
 
 		return map[string]string{"channel": channelSlug}, minigo.EnvoiOp

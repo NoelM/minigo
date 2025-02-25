@@ -54,9 +54,11 @@ func (cm *ChatManager) GetChannel(channelSlug string) *Channel {
 	defer cm.mutex.Unlock()
 
 	if channel, exists := cm.channels[channelSlug]; exists {
+		logs.InfoLog("got channel: %s\n", channelSlug)
 		return channel
 	}
 
+	logs.ErrorLog("unable to find channel: %s\n", channelSlug)
 	return nil
 }
 
@@ -104,7 +106,7 @@ func (c *Channel) LoadMessages(channelConf confs.ChannelConf) error {
 		logs.ErrorLog("unable to get database: %s\n", err.Error())
 		return err
 	}
-	logs.InfoLog("opened database: %s\n", c.conf.Path)
+	logs.InfoLog("loaded database: %s\n", c.conf.Path)
 
 	return nil
 }

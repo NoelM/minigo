@@ -10,7 +10,7 @@ func ServiceSuperchat(minitel *minigo.Minitel, chatManager *databases.ChatManage
 	// First show channel selection page
 CHANNEL:
 	choice, op := ChannelPage(minitel, chatManager).Run()
-	if op == minigo.SommaireOp {
+	if op != minigo.SommaireOp || op != minigo.EnvoiOp {
 		return op
 	}
 

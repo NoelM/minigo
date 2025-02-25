@@ -194,6 +194,10 @@ func (c *Channel) GetConnected() []string {
 	return connected
 }
 
+func (c *Channel) GetName() string {
+	return c.conf.Name
+}
+
 func (c *Channel) Quit() {
 	c.file.Close()
 }

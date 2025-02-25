@@ -81,12 +81,7 @@ func (c *ChatLayout) printHeader() {
 		mode = "NAVIGATION"
 	}
 
-	var status string
-	if cntd < 2 {
-		status = fmt.Sprintf(" [Mode %s] Connecté: %d", mode, cntd)
-	} else {
-		status = fmt.Sprintf(" [Mode %s] Connectés: %d", mode, cntd)
-	}
+	status := fmt.Sprintf(" [%s] [%s] [Conn. %d]", c.channel.GetName(), mode, cntd)
 	c.mntl.PrintStatusWithAttributes(fmt.Sprintf("%-35s", status), minigo.FondMagenta, minigo.CaractereNoir)
 }
 

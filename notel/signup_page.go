@@ -46,10 +46,10 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.Helper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
 		mntl.ReturnCol(3, 1)
-		mntl.Print("Compte réatribuable après")
+		mntl.Print("Compte réattribuable après")
 
 		mntl.ReturnCol(1, 1)
-		mntl.Print("30j sans connexion")
+		mntl.Print("30 jours sans connexion")
 
 		inputs.InitAll()
 		return minigo.NoOp

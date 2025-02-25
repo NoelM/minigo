@@ -6,6 +6,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/NoelM/minigo/notel/logs"
 )
 
 type Message struct {
@@ -36,10 +38,10 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 
 	filedb, err := os.OpenFile(m.filePath, os.O_RDONLY|os.O_CREATE, 0755)
 	if err != nil {
-		errorLog.Printf("unable to get database: %s\n", err.Error())
+		logs.ErrorLog("unable to get database: %s\n", err.Error())
 		return err
 	}
-	infoLog.Printf("opened database: %s\n", filePath)
+	logs.InfoLog("opened database: %s\n", filePath)
 
 	scanner := bufio.NewScanner(filedb)
 	scanner.Split(bufio.ScanLines)
@@ -48,7 +50,7 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 	for scanner.Scan() {
 		var msg Message
 		if err := json.Unmarshal([]byte(scanner.Text()), &msg); err != nil {
-			errorLog.Printf("unable to marshal line %d: %s\n", line, err.Error())
+			logs.ErrorLog("unable to marshal line %d: %s\n", line, err.Error())
 			continue
 		}
 
@@ -56,14 +58,14 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 	}
 	filedb.Close()
 
-	infoLog.Printf("loaded %d messages from database\n", len(m.messages))
+	logs.InfoLog("loaded %d messages from database\n", len(m.messages))
 
 	m.file, err = os.OpenFile(m.filePath, os.O_RDWR|os.O_APPEND, 0755)
 	if err != nil {
-		errorLog.Printf("unable to get database: %s\n", err.Error())
+		logs.ErrorLog("unable to get database: %s\n", err.Error())
 		return err
 	}
-	infoLog.Printf("opened database: %s\n", filePath)
+	logs.InfoLog("opened database: %s\n", filePath)
 
 	return nil
 }
@@ -74,11 +76,11 @@ func (m *MessageDatabase) Subscribe(nick string) {
 
 	m.subscribers[nick] = -1
 
-	infoLog.Printf("got a new subscriber with id=%s\n", nick)
+	logs.InfoLog("got a new subscriber with id=%s\n", nick)
 }
 
 func (m *MessageDatabase) Resign(nick string) {
-	infoLog.Printf("resigned subscriber with id=%s\n", nick)
+	logs.InfoLog("resigned subscriber with id=%s\n", nick)
 	delete(m.subscribers, nick)
 }
 
@@ -88,7 +90,7 @@ func (m *MessageDatabase) GetMessages(nick string) []Message {
 
 	lastMsg, ok := m.subscribers[nick]
 	if !ok {
-		warnLog.Printf("unable to find subscriber with id=%s\n", nick)
+		logs.WarnLog("unable to find subscriber with id=%s\n", nick)
 		return nil
 	}
 
@@ -98,7 +100,7 @@ func (m *MessageDatabase) GetMessages(nick string) []Message {
 	copy(messagesCopy, m.messages[lastMsg+1:])
 	m.subscribers[nick] = len(m.messages) - 1
 
-	infoLog.Printf("subscriber id=%s received %d messages\n", nick, nbMsg)
+	logs.InfoLog("subscriber id=%s received %d messages\n", nick, nbMsg)
 	return messagesCopy
 }
 
@@ -108,7 +110,7 @@ func (m *MessageDatabase) HasNewMessage(nick string) bool {
 
 	lastMsg, ok := m.subscribers[nick]
 	if !ok {
-		warnLog.Printf("unable to find subscriber with id=%s\n", nick)
+		logs.WarnLog("unable to find subscriber with id=%s\n", nick)
 		return false
 	}
 
@@ -130,16 +132,16 @@ func (m *MessageDatabase) PushMessage(msg Message, filterNick bool) {
 
 	buf, err := json.Marshal(msg)
 	if err != nil {
-		errorLog.Printf("unable to marshal message: %s\n", err.Error())
+		logs.ErrorLog("unable to marshal message: %s\n", err.Error())
 	}
 	buf = append(buf, '\n')
 
 	_, err = m.file.Write(buf)
 	if err != nil {
-		errorLog.Printf("unable to write to database: %s\n", err.Error())
+		logs.ErrorLog("unable to write to database: %s\n", err.Error())
 	}
 
-	infoLog.Printf("sucessfully pushed message of length=%d to database\n", len(msg.Text))
+	logs.InfoLog("sucessfully pushed message of length=%d to database\n", len(msg.Text))
 }
 
 func (m *MessageDatabase) Quit() {

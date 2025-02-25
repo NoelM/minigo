@@ -32,7 +32,7 @@ const (
 type ChatLayout struct {
 	mntl *minigo.Minitel
 
-	msgDB    *databases.MessageDatabase
+	channel  *databases.Channel
 	messages []databases.Message
 	maxId    int
 
@@ -44,10 +44,10 @@ type ChatLayout struct {
 	metrics *metrics.Metrics
 }
 
-func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, mtr *metrics.Metrics, nick string) *ChatLayout {
+func NewChatLayout(mntl *minigo.Minitel, channel *databases.Channel, mtr *metrics.Metrics, nick string) *ChatLayout {
 	return &ChatLayout{
 		mntl:    mntl,
-		msgDB:   msgDB,
+		channel: channel,
 		maxId:   -1,
 		nick:    nick,
 		cache:   NewCache(),
@@ -91,9 +91,8 @@ func (c *ChatLayout) printHeader() {
 }
 
 func (c *ChatLayout) getLastMessages() bool {
-	if last := c.msgDB.GetMessages(c.nick); len(last) == 0 {
+	if last := c.channel.GetMessages(c.nick); len(last) == 0 {
 		return false
-
 	} else {
 		c.messages = append(c.messages, last...)
 		return true
@@ -118,7 +117,6 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 	if dir == Down {
 		c.mntl.Return(1)
 		c.cache.AppendBottom(Date, msgId, 0)
-
 	} else if dir == Up {
 		c.mntl.ReturnUp(1)
 		c.cache.AppendTop(Date, msgId, 0)

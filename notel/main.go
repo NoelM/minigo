@@ -11,10 +11,11 @@ import (
 )
 
 var CommuneDb *databases.CommuneDatabase
-var MessageDb *databases.MessageDatabase
+var ChannelDb *databases.Channel
 var UsersDb *databases.UsersDatabase
 var BlogDbPath string
 var AnnuaireDbPath string
+var ChatManager *databases.ChatManager
 
 func main() {
 	var group sync.WaitGroup
@@ -33,8 +34,10 @@ func main() {
 	CommuneDb = databases.NewCommuneDatabase()
 	CommuneDb.LoadCommuneDatabase(notelConf.CommuneDbPath)
 
-	MessageDb = databases.NewMessageDatabase()
-	MessageDb.LoadMessages(notelConf.MessagesDbPath)
+	ChannelDb = databases.NewChannel()
+	ChannelDb.LoadMessages(notelConf.ChannelsDb[0])
+
+	ChatManager = databases.NewChatManager(notelConf)
 
 	UsersDb = databases.NewUsersDatabase()
 	UsersDb.LoadDatabase(notelConf.UsersDbPath)
@@ -67,6 +70,6 @@ func main() {
 	}
 	group.Wait()
 
-	MessageDb.Quit()
+	ChannelDb.Quit()
 	UsersDb.Quit()
 }

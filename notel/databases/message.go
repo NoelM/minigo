@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/NoelM/minigo/notel/confs"
 	"github.com/NoelM/minigo/notel/logs"
 )
 
@@ -18,7 +19,7 @@ type Message struct {
 
 // Renamed MessageDatabase to Channel
 type Channel struct {
-	filePath    string
+	conf        confs.ChannelConf
 	file        *os.File
 	messages    []Message
 	subscribers map[string]int
@@ -27,50 +28,59 @@ type Channel struct {
 
 // ChatManager handles multiple channels
 type ChatManager struct {
+	confs    *confs.NotelConf
 	channels map[string]*Channel
 	mutex    sync.RWMutex
 }
 
 // NewChatManager creates a new chat manager
-func NewChatManager() *ChatManager {
-	return &ChatManager{
+func NewChatManager(confs *confs.NotelConf) *ChatManager {
+	cm := &ChatManager{
+		confs:    confs,
 		channels: make(map[string]*Channel),
 	}
+
+	for _, channelConf := range confs.ChannelsDb {
+		cm.channels[channelConf.Slug] = NewChannel()
+		cm.channels[channelConf.Slug].LoadMessages(channelConf)
+	}
+
+	return cm
 }
 
 // GetChannel returns an existing channel or creates a new one
-func (cm *ChatManager) GetChannel(channelName string) *Channel {
+func (cm *ChatManager) GetChannel(channelSlug string) *Channel {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
 
-	if channel, exists := cm.channels[channelName]; exists {
+	if channel, exists := cm.channels[channelSlug]; exists {
 		return channel
 	}
 
-	channel := NewChannel()
-	cm.channels[channelName] = channel
-	return channel
+	return nil
 }
 
-// NewChannel creates a new channel (formerly NewMessageDatabase)
+func (cm *ChatManager) ListChannels() []confs.ChannelConf {
+	return cm.confs.ChannelsDb
+}
+
 func NewChannel() *Channel {
 	return &Channel{
 		subscribers: make(map[string]int),
 	}
 }
 
-func (c *Channel) LoadMessages(filePath string) error {
+func (c *Channel) LoadMessages(channelConf confs.ChannelConf) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	c.filePath = filePath
-
-	filedb, err := os.OpenFile(c.filePath, os.O_RDONLY|os.O_CREATE, 0755)
+	c.conf = channelConf
+	filedb, err := os.OpenFile(c.conf.Path, os.O_RDONLY|os.O_CREATE, 0755)
 	if err != nil {
 		logs.ErrorLog("unable to get database: %s\n", err.Error())
 		return err
 	}
-	logs.InfoLog("opened database: %s\n", filePath)
+	logs.InfoLog("opened database: %s\n", c.conf.Path)
 
 	scanner := bufio.NewScanner(filedb)
 	scanner.Split(bufio.ScanLines)
@@ -89,12 +99,12 @@ func (c *Channel) LoadMessages(filePath string) error {
 
 	logs.InfoLog("loaded %d messages from database\n", len(c.messages))
 
-	c.file, err = os.OpenFile(c.filePath, os.O_RDWR|os.O_APPEND, 0755)
+	c.file, err = os.OpenFile(c.conf.Path, os.O_RDWR|os.O_APPEND, 0755)
 	if err != nil {
 		logs.ErrorLog("unable to get database: %s\n", err.Error())
 		return err
 	}
-	logs.InfoLog("opened database: %s\n", filePath)
+	logs.InfoLog("opened database: %s\n", c.conf.Path)
 
 	return nil
 }

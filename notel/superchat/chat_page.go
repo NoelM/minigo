@@ -9,9 +9,9 @@ import (
 	"github.com/NoelM/minigo/notel/metrics"
 )
 
-func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, mtr *metrics.Metrics, nick string) (op int) {
+func ChatPage(m *minigo.Minitel, channel *databases.Channel, mtr *metrics.Metrics, nick string) *minigo.Page {
 	chatPage := minigo.NewPage("chat", m, nil)
-	chatLayout := NewChatLayout(m, msgDB, mtr, nick)
+	chatLayout := NewChatLayout(m, channel, mtr, nick)
 
 	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		m.Reset()
@@ -19,7 +19,7 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, mtr *metri
 		m.RouleauOn()
 		m.MinusculeOn()
 
-		msgDB.Subscribe(nick)
+		channel.Subscribe(nick)
 		inputs.AppendInput("messages", minigo.NewInput(m, inputRow, 0, 39, 2, false))
 
 		chatLayout.Init()
@@ -39,7 +39,7 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, mtr *metri
 			Text: inputs.ValueActive(),
 			Time: time.Now(),
 		}
-		msgDB.PushMessage(msg, false)
+		channel.PushMessage(msg, false)
 
 		logs.InfoLog("send new message to IRC from nick=%s len=%d\n", nick, len(msg.Text))
 
@@ -64,7 +64,7 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, mtr *metri
 	})
 
 	chatPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		msgDB.Resign(nick)
+		channel.Resign(nick)
 
 		m.PrintStatus("")
 		m.RouleauOff()
@@ -90,6 +90,5 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, mtr *metri
 		inputs.AppendKeyActive(key)
 	})
 
-	_, op = chatPage.Run()
-	return op
+	return chatPage
 }

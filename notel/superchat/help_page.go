@@ -2,10 +2,10 @@ package superchat
 
 import (
 	"github.com/NoelM/minigo"
-	"github.com/NoelM/minigo/notel/metrics"
+	"github.com/NoelM/minigo/notel/databases"
 )
 
-func HelpPage(minitel *minigo.Minitel, mtr *metrics.Metrics) *minigo.Page {
+func HelpPage(minitel *minigo.Minitel, channel *databases.Channel) *minigo.Page {
 	helpPage := minigo.NewPage("superchat: help", minitel, nil)
 
 	helpPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
@@ -17,26 +17,20 @@ func HelpPage(minitel *minigo.Minitel, mtr *metrics.Metrics) *minigo.Page {
 		mntl.Attributes(minigo.DoubleGrandeur)
 		mntl.PrintCenter("^..^ SuperChat ^..^")
 		mntl.Attributes(minigo.GrandeurNormale)
-		mntl.Return(2)
+		mntl.Return(1)
 
 		mntl.HLine(40, minigo.HCenter)
 		mntl.Return(1)
-
-		mntl.Print("SuperChat est en bêta: il y a des bugs.")
-		mntl.Return(2)
 
 		mntl.Print("Mode ")
 		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
 		mntl.Print(" EDITION ")
 		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
-		mntl.Print(" actif par défaut")
+		mntl.Print(" (actif par défaut)")
 		mntl.Return(1)
 		mntl.Print("Activez avec le bouton REPETITION")
 		mntl.Return(1)
-
-		mntl.Print("- Pour écrire des messages")
-		mntl.Return(1)
-		mntl.Print("- Charger les messages en direct")
+		mntl.Print("Pour écrire et charger les messages & commandes")
 		mntl.Return(2)
 
 		mntl.Print("Mode ")
@@ -56,22 +50,22 @@ func HelpPage(minitel *minigo.Minitel, mtr *metrics.Metrics) *minigo.Page {
 		mntl.HLine(40, minigo.HCenter)
 		mntl.Return(1)
 
-		logged := mtr.ListLogged()
+		connected := channel.GetConnected()
 
-		if len(logged) == 1 {
+		if len(connected) == 1 {
 			mntl.Print("Connecté:")
 		} else {
 			mntl.Print("Connectés:")
 		}
 
-		for _, loggedNick := range logged {
+		for _, connNick := range connected {
 			mntl.Attributes(minigo.InversionFond)
-			mntl.Printf(" %s ", loggedNick)
+			mntl.Printf(" %s ", connNick)
 			mntl.Attributes(minigo.FondNormal)
 			mntl.Right(1)
 		}
 
-		mntl.HelperRightAt(24, "Aller au Chat", "SOMMAIRE")
+		mntl.HelperRightAt(24, "Chat →", "SOMMAIRE")
 
 		return minigo.NoOp
 	})

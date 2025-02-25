@@ -10,9 +10,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atomic.Int32, nick string, promMsgNb prometheus.Counter) (op int) {
+func RunChatPage(m *minigo.Minitel, channel *databases.Channel, cntd *atomic.Int32, nick string, promMsgNb prometheus.Counter) (op int) {
 	chatPage := minigo.NewPage("chat", m, nil)
-	chatLayout := NewChatLayout(m, msgDB, cntd, nick)
+	chatLayout := NewChatLayout(m, channel, cntd, nick)
 
 	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		m.Reset()
@@ -20,7 +20,7 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atom
 		m.RouleauOn()
 		m.MinusculeOn()
 
-		msgDB.Subscribe(nick)
+		channel.Subscribe(nick)
 		inputs.AppendInput("messages", minigo.NewInput(m, rowInput, 0, 39, 2, false))
 
 		chatLayout.Init()
@@ -40,7 +40,7 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atom
 			Text: inputs.ValueActive(),
 			Time: time.Now(),
 		}
-		msgDB.PushMessage(msg, false)
+		channel.PushMessage(msg, false)
 
 		logs.InfoLog("send new message to IRC from nick=%s len=%d\n", nick, len(msg.Text))
 
@@ -65,7 +65,7 @@ func RunChatPage(m *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atom
 	})
 
 	chatPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		msgDB.Resign(nick)
+		channel.Resign(nick)
 
 		m.RouleauOff()
 		m.MinusculeOff()

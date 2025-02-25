@@ -35,26 +35,21 @@ const NoLimit = -1
 type ChatLayout struct {
 	mntl *minigo.Minitel
 
-	msgDB    *databases.MessageDatabase
+	channel  *databases.Channel
 	messages []databases.Message
 	maxId    int
 
 	nick string
-
-	navMode bool
-	cache   *Cache
-
 	cntd *atomic.Int32
 }
 
-func NewChatLayout(mntl *minigo.Minitel, msgDB *databases.MessageDatabase, cntd *atomic.Int32, nick string) *ChatLayout {
+func NewChatLayout(mntl *minigo.Minitel, channel *databases.Channel, cntd *atomic.Int32, nick string) *ChatLayout {
 	return &ChatLayout{
-		mntl:  mntl,
-		msgDB: msgDB,
-		maxId: -1,
-		nick:  nick,
-		cache: NewCache(),
-		cntd:  cntd,
+		mntl:    mntl,
+		channel: channel,
+		maxId:   -1,
+		nick:    nick,
+		cntd:    cntd,
 	}
 }
 
@@ -93,9 +88,8 @@ func (c *ChatLayout) printHeader() {
 }
 
 func (c *ChatLayout) getLastMessages() bool {
-	if last := c.msgDB.GetMessages(c.nick); len(last) == 0 {
+	if last := c.channel.GetMessages(c.nick); len(last) == 0 {
 		return false
-
 	} else {
 		c.messages = append(c.messages, last...)
 		return true
@@ -119,14 +113,10 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 
 	if dir == Down {
 		c.mntl.Return(1)
-		c.cache.Bottom(Blank)
-
+		// Blank line
 		c.mntl.Return(1)
-		c.cache.Bottom(Date)
-
 	} else if dir == Up {
 		c.mntl.ReturnUp(1)
-		c.cache.Top(Date)
 	}
 
 	c.mntl.Attributes(minigo.CaractereBleu)
@@ -139,7 +129,6 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 
 	if dir == Up {
 		c.mntl.ReturnUp(1)
-		c.cache.Top(Blank)
 	}
 
 	return 2
@@ -154,12 +143,6 @@ func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
 
 	for i := 0; i < limit; i += 1 {
 		c.mntl.Send(vdt[i])
-
-		if dir == Up {
-			c.cache.Top(msgId)
-		} else if dir == Down {
-			c.cache.Bottom(msgId)
-		}
 	}
 
 	return limit

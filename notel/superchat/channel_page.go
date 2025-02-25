@@ -51,7 +51,7 @@ func ChannelPage(m *minigo.Minitel, chatManager *databases.ChatManager) *minigo.
 		channelSlug := chatManager.ListChannels()[channelId-1].Slug
 		logs.InfoLog("selected channel: %s\n", channelSlug)
 
-		return map[string]string{"channel": channelSlug}, minigo.EnvoiOp
+		return map[string]string{"channel": channelSlug}, minigo.NoOp
 	})
 
 	channelPage.SetCorrectionFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {

@@ -46,10 +46,10 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.Helper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
 		mntl.ReturnCol(3, 1)
-		mntl.Print("Compte supprimé après 30j")
+		mntl.Print("Compte réatribuable après")
 
-		mntl.ReturnCol(1, 3)
-		mntl.Print("sans connexion")
+		mntl.ReturnCol(1, 1)
+		mntl.Print("30j sans connexion")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -77,11 +77,6 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 			return nil, minigo.NoOp
 		}
 
-		if UsersDb.UserExists(creds["login"]) {
-			printSignUpError(mntl, "Pseudo déjà utilisé")
-			return nil, minigo.NoOp
-		}
-
 		err := UsersDb.AddUser(creds["login"], creds["pwd"])
 		delete(creds, "pwd")
 		delete(creds, "pwdRepeat")
@@ -90,7 +85,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 			logs.InfoLog("new signup for user=%s\n", creds["login"])
 			return creds, minigo.EnvoiOp
 		} else {
-			printSignUpError(mntl, "Erreur serveur")
+			printSignUpError(mntl, "Pseudo déjà utilisé")
 			return nil, minigo.NoOp
 		}
 	})

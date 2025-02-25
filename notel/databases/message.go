@@ -16,7 +16,8 @@ type Message struct {
 	Time time.Time `json:"time"`
 }
 
-type MessageDatabase struct {
+// Renamed MessageDatabase to Channel
+type Channel struct {
 	filePath    string
 	file        *os.File
 	messages    []Message
@@ -24,19 +25,47 @@ type MessageDatabase struct {
 	mutex       sync.RWMutex
 }
 
-func NewMessageDatabase() *MessageDatabase {
-	return &MessageDatabase{
+// ChatManager handles multiple channels
+type ChatManager struct {
+	channels map[string]*Channel
+	mutex    sync.RWMutex
+}
+
+// NewChatManager creates a new chat manager
+func NewChatManager() *ChatManager {
+	return &ChatManager{
+		channels: make(map[string]*Channel),
+	}
+}
+
+// GetChannel returns an existing channel or creates a new one
+func (cm *ChatManager) GetChannel(channelName string) *Channel {
+	cm.mutex.Lock()
+	defer cm.mutex.Unlock()
+
+	if channel, exists := cm.channels[channelName]; exists {
+		return channel
+	}
+
+	channel := NewChannel()
+	cm.channels[channelName] = channel
+	return channel
+}
+
+// NewChannel creates a new channel (formerly NewMessageDatabase)
+func NewChannel() *Channel {
+	return &Channel{
 		subscribers: make(map[string]int),
 	}
 }
 
-func (m *MessageDatabase) LoadMessages(filePath string) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (c *Channel) LoadMessages(filePath string) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
-	m.filePath = filePath
+	c.filePath = filePath
 
-	filedb, err := os.OpenFile(m.filePath, os.O_RDONLY|os.O_CREATE, 0755)
+	filedb, err := os.OpenFile(c.filePath, os.O_RDONLY|os.O_CREATE, 0755)
 	if err != nil {
 		logs.ErrorLog("unable to get database: %s\n", err.Error())
 		return err
@@ -54,13 +83,13 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 			continue
 		}
 
-		m.messages = append(m.messages, msg)
+		c.messages = append(c.messages, msg)
 	}
 	filedb.Close()
 
-	logs.InfoLog("loaded %d messages from database\n", len(m.messages))
+	logs.InfoLog("loaded %d messages from database\n", len(c.messages))
 
-	m.file, err = os.OpenFile(m.filePath, os.O_RDWR|os.O_APPEND, 0755)
+	c.file, err = os.OpenFile(c.filePath, os.O_RDWR|os.O_APPEND, 0755)
 	if err != nil {
 		logs.ErrorLog("unable to get database: %s\n", err.Error())
 		return err
@@ -70,65 +99,65 @@ func (m *MessageDatabase) LoadMessages(filePath string) error {
 	return nil
 }
 
-func (m *MessageDatabase) Subscribe(nick string) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (c *Channel) Subscribe(nick string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
-	m.subscribers[nick] = -1
+	c.subscribers[nick] = -1
 
 	logs.InfoLog("got a new subscriber with id=%s\n", nick)
 }
 
-func (m *MessageDatabase) Resign(nick string) {
+func (c *Channel) Resign(nick string) {
 	logs.InfoLog("resigned subscriber with id=%s\n", nick)
-	delete(m.subscribers, nick)
+	delete(c.subscribers, nick)
 }
 
-func (m *MessageDatabase) GetMessages(nick string) []Message {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (c *Channel) GetMessages(nick string) []Message {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
-	lastMsg, ok := m.subscribers[nick]
+	lastMsg, ok := c.subscribers[nick]
 	if !ok {
 		logs.WarnLog("unable to find subscriber with id=%s\n", nick)
 		return nil
 	}
 
-	nbMsg := len(m.messages) - (lastMsg + 1)
+	nbMsg := len(c.messages) - (lastMsg + 1)
 	messagesCopy := make([]Message, nbMsg)
 
-	copy(messagesCopy, m.messages[lastMsg+1:])
-	m.subscribers[nick] = len(m.messages) - 1
+	copy(messagesCopy, c.messages[lastMsg+1:])
+	c.subscribers[nick] = len(c.messages) - 1
 
 	logs.InfoLog("subscriber id=%s received %d messages\n", nick, nbMsg)
 	return messagesCopy
 }
 
-func (m *MessageDatabase) HasNewMessage(nick string) bool {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (c *Channel) HasNewMessage(nick string) bool {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
-	lastMsg, ok := m.subscribers[nick]
+	lastMsg, ok := c.subscribers[nick]
 	if !ok {
 		logs.WarnLog("unable to find subscriber with id=%s\n", nick)
 		return false
 	}
 
-	return len(m.messages)-(lastMsg+1) > 0
+	return len(c.messages)-(lastMsg+1) > 0
 }
 
-func (m *MessageDatabase) PushMessage(msg Message, filterNick bool) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (c *Channel) PushMessage(msg Message, filterNick bool) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
 	if filterNick {
-		if _, ok := m.subscribers[msg.Nick]; ok {
+		if _, ok := c.subscribers[msg.Nick]; ok {
 			// Locally connected user, message already in DB
 			return
 		}
 	}
 
-	m.messages = append(m.messages, msg)
+	c.messages = append(c.messages, msg)
 
 	buf, err := json.Marshal(msg)
 	if err != nil {
@@ -136,7 +165,7 @@ func (m *MessageDatabase) PushMessage(msg Message, filterNick bool) {
 	}
 	buf = append(buf, '\n')
 
-	_, err = m.file.Write(buf)
+	_, err = c.file.Write(buf)
 	if err != nil {
 		logs.ErrorLog("unable to write to database: %s\n", err.Error())
 	}
@@ -144,6 +173,17 @@ func (m *MessageDatabase) PushMessage(msg Message, filterNick bool) {
 	logs.InfoLog("sucessfully pushed message of length=%d to database\n", len(msg.Text))
 }
 
-func (m *MessageDatabase) Quit() {
-	m.file.Close()
+func (c *Channel) GetConnected() []string {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	connected := make([]string, 0, len(c.subscribers))
+	for nick := range c.subscribers {
+		connected = append(connected, nick)
+	}
+	return connected
+}
+
+func (c *Channel) Quit() {
+	c.file.Close()
 }

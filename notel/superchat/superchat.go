@@ -7,10 +7,10 @@ import (
 )
 
 func ServiceSuperchat(minitel *minigo.Minitel, chatManager *databases.ChatManager, metrics *metrics.Metrics, nickname string) int {
-	// First show channel selection page
 CHANNEL:
+	// First show channel selection page
 	choice, op := ChannelPage(minitel, chatManager).Run()
-	if op != minigo.SommaireOp && op != minigo.EnvoiOp {
+	if op != minigo.EnvoiOp {
 		return op
 	}
 
@@ -24,17 +24,20 @@ CHANNEL:
 		return minigo.SommaireOp
 	}
 
-HELP:
-	_, op = HelpPage(minitel, channel).Run()
-	if op != minigo.SommaireOp {
-		return op
-	}
-
+CHAT:
 	_, op = ChatPage(minitel, channel, metrics, nickname).Run()
 	if op == minigo.GuideOp {
 		goto HELP
 	} else if op == minigo.SommaireOp {
 		goto CHANNEL
+	} else {
+		return op
+	}
+
+HELP:
+	_, op = HelpPage(minitel, channel).Run()
+	if op == minigo.SommaireOp {
+		goto CHAT
 	} else {
 		return op
 	}

@@ -67,6 +67,11 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		creds := inputs.ToMap()
 		inputs.ResetAll()
 
+		if creds["login"] == "ADMIN" {
+			printSignUpError(mntl, "Pseudo ADMIN interdit")
+			return nil, minigo.NoOp
+		}
+
 		if len(creds["login"]) == 0 || len(creds["pwd"]) == 0 {
 			printSignUpError(mntl, "Pseudo ou MDP vides")
 			return nil, minigo.NoOp

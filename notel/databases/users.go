@@ -55,7 +55,7 @@ func (u *UsersDatabase) ListUsers() (users []User, err error) {
 		var user User
 
 		if err = json.Unmarshal(iter.Value(), &user); err != nil {
-			fmt.Errorf("login error: nick=%s: %s", iter.Key(), err.Error())
+			logs.ErrorLog("login error: nick=%s: %s\n", iter.Key(), err.Error())
 			continue
 		}
 		users = append(users, user)
@@ -70,7 +70,7 @@ func (u *UsersDatabase) ListAllowedUsers() (users []User, err error) {
 		var user User
 
 		if err = json.Unmarshal(iter.Value(), &user); err != nil {
-			fmt.Errorf("login error: nick=%s: %s", iter.Key(), err.Error())
+			logs.ErrorLog("login error: nick=%s: %s\n", iter.Key(), err.Error())
 			continue
 		}
 

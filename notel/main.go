@@ -34,10 +34,8 @@ func main() {
 	CommuneDb = databases.NewCommuneDatabase()
 	CommuneDb.LoadCommuneDatabase(notelConf.CommuneDbPath)
 
-	ChannelDb = databases.NewChannel()
-	ChannelDb.LoadMessages(notelConf.ChannelsDb[0])
-
 	ChatManager = databases.NewChatManager(notelConf)
+	ChannelDb = ChatManager.GetChannel("general")
 
 	UsersDb = databases.NewUsersDatabase()
 	UsersDb.LoadDatabase(notelConf.UsersDbPath)

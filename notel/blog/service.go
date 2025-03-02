@@ -46,6 +46,7 @@ LIST:
 		logs.ErrorLog("unable to convert article id to int: %s\n", err)
 		goto LIST
 	}
+	articleId -= 1
 
 	if articleId < 0 || articleId >= len(articles) {
 		logs.ErrorLog("invalid article id: %d\n", articleId)

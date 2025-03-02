@@ -1,6 +1,10 @@
 package blog
 
-import "github.com/NoelM/minigo"
+import (
+	"fmt"
+
+	"github.com/NoelM/minigo"
+)
 
 func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 	page := minigo.NewPage("blog:article", mntl, nil)
@@ -13,14 +17,14 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 		mntl.CursorOff()
 
 		mntl.MoveAt(3, 1)
-		mntl.Attributes(minigo.DoubleGrandeur)
+		mntl.Attributes(minigo.DoubleHauteur)
 		mntl.Print(article.Title)
 		mntl.Attributes(minigo.GrandeurNormale)
 
 		mntl.Return(1)
 		mntl.HLine(40, minigo.HCenter)
 
-		for i := 5; i < 24; i++ {
+		for i := 5; i < 23; i++ {
 			mntl.ReturnCol(1, 1)
 
 			if wrappedTextId == len(wrappedText) {
@@ -31,6 +35,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 			wrappedTextId += 1
 		}
 
+		mntl.HelperAt(24, 0, fmt.Sprintf("PAGE %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
 		return minigo.NoOp
 	})
 
@@ -42,7 +47,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 		mntl.CleanScreenFrom(5, 0)
 		mntl.MoveAt(4, 0)
 
-		for i := 5; i < 24; i++ {
+		for i := 1; i < 23; i++ {
 			mntl.ReturnCol(1, 1)
 
 			if wrappedTextId == len(wrappedText) {
@@ -53,6 +58,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 			wrappedTextId += 1
 		}
 
+		mntl.HelperAt(24, 0, fmt.Sprintf("PAGE %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
 		return nil, minigo.NoOp
 	})
 
@@ -61,7 +67,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 			return nil, minigo.RetourOp
 		}
 
-		wrappedTextId -= 2 * (24 - 5)
+		wrappedTextId -= 2 * (23 - 5)
 		if wrappedTextId < 0 {
 			wrappedTextId = 0
 		}
@@ -69,7 +75,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 		mntl.CleanScreenFrom(5, 0)
 		mntl.MoveAt(4, 0)
 
-		for i := 5; i < 24; i++ {
+		for i := 1; i < 23; i++ {
 			mntl.ReturnCol(1, 1)
 
 			if wrappedTextId == len(wrappedText) {
@@ -80,6 +86,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 			wrappedTextId += 1
 		}
 
+		mntl.HelperAt(24, 0, fmt.Sprintf("PAGE %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
 		return nil, minigo.NoOp
 	})
 

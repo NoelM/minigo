@@ -3,6 +3,7 @@ package blog
 import (
 	"encoding/json"
 	"os"
+	"strconv"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/logs"
@@ -34,8 +35,25 @@ func ServiceBlog(m *minigo.Minitel, blogDbPath string) int {
 		return minigo.SommaireOp
 	}
 
+LIST:
+	choice, op := ListPage(m, articles).Run()
+	if op != minigo.EnvoiOp {
+		return op
+	}
+
+	articleId, err := strconv.Atoi(choice["article"])
+	if err != nil {
+		logs.ErrorLog("unable to convert article id to int: %s\n", err)
+		goto LIST
+	}
+
+	if articleId < 0 || articleId >= len(articles) {
+		logs.ErrorLog("invalid article id: %d\n", articleId)
+		goto LIST
+	}
+
 DISPLAY:
-	_, op := NewArticlePage(m, articles[articleId]).Run()
+	_, op = NewArticlePage(m, articles[articleId]).Run()
 	switch op {
 	case minigo.SuiteOp:
 		articleId += 1

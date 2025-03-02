@@ -11,7 +11,6 @@ import (
 	"github.com/NoelM/minigo/notel/logs"
 	"github.com/NoelM/minigo/notel/meteo"
 	"github.com/NoelM/minigo/notel/metrics"
-	"github.com/NoelM/minigo/notel/minichat"
 	"github.com/NoelM/minigo/notel/profil"
 	"github.com/NoelM/minigo/notel/repertoire"
 	"github.com/NoelM/minigo/notel/stats"
@@ -20,7 +19,6 @@ import (
 
 const (
 	sommaireId = iota
-	chatId
 	superChatId
 	meteoId
 	infoId
@@ -32,7 +30,6 @@ const (
 )
 
 const (
-	chatKey       = "*CHA"
 	superChatKey  = "*SCA"
 	meteoKey      = "*MTO"
 	infoKey       = "*INF"
@@ -44,7 +41,6 @@ const (
 )
 
 var ServIdMap = map[string]int{
-	chatKey:       chatId,
 	superChatKey:  superChatId,
 	meteoKey:      meteoId,
 	infoKey:       infoId,
@@ -69,8 +65,6 @@ func SommaireHandler(minitel *minigo.Minitel, nick string, metrics *metrics.Metr
 		}
 
 		switch serviceId {
-		case chatId:
-			op = minichat.RunChatPage(minitel, ChannelDb, &metrics.ConnectedUsers, nick, metrics.MessagesCount)
 		case superChatId:
 			op = superchat.ServiceSuperchat(minitel, ChatManager, metrics, nick)
 		case meteoId:
@@ -104,7 +98,6 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *metrics.Metrics) *minigo.Pag
 		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
 		list := minigo.NewList(mntl, 8, 1, 22, 2)
-		list.AppendItem(chatKey, "MINICHAT")
 		list.AppendItem(superChatKey, "SUPERCHAT")
 		list.AppendItem(meteoKey, "METEO")
 		list.AppendItem(infoKey, "INFOS")

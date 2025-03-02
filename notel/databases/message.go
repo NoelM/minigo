@@ -66,6 +66,12 @@ func (cm *ChatManager) ListChannels() []confs.ChannelConf {
 	return cm.confs.ChannelsDb
 }
 
+func (cm *ChatManager) Quit() {
+	for _, channel := range cm.channels {
+		channel.Quit()
+	}
+}
+
 func NewChannel() *Channel {
 	return &Channel{
 		subscribers: make(map[string]int),

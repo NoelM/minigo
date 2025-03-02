@@ -11,7 +11,6 @@ import (
 )
 
 var CommuneDb *databases.CommuneDatabase
-var ChannelDb *databases.Channel
 var UsersDb *databases.UsersDatabase
 var BlogDbPath string
 var AnnuaireDbPath string
@@ -35,7 +34,6 @@ func main() {
 	CommuneDb.LoadCommuneDatabase(notelConf.CommuneDbPath)
 
 	ChatManager = databases.NewChatManager(notelConf)
-	ChannelDb = ChatManager.GetChannel("general")
 
 	UsersDb = databases.NewUsersDatabase()
 	UsersDb.LoadDatabase(notelConf.UsersDbPath)
@@ -68,6 +66,6 @@ func main() {
 	}
 	group.Wait()
 
-	ChannelDb.Quit()
+	ChatManager.Quit()
 	UsersDb.Quit()
 }

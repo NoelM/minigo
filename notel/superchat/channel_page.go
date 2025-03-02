@@ -1,6 +1,7 @@
 package superchat
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/NoelM/minigo"
@@ -29,7 +30,8 @@ func ChannelPage(m *minigo.Minitel, chatManager *databases.ChatManager) *minigo.
 		channels := chatManager.ListChannels()
 		names := make([]string, 0, len(channels))
 		for _, ch := range channels {
-			names = append(names, ch.Name)
+			c := chatManager.GetChannel(ch.Slug)
+			names = append(names, fmt.Sprintf("%s (Conn. %d)", ch.Name, len(c.GetConnected())))
 		}
 		list := minigo.NewListEnum(mntl, names, 9, 1, 22, 2)
 		list.Display()

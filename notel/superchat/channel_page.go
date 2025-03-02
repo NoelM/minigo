@@ -23,7 +23,7 @@ func ChannelPage(m *minigo.Minitel, chatManager *databases.ChatManager) *minigo.
 
 		mntl.MoveAt(7, 1)
 		mntl.Attributes(minigo.DoubleHauteur)
-		mntl.Print("Salons disponibles")
+		mntl.Print("Salons")
 		mntl.Attributes(minigo.GrandeurNormale)
 
 		// Display available channels
@@ -31,7 +31,7 @@ func ChannelPage(m *minigo.Minitel, chatManager *databases.ChatManager) *minigo.
 		names := make([]string, 0, len(channels))
 		for _, ch := range channels {
 			c := chatManager.GetChannel(ch.Slug)
-			names = append(names, fmt.Sprintf("%s (Conn. %d)", ch.Name, len(c.GetConnected())))
+			names = append(names, fmt.Sprintf("%-20s Conn. %d", ch.Name, len(c.GetConnected())))
 		}
 		list := minigo.NewListEnum(mntl, names, 9, 1, 22, 2)
 		list.Display()

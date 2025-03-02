@@ -35,7 +35,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 			wrappedTextId += 1
 		}
 
-		mntl.HelperAt(24, 0, fmt.Sprintf("PAGE %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
+		mntl.HelperAt(24, 0, fmt.Sprintf("Page %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
 		return minigo.NoOp
 	})
 
@@ -58,7 +58,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 			wrappedTextId += 1
 		}
 
-		mntl.HelperAt(24, 0, fmt.Sprintf("PAGE %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
+		mntl.HelperAt(24, 0, fmt.Sprintf("Page %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
 		return nil, minigo.NoOp
 	})
 
@@ -86,7 +86,7 @@ func NewArticlePage(mntl *minigo.Minitel, article Article) *minigo.Page {
 			wrappedTextId += 1
 		}
 
-		mntl.HelperAt(24, 0, fmt.Sprintf("PAGE %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
+		mntl.HelperAt(24, 0, fmt.Sprintf("Page %d/%d", wrappedTextId/2/(23-5)+1, len(wrappedText)/2/(23-5)+1), "RETOUR/SUITE")
 		return nil, minigo.NoOp
 	})
 

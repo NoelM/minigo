@@ -46,7 +46,7 @@ func ChannelPage(m *minigo.Minitel, chatManager *databases.ChatManager) *minigo.
 
 	channelPage.SetEnvoiFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		channelId, err := strconv.Atoi(inputs.ValueActive())
-		if err != nil {
+		if err != nil || channelId < 1 || channelId > len(chatManager.ListChannels()) {
 			return nil, minigo.NoOp
 		}
 

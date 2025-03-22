@@ -127,6 +127,9 @@ func (c *Channel) Subscribe(nick string) {
 }
 
 func (c *Channel) Resign(nick string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	logs.InfoLog("resigned subscriber with id=%s\n", nick)
 	delete(c.subscribers, nick)
 }

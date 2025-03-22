@@ -86,6 +86,11 @@ func ChatPage(m *minigo.Minitel, channel *databases.Channel, mtr *metrics.Metric
 		return nil, minigo.GuideOp
 	})
 
+	chatPage.SetConnexionFinFunc(func(mntl *minigo.Minitel) int {
+		channel.Resign(nick)
+		return minigo.DisconnectOp
+	})
+
 	chatPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
 		inputs.AppendKeyActive(key)
 	})

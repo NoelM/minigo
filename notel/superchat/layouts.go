@@ -74,7 +74,7 @@ func (c *ChatLayout) printFooter() {
 }
 
 func (c *ChatLayout) printHeader() {
-	cntd := c.metrics.CountLogged()
+	cntd := len(c.channel.GetConnected())
 
 	mode := "EDITION"
 	if c.navMode {

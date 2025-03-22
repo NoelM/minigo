@@ -55,14 +55,14 @@ func RunPageProfil(mntl *minigo.Minitel, userDB *databases.UsersDatabase, pseudo
 
 		mntl.Return(3) // Row 16
 		mntl.Attributes(minigo.FondVert, minigo.CaractereNoir)
-		mntl.Print(" AFFICHAGE ANNUAIRE (OUI/NON)")
+		mntl.Print(" AFFICHAGE REPERTOIRE (OUI/NON)")
 		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc)
 		mntl.Print(" ")
 		appAnnuString := "NON"
 		if usr.AppAnnuaire {
 			appAnnuString = "OUI"
 		}
-		inputs.AppendInput("annu", minigo.NewInputWithValue(mntl, appAnnuString, 16, 30, 3, 1, true))
+		inputs.AppendInput("annu", minigo.NewInputWithValue(mntl, appAnnuString, 16, 32, 3, 1, true))
 
 		mntl.Return(2)
 		mntl.Helper("Nav.", "RETOUR/SUITE", minigo.FondBleu, minigo.CaractereBlanc)

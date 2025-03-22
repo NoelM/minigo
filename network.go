@@ -10,10 +10,11 @@ import (
 const ByteDurAt1200Bd = 8333 * time.Microsecond
 
 type Network struct {
-	conn   Connector
-	parity bool
-	source string
-	close  bool
+	conn    Connector
+	parity  bool
+	source  string
+	close   bool
+	noDelay bool
 
 	subTime time.Time
 	subCnt  int
@@ -296,9 +297,15 @@ func (n *Network) sendLoop() {
 	n.group.Done()
 }
 
+func (n *Network) SetNoDelay() {
+	n.noDelay = true
+}
+
 func (n *Network) send(data []byte) {
 	n.conn.Write(data)
-	time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
+	if !n.noDelay {
+		time.Sleep(time.Duration(len(data)) * ByteDurAt1200Bd)
+	}
 }
 
 func (n *Network) IsConnected() bool {

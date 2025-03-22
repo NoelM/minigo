@@ -295,6 +295,23 @@ func (m *Minitel) Button(s string, back, front byte) {
 
 }
 
+func (m *Minitel) PrintStatusWithAttributes(s string, attrs ...byte) error {
+	// Enters row 0
+	buf := []byte{Us, 0x40, 0x41}
+	// Clean curent value
+	buf = append(buf, RepeatRune(' ', 35)...)
+	// Return carriage to the begining of row 0
+	buf = append(buf, Us, 0x40, 0x41)
+	// Encodes attributes
+	buf = append(buf, EncodeAttributes(attrs...)...)
+	// Encode string to VDT format
+	buf = append(buf, EncodeString(s)...)
+	// Quit the row 0 with LF
+	buf = append(buf, Lf)
+
+	return m.Send(buf)
+}
+
 func (m *Minitel) PrintStatus(s string) error {
 	// Enters row 0
 	buf := []byte{Us, 0x40, 0x41}

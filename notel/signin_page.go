@@ -9,9 +9,11 @@ func NewPageSignIn(mntl *minigo.Minitel) *minigo.Page {
 	signInPage := minigo.NewPage("signIn", mntl, nil)
 
 	signInPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
+		mntl.Reset()
 		mntl.CleanScreen()
 		mntl.SendVDT("static/connect.vdt")
 		mntl.ModeG0()
+		mntl.CursorOn()
 
 		mntl.MoveAt(12, 1)
 		mntl.Attributes(minigo.FondNormal, minigo.DoubleHauteur)

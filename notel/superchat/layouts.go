@@ -1,13 +1,12 @@
-package minichat
+package superchat
 
 import (
 	"fmt"
-	"sync/atomic"
 	"time"
-	"unicode/utf8"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/databases"
+	"github.com/NoelM/minigo/notel/metrics"
 )
 
 type RouleauDir uint
@@ -18,19 +17,17 @@ const (
 )
 
 const (
-	rowMsgZoneStart = 1
-	rowMsgZoneEnd   = 19
-	rowHLine        = 20
-	rowInput        = 21
-	rowHelpers      = 24
+	msgStartRow = 1
+	msgStopRow  = 20
+	hLineRow    = 21
+	inputRow    = 22
+	helpersRow  = 24
 )
 
 const (
-	Blank = -2
-	Date  = -1
+	NoLimit  = -1
+	MaxLimit = 256
 )
-
-const NoLimit = -1
 
 type ChatLayout struct {
 	mntl *minigo.Minitel
@@ -40,51 +37,52 @@ type ChatLayout struct {
 	maxId    int
 
 	nick string
-	cntd *atomic.Int32
+
+	navMode bool
+	cache   *Cache
+
+	metrics *metrics.Metrics
 }
 
-func NewChatLayout(mntl *minigo.Minitel, channel *databases.Channel, cntd *atomic.Int32, nick string) *ChatLayout {
+func NewChatLayout(mntl *minigo.Minitel, channel *databases.Channel, mtr *metrics.Metrics, nick string) *ChatLayout {
 	return &ChatLayout{
 		mntl:    mntl,
 		channel: channel,
 		maxId:   -1,
 		nick:    nick,
-		cntd:    cntd,
+		cache:   NewCache(),
+		metrics: mtr,
 	}
 }
 
 func (c *ChatLayout) cleanFooter() {
-	c.mntl.MoveAt(rowHLine, 0)
+	c.mntl.MoveAt(hLineRow, 0)
 	c.mntl.CleanLine()
 
-	c.mntl.Return(rowHelpers - 1 - rowHLine)
-	c.mntl.CleanLine()
-
-	c.mntl.Return(1)
+	c.mntl.Return(helpersRow - hLineRow)
 	c.mntl.CleanLine()
 }
 
 func (c *ChatLayout) printFooter() {
-	c.mntl.MoveAt(rowHLine, 0)
+	c.mntl.MoveAt(hLineRow, 0)
 	c.mntl.HLine(40, minigo.HCenter)
 	// It already went to the next line!
+	c.mntl.Return(helpersRow - 1 - hLineRow)
 
-	c.mntl.Return(rowHelpers - 1 - rowHLine - 1)
-	c.mntl.HLine(40, minigo.HCenter)
-	// It already went to the next line!
-
-	c.mntl.Helper("Nouveaux Msg", "REPET", minigo.FondBleu, minigo.CaractereBlanc)
+	c.mntl.Helper("Aide →", "GUIDE", minigo.FondBleu, minigo.CaractereBlanc)
 	c.mntl.HelperRight("→", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 }
 
 func (c *ChatLayout) printHeader() {
-	cntd := c.cntd.Load()
+	cntd := len(c.channel.GetConnected())
 
-	if cntd < 2 {
-		c.mntl.PrintStatus(fmt.Sprintf("→ Connecté: %d", cntd))
-	} else {
-		c.mntl.PrintStatus(fmt.Sprintf("→ Connectés: %d", cntd))
+	mode := "EDITION"
+	if c.navMode {
+		mode = "NAVIGATION"
 	}
+
+	status := fmt.Sprintf(" [%s] [%s] [Conn. %d]", c.channel.GetName(), mode, cntd)
+	c.mntl.PrintStatusWithAttributes(fmt.Sprintf("%-35s", status), minigo.FondMagenta, minigo.CaractereNoir)
 }
 
 func (c *ChatLayout) getLastMessages() bool {
@@ -97,7 +95,7 @@ func (c *ChatLayout) getLastMessages() bool {
 }
 
 func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
-	if limit >= 0 && limit < 2 {
+	if limit >= 0 && limit < 1 {
 		return 0
 	}
 
@@ -113,47 +111,126 @@ func (c *ChatLayout) printDate(msgId, limit int, dir RouleauDir) int {
 
 	if dir == Down {
 		c.mntl.Return(1)
-		// Blank line
-		c.mntl.Return(1)
+		c.cache.AppendBottom(Date, msgId, 0)
 	} else if dir == Up {
 		c.mntl.ReturnUp(1)
+		c.cache.AppendTop(Date, msgId, 0)
 	}
 
 	c.mntl.Attributes(minigo.CaractereBleu)
-
-	length := utf8.RuneCountInString(dateString)
-	c.mntl.Right((minigo.ColonnesSimple - length) / 2)
-	c.mntl.Print(dateString)
-
+	c.mntl.PrintCenter(dateString)
 	c.mntl.Attributes(minigo.CaractereBlanc)
 
-	if dir == Up {
-		c.mntl.ReturnUp(1)
-	}
-
-	return 2
+	return 1
 }
 
-func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
+func (c *ChatLayout) printMessageFromLine(msgId, lineId, limit int, dir RouleauDir) int {
 	lines, vdt := FormatMessage(c.messages[msgId], dir, c.mntl.SupportCSI())
 
 	if limit < 0 || limit > lines {
 		limit = lines
 	}
 
-	for i := 0; i < limit; i += 1 {
+	start := lineId
+	// we already reach the end of the msg
+	if start > lines-1 {
+		return 0
+	}
+
+	for i := start; i < limit; i += 1 {
 		c.mntl.Send(vdt[i])
+
+		if dir == Up {
+			c.cache.AppendTop(Message, msgId, i)
+		} else if dir == Down {
+			c.cache.AppendBottom(Message, msgId, i)
+		}
 	}
 
 	return limit
 }
 
+func (c *ChatLayout) printMessage(msgId, limit int, dir RouleauDir) int {
+	return c.printMessageFromLine(msgId, 0, limit, dir)
+}
+
+func (c *ChatLayout) PrintPreviousMessage() {
+	if !c.navMode {
+		c.mntl.CursorOff()
+		c.navMode = true
+		c.printHeader()
+	}
+
+	firstRow := c.cache.FirstRow()
+
+	var msgId int
+	if firstRow.kind == Date {
+		msgId = firstRow.msgId - 1
+		if msgId <= 0 {
+			return
+		}
+
+		c.mntl.MoveAt(1, 0)
+		c.printMessage(msgId, NoLimit, Up)
+		c.printDate(msgId, NoLimit, Up)
+
+	} else {
+		c.mntl.MoveAt(1, 0)
+		msgId = firstRow.msgId
+
+		c.printMessageFromLine(msgId, firstRow.lineId+1, NoLimit, Up)
+		c.printDate(msgId, NoLimit, Up)
+
+		msgId -= 1
+		if msgId <= 0 {
+			return
+		}
+
+		c.printMessage(msgId, NoLimit, Up)
+		c.printDate(msgId, NoLimit, Up)
+	}
+}
+
+func (c *ChatLayout) PrintNextMessage() {
+	rowId, lastRow := c.cache.LastRow()
+	if lastRow.msgId == len(c.messages)-1 {
+		return
+	}
+
+	if !c.navMode {
+		c.mntl.CursorOff()
+		c.navMode = true
+		c.printHeader()
+	}
+
+	msgId := lastRow.msgId
+	c.mntl.MoveAt(rowId+1, 0)
+
+	if lastRow.kind == Date {
+		c.printMessage(msgId, NoLimit, Down)
+
+	} else {
+		c.printMessageFromLine(msgId, lastRow.lineId+1, NoLimit, Down)
+
+		msgId += 1
+		if msgId == len(c.messages)-1 {
+			return
+		}
+
+		c.printDate(msgId, NoLimit, Down)
+		c.printMessage(msgId, NoLimit, Down)
+	}
+}
+
 func (c *ChatLayout) Init() {
 	// Load the last messages from DB
-	if !c.getLastMessages() {
+	if !c.getLastMessages() && !c.navMode {
 		// No message, we quit!
 		return
 	}
+
+	c.navMode = false
+	c.cache.Init()
 
 	// No cursor and go to the origin
 	c.mntl.CursorOff()
@@ -168,13 +245,13 @@ func (c *ChatLayout) Init() {
 
 	// One start from the last message recvd.
 	for msgId := len(c.messages) - 1; msgId >= 0; msgId -= 1 {
-		limit = rowMsgZoneEnd - curLine
+		limit = msgStopRow - curLine
 		curLine += c.printMessage(msgId, limit, Up)
 
-		limit = rowMsgZoneEnd - curLine
+		limit = msgStopRow - curLine
 		curLine += c.printDate(msgId, limit, Up)
 
-		if curLine >= rowMsgZoneEnd {
+		if curLine >= msgStopRow {
 			break
 		}
 	}
@@ -185,6 +262,12 @@ func (c *ChatLayout) Init() {
 }
 
 func (c *ChatLayout) Update() {
+	if c.navMode {
+		c.mntl.CleanScreen()
+		c.Init()
+		return
+	}
+
 	if !c.getLastMessages() {
 		return
 	}
@@ -194,10 +277,10 @@ func (c *ChatLayout) Update() {
 	c.cleanFooter()
 
 	// Go to the last line of the MSG Zone
-	c.mntl.MoveAt(rowMsgZoneEnd, 1)
+	c.mntl.MoveAt(msgStopRow, 1)
 
 	// We print on the DOWN direction all the new messages, no limits here!
-	curLine := rowMsgZoneEnd
+	curLine := msgStopRow
 	for msgId := c.maxId + 1; msgId < len(c.messages); msgId += 1 {
 		curLine += c.printDate(msgId, NoLimit, Down)
 		curLine += c.printMessage(msgId, NoLimit, Down)
@@ -215,7 +298,7 @@ func (c *ChatLayout) Update() {
 	// this is a > not a >= because
 	// with an equal at curLine == rowMsgZoneEnd
 	// if will return another time
-	for ; curLine > rowMsgZoneEnd; curLine -= 1 {
+	for ; curLine > msgStopRow; curLine -= 1 {
 		c.mntl.Return(1)
 	}
 

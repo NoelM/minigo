@@ -1,4 +1,4 @@
-package serveur
+package stats
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"github.com/NoelM/minigo"
 )
 
-func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
-	infoPage := minigo.NewPage("serveur", mntl, nil)
+func NewStatsPage(mntl *minigo.Minitel) *minigo.Page {
+	infoPage := minigo.NewPage("stats", mntl, nil)
 
 	infoPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.Reset()
@@ -16,7 +16,7 @@ func NewServeurPage(mntl *minigo.Minitel) *minigo.Page {
 
 		mntl.MoveAt(2, 0)
 		mntl.Attributes(minigo.DoubleHauteur, minigo.CaractereJaune)
-		mntl.PrintCenter("Serveur NOTEL")
+		mntl.PrintCenter("Statistiques NOTEL")
 		mntl.Attributes(minigo.GrandeurNormale)
 
 		mntl.Return(1)

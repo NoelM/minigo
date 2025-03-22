@@ -20,7 +20,7 @@
                     "reply":   "OK"
                 },
                 {
-                    "command": "ATE0L0M0X4&A0&N2S0=1S27=16ATS10=100",
+                    "command": "ATE0L0M0X4&A0&N2S0=1S27=16S10=100",
                     "reply":   "OK"
                 }
             ]
@@ -36,7 +36,7 @@
                     "reply":   "OK"
                 },
                 {
-                    "command": "ATE0L0M0X4&A0&N2S0=1S27=16ATS10=100",
+                    "command": "ATE0L0M0X4&A0&N2S0=1S27=16S10=100",
                     "reply":   "OK"
                 }
             ]

@@ -9,6 +9,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 	signUpPage := minigo.NewPage("signup", mntl, nil)
 
 	signUpPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
+		mntl.Reset()
 		mntl.CleanScreen()
 		mntl.SendVDT("static/connect.vdt")
 		mntl.ModeG0()
@@ -45,10 +46,10 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		mntl.Helper("Validez →", "ENVOI", minigo.FondJaune, minigo.CaractereNoir)
 
 		mntl.ReturnCol(3, 1)
-		mntl.Print("Compte supprimé après 30j")
+		mntl.Print("Compte réattribuable après")
 
-		mntl.ReturnCol(1, 3)
-		mntl.Print("sans connexion")
+		mntl.ReturnCol(1, 1)
+		mntl.Print("30 jours sans connexion")
 
 		inputs.InitAll()
 		return minigo.NoOp
@@ -66,6 +67,11 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 		creds := inputs.ToMap()
 		inputs.ResetAll()
 
+		if creds["login"] == "ADMIN" || creds["login"] == "admin" {
+			printSignUpError(mntl, "Pseudo ADMIN interdit")
+			return nil, minigo.NoOp
+		}
+
 		if len(creds["login"]) == 0 || len(creds["pwd"]) == 0 {
 			printSignUpError(mntl, "Pseudo ou MDP vides")
 			return nil, minigo.NoOp
@@ -73,11 +79,6 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 
 		if creds["pwd"] != creds["pwdRepeat"] {
 			printSignUpError(mntl, "Mots de passes non indentiques")
-			return nil, minigo.NoOp
-		}
-
-		if UsersDb.UserExists(creds["login"]) {
-			printSignUpError(mntl, "Pseudo déjà utilisé")
 			return nil, minigo.NoOp
 		}
 
@@ -89,7 +90,7 @@ func NewSignUpPage(mntl *minigo.Minitel) *minigo.Page {
 			logs.InfoLog("new signup for user=%s\n", creds["login"])
 			return creds, minigo.EnvoiOp
 		} else {
-			printSignUpError(mntl, "Erreur serveur")
+			printSignUpError(mntl, "Pseudo déjà utilisé")
 			return nil, minigo.NoOp
 		}
 	})

@@ -10,8 +10,17 @@ import (
 type NotelConf struct {
 	CommuneDbPath  string          `json:"communeDbPath"`
 	MessagesDbPath string          `json:"messagesDbPath"`
+	ChannelsDb     []ChannelConf   `json:"channelsDb"`
 	UsersDbPath    string          `json:"usersDbPath"`
+	BlogDbPath     string          `json:"blogDbPath"`
+	AnnuaireDbPath string          `json:"annuaireDbPath"`
 	Connectors     []ConnectorConf `json:"connectors"`
+}
+
+type ChannelConf struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+	Path string `json:"path"`
 }
 
 type ConnectorConf struct {

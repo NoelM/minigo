@@ -1,18 +1,17 @@
-package minichat
+package superchat
 
 import (
-	"sync/atomic"
 	"time"
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/databases"
 	"github.com/NoelM/minigo/notel/logs"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/NoelM/minigo/notel/metrics"
 )
 
-func RunChatPage(m *minigo.Minitel, channel *databases.Channel, cntd *atomic.Int32, nick string, promMsgNb prometheus.Counter) (op int) {
+func ChatPage(m *minigo.Minitel, channel *databases.Channel, mtr *metrics.Metrics, nick string) *minigo.Page {
 	chatPage := minigo.NewPage("chat", m, nil)
-	chatLayout := NewChatLayout(m, channel, cntd, nick)
+	chatLayout := NewChatLayout(m, channel, mtr, nick)
 
 	chatPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		m.Reset()
@@ -21,7 +20,7 @@ func RunChatPage(m *minigo.Minitel, channel *databases.Channel, cntd *atomic.Int
 		m.MinusculeOn()
 
 		channel.Subscribe(nick)
-		inputs.AppendInput("messages", minigo.NewInput(m, rowInput, 0, 39, 2, false))
+		inputs.AppendInput("messages", minigo.NewInput(m, inputRow, 0, 39, 2, false))
 
 		chatLayout.Init()
 		inputs.InitAll()
@@ -33,7 +32,7 @@ func RunChatPage(m *minigo.Minitel, channel *databases.Channel, cntd *atomic.Int
 		if len(inputs.ValueActive()) == 0 {
 			return nil, minigo.NoOp
 		}
-		promMsgNb.Inc()
+		mtr.MessagesCount.Inc()
 
 		msg := databases.Message{
 			Nick: nick,
@@ -67,15 +66,34 @@ func RunChatPage(m *minigo.Minitel, channel *databases.Channel, cntd *atomic.Int
 	chatPage.SetSommaireFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
 		channel.Resign(nick)
 
+		m.PrintStatus("")
 		m.RouleauOff()
 		m.MinusculeOff()
 		return nil, minigo.SommaireOp
+	})
+
+	chatPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		chatLayout.PrintNextMessage()
+		return nil, minigo.NoOp
+	})
+
+	chatPage.SetRetourFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		chatLayout.PrintPreviousMessage()
+		return nil, minigo.NoOp
+	})
+
+	chatPage.SetGuideFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
+		return nil, minigo.GuideOp
+	})
+
+	chatPage.SetConnexionFinFunc(func(mntl *minigo.Minitel) int {
+		channel.Resign(nick)
+		return minigo.DisconnectOp
 	})
 
 	chatPage.SetCharFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, key int32) {
 		inputs.AppendKeyActive(key)
 	})
 
-	_, op = chatPage.Run()
-	return op
+	return chatPage
 }

@@ -13,6 +13,7 @@ const LeMondeLiveRss = "https://www.lemonde.fr/rss/en_continu.xml"
 const BBCRss = "http://feeds.bbci.co.uk/news/rss.xml"
 const LiberationRss = "https://www.liberation.fr/arc/outboundfeeds/rss-all/?outputType=xml"
 const TheVergeRss = "https://www.theverge.com/rss/index.xml"
+const LeFigaroRss = "https://www.lefigaro.fr/rss/figaro_flash-actu.xml"
 
 type Depeche struct {
 	Title    string

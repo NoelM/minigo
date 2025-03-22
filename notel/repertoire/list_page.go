@@ -1,4 +1,4 @@
-package annuaire
+package repertoire
 
 import (
 	"strconv"
@@ -20,9 +20,10 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 
 	listPage.SetInitFunc(func(mntl *minigo.Minitel, inputs *minigo.Form, initData map[string]string) int {
 		mntl.Reset()
+		mntl.CursorOff()
 
 		var err error
-		if users, err = userDB.LoadAnnuaireUsers(); err != nil {
+		if users, err = userDB.ListAllowedUsers(); err != nil {
 			mntl.Print("Impossible de charger les utilisateurs")
 			time.Sleep(2 * time.Second)
 			return minigo.SommaireOp
@@ -47,7 +48,14 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 	})
 
 	listPage.SetSuiteFunc(func(mntl *minigo.Minitel, inputs *minigo.Form) (map[string]string, int) {
-		if pageId == len(users)/usersPerPage {
+		// maxPage is the exact count of page numbers, it goes from 1 to +inf
+		maxPage := len(users) / usersPerPage
+		if maxPage == 0 {
+			maxPage = 1
+		}
+
+		// pageId is the ID, going from 0 to +inf, so this explains why we set maxPage-1
+		if pageId == maxPage-1 {
 			return nil, minigo.NoOp
 		}
 
@@ -79,19 +87,24 @@ func NewPageList(mntl *minigo.Minitel, userDB *databases.UsersDatabase) *minigo.
 }
 
 func displayPage(m *minigo.Minitel, users []databases.User, usersPerPage, pageId int) {
-	printAnnuaireHeader(m)
+	printRepertoireHeader(m)
 
 	m.ModeG0()
 
-	m.MoveAt(2, 35)
+	m.MoveAt(3, 34)
 	m.Attributes(minigo.CaractereNoir)
-	m.Printf("%d/%d ", pageId+1, len(users)/usersPerPage+1)
+
+	maxPage := len(users) / usersPerPage
+	if maxPage == 0 {
+		maxPage = 1
+	}
+	m.Printf(" %d/%d ", pageId+1, maxPage)
 
 	displayList(m, users, pageId*usersPerPage)
 
 	m.MoveAt(24, 0)
-	m.Attributes(minigo.CaractereVert)
-	m.HelperRight("Numéro du profil + ", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
+	m.Attributes(minigo.CaractereCyan)
+	m.HelperRight("Numéro du profil + ", "ENVOI", minigo.FondCyan, minigo.CaractereNoir)
 }
 
 func displayList(m *minigo.Minitel, users []databases.User, userId int) {
@@ -102,7 +115,7 @@ func displayList(m *minigo.Minitel, users []databases.User, userId int) {
 			break
 		}
 
-		m.Attributes(minigo.CaractereVert, minigo.DoubleLargeur, minigo.InversionFond)
+		m.Attributes(minigo.CaractereCyan, minigo.DoubleLargeur, minigo.InversionFond)
 		m.Printf(" %d ", i+1)
 
 		m.Right(2)
@@ -111,7 +124,7 @@ func displayList(m *minigo.Minitel, users []databases.User, userId int) {
 
 		txt := minigo.Wrapper(users[i].Bio, 26)
 		m.ReturnCol(1, 10)
-		m.Attributes(minigo.CaractereVert, minigo.GrandeurNormale)
+		m.Attributes(minigo.CaractereCyan, minigo.GrandeurNormale)
 		m.Printf("%s...", txt[0])
 
 		m.ReturnCol(2, 2)

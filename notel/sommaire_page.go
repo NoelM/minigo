@@ -6,118 +6,119 @@ import (
 
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/annuaire"
+	"github.com/NoelM/minigo/notel/blog"
 	"github.com/NoelM/minigo/notel/infos"
 	"github.com/NoelM/minigo/notel/logs"
 	"github.com/NoelM/minigo/notel/meteo"
-	"github.com/NoelM/minigo/notel/minichat"
+	"github.com/NoelM/minigo/notel/metrics"
 	"github.com/NoelM/minigo/notel/profil"
-	"github.com/NoelM/minigo/notel/serveur"
-	"github.com/NoelM/minigo/notel/sudoku"
+	"github.com/NoelM/minigo/notel/repertoire"
+	"github.com/NoelM/minigo/notel/stats"
+	"github.com/NoelM/minigo/notel/superchat"
 )
 
 const (
 	sommaireId = iota
-	chatId
+	superChatId
 	meteoId
 	infoId
-	serveurId
-	sudokuId
+	statsId
 	profilId
+	repertoireId
+	blogId
 	annuaireId
 )
 
 const (
-	chatKey     = "*CHA"
-	meteoKey    = "*MTO"
-	infoKey     = "*INF"
-	serveurKey  = "*SRV"
-	sudokuKey   = "*SDK"
-	profilKey   = "*PRO"
-	annuaireKey = "*ANU"
+	superChatKey  = "*SCA"
+	meteoKey      = "*MTO"
+	infoKey       = "*INF"
+	statsKey      = "*STA"
+	profilKey     = "*PRO"
+	repertoireKey = "*REP"
+	blogKey       = "*BLO"
+	annuaireKey   = "*ANU"
 )
 
 var ServIdMap = map[string]int{
-	chatKey:     chatId,
-	meteoKey:    meteoId,
-	infoKey:     infoId,
-	serveurKey:  serveurId,
-	sudokuKey:   sudokuId,
-	profilKey:   profilId,
-	annuaireKey: annuaireId,
+	superChatKey:  superChatId,
+	meteoKey:      meteoId,
+	infoKey:       infoId,
+	statsKey:      statsId,
+	profilKey:     profilId,
+	repertoireKey: repertoireId,
+	blogKey:       blogId,
+	annuaireKey:   annuaireId,
 }
 
-func SommaireHandler(m *minigo.Minitel, nick string, metrics *Metrics) {
+func SommaireHandler(minitel *minigo.Minitel, nick string, metrics *metrics.Metrics) {
 	logs.InfoLog("enters sommaire handler\n")
 
 	var op int
 	var choice map[string]string
 
 	for op != minigo.DisconnectOp {
-		choice, op = NewPageSommaire(m, metrics).Run()
+		choice, op = NewPageSommaire(minitel, metrics).Run()
 		serviceId, ok := ServIdMap[strings.ToUpper(choice["choice"])]
 		if !ok {
 			continue
 		}
 
 		switch serviceId {
-		case chatId:
-			op = minichat.RunChatPage(m, MessageDb, &metrics.ConnectedUsers, nick, metrics.MessagesCount)
+		case superChatId:
+			op = superchat.ServiceSuperchat(minitel, ChatManager, metrics, nick)
 		case meteoId:
-			op = meteo.MeteoService(m, CommuneDb)
+			op = meteo.MeteoService(minitel, CommuneDb)
 		case infoId:
-			op = infos.ServiceInfo(m)
-		case serveurId:
-			_, op = serveur.NewServeurPage(m).Run()
-		case sudokuId:
-			op = sudoku.SudokuService(m, nick)
+			op = infos.ServiceInfo(minitel)
+		case statsId:
+			_, op = stats.NewStatsPage(minitel).Run()
+		case blogId:
+			op = blog.ServiceBlog(minitel, BlogDbPath)
 		case profilId:
-			op = profil.ProfilService(m, UsersDb, nick)
+			op = profil.ProfilService(minitel, UsersDb, nick)
+		case repertoireId:
+			op = repertoire.RepertoireService(minitel, UsersDb)
 		case annuaireId:
-			op = annuaire.AnnuaireService(m, UsersDb)
+			op = annuaire.AnnuaireService(minitel, AnnuaireDbPath)
 		}
 	}
-	logs.InfoLog("quits sommaire handler\n")
+	logs.InfoLog("sommaire: quits handler\n")
 }
 
-func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
+func NewPageSommaire(mntl *minigo.Minitel, metrics *metrics.Metrics) *minigo.Page {
 	sommairePage := minigo.NewPage("sommaire", mntl, nil)
 
 	sommairePage.SetInitFunc(func(mntl *minigo.Minitel, form *minigo.Form, initData map[string]string) int {
-		mntl.CleanScreen()
+		mntl.Reset()
 		mntl.CursorOff()
 		mntl.SendVDT("static/notel.vdt")
 
 		mntl.ModeG0()
 		mntl.Attributes(minigo.FondNoir, minigo.CaractereBlanc, minigo.GrandeurNormale)
 
-		list := minigo.NewList(mntl, 8, 1, 17, 2)
-		list.AppendItem(chatKey, "MINICHAT")
+		list := minigo.NewList(mntl, 8, 1, 22, 2)
+		list.AppendItem(superChatKey, "SUPERCHAT")
 		list.AppendItem(meteoKey, "METEO")
 		list.AppendItem(infoKey, "INFOS")
-		list.AppendItem(sudokuKey, "SUDOKU")
-		list.AppendItem(serveurKey, "SERVEUR")
+		list.AppendItem(blogKey, "BLOG")
+		//list.AppendItem(statsKey, "STATS")
 		list.AppendItem(profilKey, "PROFIL")
 		list.AppendItem(annuaireKey, "ANNUAIRE")
+		list.AppendItem(repertoireKey, "REPERTOIRE")
 		list.Display()
 
-		mntl.MoveAt(19, 0)
-		mntl.Attributes(minigo.DoubleHauteur)
-		mntl.PrintCenter("NOTEL est de retour !")
-
-		mntl.Attributes(minigo.GrandeurNormale)
-
-		mntl.Return(1)
-		mntl.PrintCenter("Bienvenue sur le Minitel")
-
-		mntl.ReturnCol(4, 1)
-		cntd := metrics.ConnectedUsers.Load()
-		if cntd < 2 {
-			mntl.Print(fmt.Sprintf("> Connecté: %d", cntd))
+		mntl.MoveAt(24, 0)
+		loggedCnt := metrics.CountLogged()
+		if loggedCnt < 2 {
+			// Whitespace required to activate the background
+			mntl.Print(fmt.Sprintf("Connecté: %d", loggedCnt))
 		} else {
-			mntl.Print(fmt.Sprintf("> Connectés: %d", cntd))
+			// Whitespace required to activate the background
+			mntl.Print(fmt.Sprintf("Connectés: %d", loggedCnt))
 		}
 
-		mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondBleu, minigo.CaractereBlanc)
+		mntl.HelperRight("CODE .... +", "ENVOI", minigo.FondVert, minigo.CaractereNoir)
 		form.AppendInput("choice", minigo.NewInput(mntl, 24, 25, 4, 1, true))
 
 		form.InitAll()
@@ -134,12 +135,12 @@ func NewPageSommaire(mntl *minigo.Minitel, metrics *Metrics) *minigo.Page {
 
 func envoiSommaire(mntl *minigo.Minitel, form *minigo.Form) (map[string]string, int) {
 	if len(form.ValueActive()) == 0 {
-		logs.WarnLog("empty choice\n")
+		logs.WarnLog("sommaire: empty choice\n")
 		return nil, minigo.NoOp
 	}
 
 	mntl.Reset()
-	logs.InfoLog("chosen service: %s\n", form.ValueActive())
+	logs.InfoLog("sommaire: chosen service: %s\n", form.ValueActive())
 
 	return form.ToMap(), minigo.SommaireOp
 }

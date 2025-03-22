@@ -11,9 +11,10 @@ import (
 	"github.com/NoelM/minigo"
 	"github.com/NoelM/minigo/notel/confs"
 	"github.com/NoelM/minigo/notel/logs"
+	"github.com/NoelM/minigo/notel/metrics"
 )
 
-func tcpServe(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *Metrics) {
+func tcpServe(wg *sync.WaitGroup, connConf confs.ConnectorConf, metrics *metrics.Metrics) {
 	defer wg.Done()
 
 	handler := func(conn net.Conn) {
